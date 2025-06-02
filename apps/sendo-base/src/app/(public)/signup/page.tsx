@@ -7,7 +7,7 @@ import { FaGoogle } from "react-icons/fa";
 import {
   SignUpForms,
   signupScheme,
-} from "@/lib/forms/authentication/signup.scheme";
+} from "@/src/lib/forms/authentication/signup.scheme";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
