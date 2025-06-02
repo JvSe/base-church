@@ -3,7 +3,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@repo/icons/*": ["./src/*"]
+      "@repo/ui/*": ["./src/*"]
     },
     "emitDeclarationOnly": true,
     "allowImportingTsExtensions": true
