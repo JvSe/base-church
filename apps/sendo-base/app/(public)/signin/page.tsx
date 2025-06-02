@@ -1,6 +1,9 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@repo/ui/components/button";
+import { Input } from "@repo/ui/components/input";
 import { FaGoogle } from "react-icons/fa";
+
+// SENHA DO SUPABASE
+// Vrrf5IJlIIzDToyO
 
 export default function SigInPage() {
   return (
@@ -43,7 +46,7 @@ export default function SigInPage() {
         </div>
       </div>
       <p className="text-xs text-foreground-lighter sm:mx-auto sm:max-w-sm text-center mt-auto">
-        By continuing, you agree to Agendify&apos;s{" "}
+        By continuing, you agree to Sendo Base{" "}
         <a className="underline">Terms of Service</a> and{" "}
         <a className="underline">Privacy Policy</a>, and to receive periodic
         emails with updates.

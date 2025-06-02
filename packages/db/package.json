@@ -1,5 +1,5 @@
 {
-  "name": "@workspace/db",
+  "name": "@repo/db",
   "version": "1.0.0",
   "exports": {
     ".": "./src/client.ts"
@@ -21,8 +21,8 @@
     "@prisma/client": "latest"
   },
   "devDependencies": {
-    "@workspace/eslint-config": "workspace:*",
-    "@workspace/typescript-config": "workspace:*",
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
     "eslint": "^8.57.0",
     "prisma": "latest",
     "rimraf": "^5.0.5",

@@ -1,9 +1,14 @@
 "use client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@repo/ui/components/button";
+import { Input } from "@repo/ui/components/input";
 import { useForm } from "react-hook-form";
 import { FaGoogle } from "react-icons/fa";
 
+import {
+  SignUpForms,
+  signupScheme,
+} from "@/lib/forms/authentication/signup.scheme";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
   FormControl,
@@ -11,12 +16,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import {
-  SignUpForms,
-  signupScheme,
-} from "@/lib/forms/authentication/signup.scheme";
-import { zodResolver } from "@hookform/resolvers/zod";
+} from "@repo/ui/components/form";
 export default function SignUpPage() {
   const form = useForm<SignUpForms>({
     resolver: zodResolver(signupScheme),
