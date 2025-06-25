@@ -13,8 +13,8 @@
     "format": "prisma format",
     "generate": "prisma generate",
     "lint": "eslint . --max-warnings 0",
-    "prebuild": "npm run generate",
-    "predev": "npm run generate",
+    "prebuild": "pnpm generate",
+    "predev": "pnpm generate",
     "studio": "prisma studio"
   },
   "dependencies": {
