@@ -25,31 +25,31 @@ export const Navbar = () => {
           <div className="hidden md:block shadow gradient-radial-dark py-3 rounded-full px-5 ">
             <div className="flex items-baseline space-x-4 uppercase text-white">
               <Link
-                href="/"
+                href="#section-hero"
                 className="text-gray-900 dark:text-white hover:gradient-yellow-text px-3 py-2 rounded-md text-sm font-medium"
               >
                 Inicio
               </Link>
               <Link
-                href="/about"
+                href="#section-about"
                 className="text-gray-900 dark:text-white hover:text-gray-700 dark:hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium"
               >
                 Sobre nós
               </Link>
               <Link
-                href="/about"
+                href="#section-courses"
                 className="text-gray-900 dark:text-white hover:text-gray-700 dark:hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium"
               >
                 Cursos
               </Link>
               <Link
-                href="/about"
+                href="#section-teachers"
                 className="text-gray-900 dark:text-white hover:text-gray-700 dark:hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium"
               >
                 Professores
               </Link>
               <Link
-                href="/about"
+                href="#section-pillars"
                 className="text-gray-900 dark:text-white hover:text-gray-700 dark:hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium"
               >
                 Pilares

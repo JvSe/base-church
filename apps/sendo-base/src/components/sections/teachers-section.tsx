@@ -47,7 +47,10 @@ export const TeachersSection = () => {
     },
   ];
   return (
-    <div className="relative flex pt-24 flex-col items-center w-dvw min-h-full">
+    <div
+      id="section-teachers"
+      className="relative flex pt-24 flex-col items-center w-dvw min-h-full"
+    >
       <h1 className="font-surgena font-bold text-5xl mb-20">
         Nossos Professores
       </h1>

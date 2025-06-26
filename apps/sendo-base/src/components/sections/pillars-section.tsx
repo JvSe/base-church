@@ -3,7 +3,10 @@ import { SpotlightCard } from "../spotlight-card";
 
 export const PillarsSection = () => {
   return (
-    <div className="w-full flex flex-col items-center gap-14 mb-20">
+    <div
+      id="section-pillars"
+      className="w-full flex flex-col items-center gap-14 mb-20"
+    >
       <div className="flex flex-col gap-5 items-center">
         <h1 className="font-surgena text-5xl font-bold">Pilares da Igreja</h1>
 

@@ -105,7 +105,7 @@
   }
 
   --animate-sphere-float: float 12s ease-in-out infinite;
-  --animate-right-to-left: rightToLeft infinite alternate 180s linear;
+  --animate-right-to-left: rightToLeft infinite alternate 120s linear;
 
   @keyframes float {
     0%,
@@ -123,7 +123,7 @@
     }
 
     to {
-      transform: translate(-85vw);
+      transform: translate(-65vw);
     }
   }
 }

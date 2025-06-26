@@ -26,7 +26,10 @@ export const CourseSection = () => {
     },
   ];
   return (
-    <div className="relative flex flex-col items-center w-dvw min-h-dvh">
+    <div
+      id="section-courses"
+      className="relative flex flex-col items-center w-dvw min-h-dvh"
+    >
       <h1 className="font-surgena font-bold text-5xl mb-20">
         Conheça nossos Cursos
       </h1>
