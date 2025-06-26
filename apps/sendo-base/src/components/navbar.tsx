@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export const Navbar = () => {
   return (
-    <nav className="w-full border-b border-white py-4 shadow-md absolute top-0 backdrop-blur-sm">
+    <nav className="w-full z-10 border-b border-white py-4 shadow-md absolute top-0 backdrop-blur-sm">
       <div className="max-w-10/12 mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center  justify-between h-16">
           <div className="flex items-center">
@@ -57,13 +57,15 @@ export const Navbar = () => {
             </div>
           </div>
 
-          <Button
-            size="clean"
-            className="gap-3 uppercase gradient-radial-dark py-3 px-5"
-          >
-            <User />
-            Entrar
-          </Button>
+          <Link href="/signin">
+            <Button
+              size="clean"
+              className="gap-3 uppercase gradient-radial-dark py-3 px-5"
+            >
+              <User />
+              Entrar
+            </Button>
+          </Link>
         </div>
       </div>
     </nav>

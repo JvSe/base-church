@@ -34,11 +34,11 @@ export const PillarsSection = () => {
           </SpotlightCard>
           <SpotlightCard className="max-w-96 text-center gap-3 bg-[#3ED8E199]">
             <Image
-              src="/assets/svg/provision-icon.png"
+              src="/assets/svg/provision-icon.svg"
               alt="Ícone de Provisão"
               width={100}
               height={100}
-              className="w-20 mx-auto mb-6 invert"
+              className="w-20 mx-auto mb-6 "
             />
             <div className="flex-1">
               <p className="text-xl font-bold">Provisão</p>

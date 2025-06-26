@@ -4,7 +4,7 @@ import Particles from "../particles";
 
 export const SectionHero = () => {
   return (
-    <div className="relative w-dvw min-h-dvh">
+    <div className="relative w-dvw min-h-[calc(100dvh-12dvh)]">
       <Image
         src="/assets/svg/hero-circle.svg"
         alt="Sendo Base Logo"

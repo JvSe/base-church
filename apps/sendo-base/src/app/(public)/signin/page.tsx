@@ -2,9 +2,6 @@ import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
 import { FaGoogle } from "react-icons/fa";
 
-// SENHA DO SUPABASE
-// Vrrf5IJlIIzDToyO
-
 export default function SigInPage() {
   return (
     <div className="flex-1 flex flex-col justify-center w-[330px] sm:w-[384px]">
