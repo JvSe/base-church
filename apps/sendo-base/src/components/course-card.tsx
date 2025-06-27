@@ -18,39 +18,39 @@ export const CouseCard = ({ title, teachers, variant }: CourseCardProps) => {
   return (
     <div
       className={cn(
-        "pt-5 px-4 items-center rounded-lg flex flex-col h-[429px] w-full",
-        variant === "creativity" && " bg-[#6D19F766]",
+        "flex h-[400px] w-full flex-col items-center gap-2 rounded-lg px-4 pt-5 md:gap-4",
+        variant === "creativity" && "bg-[#6D19F766]",
         variant === "multiplication" && "bg-[#3ED8E199]",
-        variant === "provision" && "bg-emerald-500"
+        variant === "provision" && "bg-emerald-500",
       )}
     >
-      <div className="flex-1 w-full h-full bg-primary overflow-hidden rounded-xl">
+      <div className="bg-primary h-full w-full flex-1 overflow-hidden rounded-xl">
         <Image
           src="/assets/svg/dots.svg"
           alt="dots"
           width={200}
           height={200}
-          className="w-full h-full scale-150"
+          className="h-full w-full scale-150"
         />
       </div>
-      <div className="w-full flex-[0.4] mt-4">
+      <div className="w-full flex-[0.4]">
         <h1 className="text-2xl font-semibold">{title}</h1>
 
-        <div className="flex gap-4 items-center">
+        <div className="flex items-center gap-4">
           {teachersImgs.splice(0, 5).map((i, index) => (
             <div
               key={index}
               className={cn(
-                "min-w-12 min-h-12 rounded-lg overflow-hidden",
-                index > 0 && "-ml-6"
+                "min-h-12 min-w-12 overflow-hidden rounded-lg",
+                index > 0 && "-ml-6",
               )}
             >
               <Image
                 src={i}
-                alt="img pastors"
+                alt="imgs pastors"
                 width={50}
                 height={50}
-                className="min-w-12 min-h-12 object-contain"
+                className="min-h-12 min-w-12 object-contain"
               />
             </div>
           ))}

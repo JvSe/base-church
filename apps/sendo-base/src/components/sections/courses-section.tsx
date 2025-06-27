@@ -28,13 +28,13 @@ export const CourseSection = () => {
   return (
     <div
       id="section-courses"
-      className="relative flex flex-col items-center w-dvw min-h-dvh"
+      className="relative flex min-h-dvh w-dvw flex-col items-center"
     >
-      <h1 className="font-surgena font-bold text-5xl mb-20">
+      <h1 className="font-surgena mb-10 text-4xl font-bold md:mb-20 md:text-5xl">
         Conheça nossos Cursos
       </h1>
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(424px,1fr))]  w-full h-full px-16 gap-5">
+      <div className="grid h-full w-full grid-cols-1 gap-5 px-4 md:grid-cols-2 lg:grid-cols-3 lg:px-16">
         <CouseCard title="Sendo Base" variant="provision" teachers={teachers} />
         <CouseCard
           title="Base de Ministérios"

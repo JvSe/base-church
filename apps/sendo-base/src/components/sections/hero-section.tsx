@@ -6,24 +6,24 @@ export const SectionHero = () => {
   return (
     <div
       id="section-hero"
-      className="relative w-dvw min-h-[calc(100dvh-12dvh)]"
+      className="relative h-full w-dvw md:min-h-[calc(100dvh-12dvh)]"
     >
       <Image
         src="/assets/svg/hero-circle.svg"
         alt="Sendo Base Logo"
         width={100}
         height={100}
-        className="w-full h-full inset-x-0 top-1/4 absolute scale-120"
+        className="absolute inset-x-0 top-[calc(1/3*120%)] h-full w-full scale-120"
       />
       <Image
         src="/assets/svg/mask-clean.svg"
         alt="Sendo Base Logo"
         width={100}
         height={100}
-        className="absolute -top-0 w-full h-full object-cover select-none"
+        className="absolute -top-0 h-full w-full object-cover select-none"
       />
 
-      <div className="relative w-full h-[800px]">
+      <div className="relative h-[500px] w-full md:h-[800px]">
         <Particles
           particleColors={["#ffffff", "#ffffff"]}
           particleCount={1000}
@@ -36,22 +36,22 @@ export const SectionHero = () => {
         />
       </div>
 
-      <div className="absolute inset-0 flex-col flex items-center gap-12 mt-50">
-        <div className="flex items-center gap-4 justify-center">
-          <div className="relative scale-60 -mt-12">
+      <div className="absolute inset-0 mt-36 flex flex-col items-center gap-6 md:mt-50 md:gap-12">
+        <div className="flex items-center justify-center gap-4">
+          <div className="relative -mt-12 scale-60">
             <Image
               src="/assets/svg/logo/logo-b.svg"
               alt="Sendo Base Logo"
               width={200}
               height={200}
-              className="w-20 h-20 scale-50"
+              className="h-20 w-20 scale-50"
             />
             <Image
               src="/assets/svg/logo/logo-circle.svg"
               alt="Sendo Base Logo"
               width={200}
               height={200}
-              className="w-20 h-20 absolute top-0 animate-spin-slow"
+              className="animate-spin-slow absolute top-0 h-20 w-20"
             />
           </div>
           {/* 
@@ -62,17 +62,17 @@ export const SectionHero = () => {
           </div> */}
         </div>
         <div className="text-center">
-          <h1 className="font-surgena font-bold md:text-8xl 2xl:text-9xl">
+          <h1 className="font-surgena text-5xl font-bold md:text-8xl 2xl:text-9xl">
             Formando Líderes
           </h1>
-          <h2 className="font-roboto italic md:text-6xl 2xl:text-7xl">
+          <h2 className="font-roboto text-4xl italic md:text-6xl 2xl:text-7xl">
             Influentes e Relevantes
           </h2>
         </div>
 
         <Button
           size="clean"
-          className="gradient-yellow font-surgena text-lg mt-10 text-primary uppercase font-bold py-4 px-11 rounded-xl"
+          className="gradient-yellow font-surgena text-primary mt-5 rounded-xl px-11 py-4 text-lg font-bold uppercase"
         >
           Quero Iniciar Meus Estudos
         </Button>

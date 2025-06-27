@@ -5,27 +5,28 @@ export const PillarsSection = () => {
   return (
     <div
       id="section-pillars"
-      className="w-full flex flex-col items-center gap-14 mb-20"
+      className="mb-20 flex w-full flex-col items-center gap-14"
     >
-      <div className="flex flex-col gap-5 items-center">
-        <h1 className="font-surgena text-5xl font-bold">Pilares da Igreja</h1>
+      <div className="flex flex-col items-center gap-2 md:gap-5">
+        <h1 className="font-surgena text-4xl font-bold md:text-5xl">
+          Pilares da Igreja
+        </h1>
 
-        <h2 className="text-center text-lg font-roboto">
-          Vivemos a missão com Criatividade para comunicar, Multiplicação para{" "}
-          <br />
+        <h2 className="font-roboto mx-4 text-center text-base md:text-lg">
+          Vivemos a missão com Criatividade para comunicar, Multiplicação para
           expandir e Provisão para sustentar o que Deus nos confiou.
         </h2>
       </div>
 
       <div>
-        <div className="flex gap-7">
-          <SpotlightCard className="max-w-96 text-center items-center bg-[#6D19F766]">
+        <div className="flex flex-col gap-4 px-4 md:flex-row md:gap-7">
+          <SpotlightCard className="min-w-96 items-center bg-[#6D19F766] text-center md:max-w-96">
             <Image
               src="/assets/svg/creativity-icon.svg"
               alt="Sendo Base Logo"
               width={100}
               height={100}
-              className="w-20 mx-auto mb-6"
+              className="mx-auto mb-6 w-20"
             />
             <div className="flex-1">
               <p className="text-xl font-bold">Criatividade</p>
@@ -35,13 +36,13 @@ export const PillarsSection = () => {
               </p>
             </div>
           </SpotlightCard>
-          <SpotlightCard className="max-w-96 text-center gap-3 bg-[#3ED8E199]">
+          <SpotlightCard className="min-w-96 gap-3 bg-[#3ED8E199] text-center md:max-w-96">
             <Image
               src="/assets/svg/provision-icon.svg"
               alt="Ícone de Provisão"
               width={100}
               height={100}
-              className="w-20 mx-auto mb-6 "
+              className="mx-auto mb-6 w-20"
             />
             <div className="flex-1">
               <p className="text-xl font-bold">Provisão</p>
@@ -51,13 +52,13 @@ export const PillarsSection = () => {
               </p>
             </div>
           </SpotlightCard>
-          <SpotlightCard className="max-w-96 text-center bg-emerald-500">
+          <SpotlightCard className="min-w-96 gap-3 bg-emerald-500 text-center md:max-w-96">
             <Image
               src="/assets/svg/multiplication-icon.png"
               alt="Ícone de Provisão"
               width={100}
               height={100}
-              className="w-20 mx-auto mb-6 invert"
+              className="mx-auto mb-6 w-20 invert"
             />
             <p className="text-xl font-bold">Multiplicação</p>
             <p className="font-roboto">

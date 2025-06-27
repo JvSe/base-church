@@ -4,11 +4,11 @@ export const WelcomeSection = () => {
   return (
     <div
       id="section-about"
-      className="flex items-center justify-center w-dvw pb-20"
+      className="flex w-dvw items-center justify-center pb-20"
     >
-      <div className="w-9/12 2xl:w-7/12 rounded-2xl h-[563px] flex items-center justify-center bg-primary-2/50">
-        <div className="w-24 h-24 flex items-center justify-center rounded-full gradient-yellow">
-          <Play size={50} />
+      <div className="bg-primary-2/50 mx-4 flex h-[263px] w-full items-center justify-center rounded-2xl md:h-[563px] md:w-9/12 2xl:w-7/12">
+        <div className="gradient-yellow flex h-16 w-16 items-center justify-center rounded-full md:h-24 md:w-24">
+          <Play className="size-8 md:size-14" />
         </div>
       </div>
     </div>

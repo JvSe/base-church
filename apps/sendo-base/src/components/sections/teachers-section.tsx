@@ -49,13 +49,13 @@ export const TeachersSection = () => {
   return (
     <div
       id="section-teachers"
-      className="relative flex pt-24 flex-col items-center w-dvw min-h-full"
+      className="relative flex min-h-full w-dvw flex-col items-center pt-12 md:pt-24"
     >
-      <h1 className="font-surgena font-bold text-5xl mb-20">
+      <h1 className="font-surgena mb-10 text-4xl font-bold md:mb-20 md:text-5xl">
         Nossos Professores
       </h1>
 
-      <div className="flex animate-right-to-left w-full h-full gap-5">
+      <div className="md:animate-right-to-left flex h-full w-full flex-col gap-5 px-4 md:flex-row">
         {teachers.map((t, index) => (
           <TeacherCard key={t.name + index} teacher={t} />
         ))}
