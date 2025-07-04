@@ -1,62 +1,65 @@
 import { Teacher } from "@/src/lib/types";
-import { CouseCard } from "../course-card";
+import { CourseCard } from "../course-card";
+import { CourseSlides } from "../course-slides";
+
+export type CoursesType = {
+  title: string;
+  variant: "multiplication" | "provision" | "creativity";
+  teachers: Teacher[];
+};
 
 export const CourseSection = () => {
   const teachers: Teacher[] = [
     {
       name: "Robson Correa",
-      avatar_url:
-        "https://ui-avatars.com/api/?name=Robson+Correa&background=random",
+      avatar_url: "https://avatar.iran.liara.run/public/boy?username=Robson",
       description: "description",
       prefix: "PR.",
     },
     {
       name: "Jefferson Leal",
-      avatar_url:
-        "https://ui-avatars.com/api/?name=Jefferson+Leal&background=random",
+      avatar_url: "https://avatar.iran.liara.run/public/boy?username=Jeff",
       description: "description",
       prefix: "PR.",
     },
     {
       name: "Patrick Nascimento",
-      avatar_url:
-        "https://ui-avatars.com/api/?name=Patrick+Nascimento&background=random",
+      avatar_url: "https://avatar.iran.liara.run/public/boy?username=Patrick",
       description: "description",
       prefix: "PR.",
     },
   ];
+  const courses: CoursesType[] = [
+    { title: "Sendo Base", variant: "provision", teachers },
+    { title: "Base de Ministérios", variant: "creativity", teachers },
+    { title: "Discipulado", variant: "multiplication", teachers },
+    { title: "Base Vida", variant: "multiplication", teachers },
+    { title: "Familia para Sempre", variant: "provision", teachers },
+    { title: "Missões", variant: "creativity", teachers },
+  ];
+
   return (
     <div
       id="section-courses"
-      className="relative flex min-h-dvh w-dvw flex-col items-center"
+      className="relative flex h-full w-dvw flex-col items-center pb-10 md:min-h-dvh md:pb-0"
     >
-      <h1 className="font-surgena mb-10 text-4xl font-bold md:mb-20 md:text-5xl">
+      <h1 className="font-surgena mb-10 text-center text-4xl font-bold md:mb-20 md:text-5xl">
         Conheça nossos Cursos
       </h1>
 
-      <div className="grid h-full w-full grid-cols-1 gap-5 px-4 md:grid-cols-2 lg:grid-cols-3 lg:px-16">
-        <CouseCard title="Sendo Base" variant="provision" teachers={teachers} />
-        <CouseCard
-          title="Base de Ministérios"
-          variant="creativity"
-          teachers={teachers}
-        />
-        <CouseCard
-          title="Discipulado"
-          variant="multiplication"
-          teachers={teachers}
-        />
-        <CouseCard
-          title="Base Vida"
-          variant="multiplication"
-          teachers={teachers}
-        />
-        <CouseCard
-          title="Familia para Sempre"
-          variant="provision"
-          teachers={teachers}
-        />
-        <CouseCard title="Missões" variant="creativity" teachers={teachers} />
+      <div className="hidden h-full w-full grid-cols-1 gap-5 px-4 md:grid md:grid-cols-2 lg:grid-cols-3 lg:px-16">
+        {courses.map((c, index) => (
+          <CourseCard
+            key={c.title + index}
+            title={c.title}
+            variant={c.variant}
+            teachers={c.teachers}
+          />
+        ))}
+      </div>
+
+      <div className="w-full md:hidden">
+        <CourseSlides courses={courses} />
       </div>
     </div>
   );

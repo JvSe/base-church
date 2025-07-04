@@ -19,8 +19,8 @@ export const PillarsSection = () => {
       </div>
 
       <div>
-        <div className="flex flex-col gap-4 px-4 md:flex-row md:gap-7">
-          <SpotlightCard className="min-w-96 items-center bg-[#6D19F766] text-center md:max-w-96">
+        <div className="flex w-full flex-col items-center gap-4 px-4 md:flex-row md:gap-7">
+          <SpotlightCard className="w-full items-center bg-[#6D19F766] text-center md:max-w-96">
             <Image
               src="/assets/svg/creativity-icon.svg"
               alt="Sendo Base Logo"
@@ -36,7 +36,7 @@ export const PillarsSection = () => {
               </p>
             </div>
           </SpotlightCard>
-          <SpotlightCard className="min-w-96 gap-3 bg-[#3ED8E199] text-center md:max-w-96">
+          <SpotlightCard className="w-full gap-3 bg-[#3ED8E199] text-center md:max-w-96">
             <Image
               src="/assets/svg/provision-icon.svg"
               alt="Ícone de Provisão"
@@ -52,7 +52,7 @@ export const PillarsSection = () => {
               </p>
             </div>
           </SpotlightCard>
-          <SpotlightCard className="min-w-96 gap-3 bg-emerald-500 text-center md:max-w-96">
+          <SpotlightCard className="w-full gap-3 bg-emerald-500 text-center md:max-w-96">
             <Image
               src="/assets/svg/multiplication-icon.png"
               alt="Ícone de Provisão"

@@ -1,15 +1,34 @@
+"use client";
 import { Button } from "@repo/ui/components/button";
 
+import { cn } from "@repo/ui/lib/utils";
 import { User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { NavDrawer } from "./drawer";
 import { NavLinks } from "./nav-links";
 
 export const Navbar = () => {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10); // ativa quando desce mais de 10px
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
   return (
-    <nav className="absolute top-0 z-10 w-full border-b border-white py-2 shadow-md backdrop-blur-sm md:py-4">
-      <div className="mx-auto px-4 sm:px-6 md:max-w-10/12 lg:px-8">
+    <nav
+      className={`fixed top-0 z-10 backdrop-blur-md transition-all duration-300 ${
+        scrolled
+          ? "mt-2 w-9/12 rounded-xl px-10 py-1 shadow-md md:py-2 dark:bg-white/10"
+          : "w-full border-b border-white px-50 py-2 shadow-md md:py-4"
+      }`}
+    >
+      <div className={cn("mx-auto px-4 sm:px-6 lg:px-8")}>
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">
             <Link

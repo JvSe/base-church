@@ -1,5 +1,6 @@
 "use client";
 
+import AutoScroll from "embla-carousel-auto-scroll";
 import useEmblaCarousel, {
   type UseEmblaCarouselType,
 } from "embla-carousel-react";
@@ -231,6 +232,7 @@ function CarouselNext({
 }
 
 export {
+  AutoScroll,
   Carousel,
   CarouselContent,
   CarouselItem,

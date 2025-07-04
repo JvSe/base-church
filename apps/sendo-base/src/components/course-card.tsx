@@ -8,7 +8,7 @@ type CourseCardProps = {
   teachers: Teacher[];
 };
 
-export const CouseCard = ({ title, teachers, variant }: CourseCardProps) => {
+export const CourseCard = ({ title, teachers, variant }: CourseCardProps) => {
   const teachersTitle = teachers
     .map((t) => `${t.prefix} ${t.name.split(" ")[0]}`)
     .join(", ");
@@ -50,7 +50,7 @@ export const CouseCard = ({ title, teachers, variant }: CourseCardProps) => {
                 alt="imgs pastors"
                 width={50}
                 height={50}
-                className="min-h-12 min-w-12 object-contain"
+                className="min-h-12 min-w-12 scale-125 object-cover"
               />
             </div>
           ))}

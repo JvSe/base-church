@@ -74,7 +74,7 @@ export const TestimonialSection = () => {
               Eles aprofundaram sua fé, cresceram em propósito e transformaram
               suas vidas em Cristo
             </p>
-            <SlidesButton className="hidden md:block" />
+            <SlidesButton className="hidden md:flex" />
           </div>
           <div className="h-full w-full flex-1">
             <CarouselContent>

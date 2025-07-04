@@ -13,7 +13,7 @@ export const SectionHero = () => {
         alt="Sendo Base Logo"
         width={100}
         height={100}
-        className="absolute inset-x-0 top-[calc(1/3*120%)] h-full w-full scale-120"
+        className="absolute inset-x-0 top-[calc(1/3*120%)] h-full w-full scale-120 md:top-1/4"
       />
       <Image
         src="/assets/svg/mask-clean.svg"
@@ -62,17 +62,17 @@ export const SectionHero = () => {
           </div> */}
         </div>
         <div className="text-center">
-          <h1 className="font-surgena text-5xl font-bold md:text-8xl 2xl:text-9xl">
+          <h1 className="font-surgena text-[42px] font-bold md:text-8xl 2xl:text-9xl">
             Formando Líderes
           </h1>
-          <h2 className="font-roboto text-4xl italic md:text-6xl 2xl:text-7xl">
+          <h2 className="font-roboto text-[30px] italic md:text-6xl 2xl:text-7xl">
             Influentes e Relevantes
           </h2>
         </div>
 
         <Button
           size="clean"
-          className="gradient-yellow font-surgena text-primary mt-5 rounded-xl px-11 py-4 text-lg font-bold uppercase"
+          className="gradient-yellow font-surgena text-primary mt-5 rounded-xl px-7 py-4 text-lg font-bold uppercase md:px-11"
         >
           Quero Iniciar Meus Estudos
         </Button>
