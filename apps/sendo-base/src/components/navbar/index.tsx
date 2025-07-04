@@ -24,7 +24,7 @@ export const Navbar = () => {
     <nav
       className={`fixed top-0 z-10 backdrop-blur-md transition-all duration-300 ${
         scrolled
-          ? "mt-2 w-9/12 rounded-xl px-10 py-1 shadow-md md:py-2 dark:bg-white/10"
+          ? "mt-2 w-11/12 rounded-xl py-1 shadow-md md:w-9/12 md:px-10 md:py-2 dark:bg-white/10"
           : "w-full border-b border-white py-2 shadow-md md:px-32 md:py-4 2xl:px-50"
       }`}
     >

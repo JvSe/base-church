@@ -43,7 +43,7 @@ export const CourseSection = () => {
       id="section-courses"
       className="relative flex h-full w-dvw flex-col items-center pb-10 md:min-h-dvh md:pb-0"
     >
-      <h1 className="font-surgena mb-10 text-center text-4xl font-bold md:mb-20 md:text-5xl">
+      <h1 className="font-surgena mb-10 px-4 text-center text-4xl font-bold md:mb-20 md:text-5xl">
         Conheça nossos Cursos
       </h1>
 
