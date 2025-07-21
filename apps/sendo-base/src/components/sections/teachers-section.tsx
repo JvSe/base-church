@@ -71,9 +71,9 @@ export const TeachersSection = () => {
             }),
           ]}
         >
-          <CarouselContent className="items-center">
+          <CarouselContent className="items-center px-4">
             {teachers.map((t, index) => (
-              <CarouselItem className={cn("basis-md")} key={t.name + index}>
+              <CarouselItem className={cn("basis-full")} key={t.name + index}>
                 <TeacherCard key={t.name + index} teacher={t} />
               </CarouselItem>
             ))}

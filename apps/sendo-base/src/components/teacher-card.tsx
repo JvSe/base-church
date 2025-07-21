@@ -3,7 +3,7 @@ import { Teacher } from "../lib/types";
 
 export const TeacherCard = ({ teacher }: { teacher: Teacher }) => {
   return (
-    <div className="h-[400px] min-w-[350px] rounded-xl bg-gradient-to-b from-[#7D12FF]/50 to-white/20 to-100% p-px md:h-[532px] md:min-w-[400px]">
+    <div className="h-[400px] w-full overflow-hidden rounded-xl bg-gradient-to-b from-[#7D12FF]/50 to-white/20 to-100% p-px md:h-[532px] md:min-w-[400px]">
       <div className="bg-primary/95 h-full w-full overflow-hidden rounded-[calc(0.75rem-0.1px)] p-6">
         <div className="h-[230px] w-full overflow-hidden rounded-lg md:h-[333px]">
           <Image

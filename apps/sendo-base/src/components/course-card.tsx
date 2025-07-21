@@ -18,7 +18,7 @@ export const CourseCard = ({ title, teachers, variant }: CourseCardProps) => {
   return (
     <div
       className={cn(
-        "flex h-[400px] w-full flex-col items-center gap-2 rounded-lg px-4 pt-5 md:gap-4",
+        "flex h-[400px] flex-col items-center gap-2 rounded-lg px-4 pt-5 md:w-full md:gap-4",
         variant === "creativity" && "bg-[#6D19F766]",
         variant === "multiplication" && "bg-[#3ED8E199]",
         variant === "provision" && "bg-emerald-500",

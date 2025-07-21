@@ -21,7 +21,7 @@ export const CourseSlides = ({ courses }: { courses: CoursesType[] }) => {
         }),
       ]}
     >
-      <CarouselContent>
+      <CarouselContent className="px-4">
         {courses.map((c, index) => (
           <CarouselItem key={c.title + index}>
             <CourseCard
