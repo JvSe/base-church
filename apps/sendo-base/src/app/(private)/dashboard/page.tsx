@@ -1,7 +1,28 @@
-export default function Component() {
+import { AppSidebar } from "@/src/components/sidebar/app-sidebar";
+import { SiteHeader } from "@/src/components/sidebar/site-header";
+import { SidebarInset, SidebarProvider } from "@repo/ui/components/sidebar";
+
+export default function Page() {
   return (
-    <div>
-      <h1>DASHBOARD SCREEN</h1>
-    </div>
+    <SidebarProvider
+      style={
+        {
+          "--sidebar-width": "calc(var(--spacing) * 72)",
+          "--header-height": "calc(var(--spacing) * 12)",
+        } as React.CSSProperties
+      }
+    >
+      <AppSidebar variant="inset" />
+      <SidebarInset>
+        <SiteHeader />
+        <div className="flex flex-1 flex-col">
+          <div className="@container/main flex flex-1 flex-col gap-2">
+            <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+              {/* AQUI VAI FICAR A PARTE PRINCIPAL DO DASHBOARD */}
+            </div>
+          </div>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

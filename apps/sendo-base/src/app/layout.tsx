@@ -87,6 +87,16 @@ const surgena = localFont({
   variable: "--font-surgena",
 });
 
+const helvetica = localFont({
+  src: [
+    {
+      path: "../../public/assets/fonts/Helvetica-Bold.ttf",
+      weight: "700",
+    },
+  ],
+  variable: "--font-helvetica",
+});
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -95,7 +105,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className="scroll-smooth" suppressHydrationWarning>
       <body
-        className={`${belfast.variable} ${roboto.variable} ${surgena.variable} font-belfast antialiased `}
+        className={`${belfast.variable} ${roboto.variable} ${surgena.variable} ${helvetica.variable} antialiased`}
       >
         <Providers>{children}</Providers>
       </body>

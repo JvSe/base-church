@@ -11,7 +11,7 @@ import { WorldSection } from "../components/sections/world-section";
 
 export default function Page() {
   return (
-    <div className="flex flex-col overflow-hidden relative items-center justify-center min-h-svh">
+    <div className="font-belfast bg-primary relative flex min-h-svh flex-col items-center justify-center overflow-hidden">
       <Navbar />
       <SectionHero />
       <WelcomeSection />
