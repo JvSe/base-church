@@ -1,181 +1,214 @@
 "use client";
 
 import {
-  IconCamera,
-  IconChartBar,
-  IconDashboard,
-  IconDatabase,
-  IconFileAi,
-  IconFileDescription,
-  IconFileWord,
-  IconFolder,
-  IconHelp,
-  IconInnerShadowTop,
-  IconListDetails,
-  IconReport,
-  IconSearch,
-  IconSettings,
-  IconUsers,
-} from "@tabler/icons-react";
+  BookOpen,
+  Calendar,
+  FileText,
+  GraduationCap,
+  HelpCircle,
+  Home,
+  Map,
+  MessageCircle,
+  User,
+  Users,
+} from "lucide-react";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import * as React from "react";
 
-import { NavDocuments } from "@/src/components/sidebar/nav-documents";
-import { NavMain } from "@/src/components/sidebar/nav-main";
-import { NavSecondary } from "@/src/components/sidebar/nav-secondary";
-import { NavUser } from "@/src/components/sidebar/nav-user";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/ui/components/sidebar";
 
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "#",
-      icon: IconDashboard,
-    },
-    {
-      title: "Lifecycle",
-      url: "#",
-      icon: IconListDetails,
-    },
-    {
-      title: "Analytics",
-      url: "#",
-      icon: IconChartBar,
-    },
-    {
-      title: "Projects",
-      url: "#",
-      icon: IconFolder,
-    },
-    {
-      title: "Team",
-      url: "#",
-      icon: IconUsers,
-    },
-  ],
-  navClouds: [
-    {
-      title: "Capture",
-      icon: IconCamera,
-      isActive: true,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Proposal",
-      icon: IconFileDescription,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Prompts",
-      icon: IconFileAi,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "#",
-      icon: IconSettings,
-    },
-    {
-      title: "Get Help",
-      url: "#",
-      icon: IconHelp,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: IconSearch,
-    },
-  ],
-  documents: [
-    {
-      name: "Data Library",
-      url: "#",
-      icon: IconDatabase,
-    },
-    {
-      name: "Reports",
-      url: "#",
-      icon: IconReport,
-    },
-    {
-      name: "Word Assistant",
-      url: "#",
-      icon: IconFileWord,
-    },
-  ],
-};
-
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const pathname = usePathname();
+
+  const data = {
+    user: {
+      name: "Joao Vitor Soares Egidio Nunes",
+      email: "joao@example.com",
+      avatar: "/avatars/joao.jpg",
+    },
+    navMain: [
+      {
+        title: "Home",
+        url: "/dashboard",
+        icon: Home,
+      },
+      {
+        title: "Perfil",
+        url: "/dashboard/profile",
+        icon: User,
+      },
+    ],
+    navProgresso: [
+      {
+        title: "Meus conteúdos",
+        url: "/dashboard/conteudos",
+        icon: FileText,
+      },
+      {
+        title: "Minha Jornada",
+        url: "/dashboard/jornada",
+        icon: Map,
+      },
+    ],
+    navAprendizado: [
+      {
+        title: "Catálogo",
+        url: "/dashboard/catalogo",
+        icon: BookOpen,
+      },
+      {
+        title: "Eventos",
+        url: "/dashboard/eventos",
+        icon: Calendar,
+      },
+      {
+        title: "Fórum",
+        url: "/dashboard/forum",
+        icon: MessageCircle,
+      },
+    ],
+    navBottom: [
+      {
+        title: "Comunidade",
+        url: "/dashboard/comunidade",
+        icon: Users,
+        hasChevron: true,
+      },
+      {
+        title: "Pós-Graduação",
+        url: "/dashboard/pos-graduacao",
+        icon: GraduationCap,
+        hasChevron: true,
+      },
+      {
+        title: "Ajuda",
+        url: "/dashboard/ajuda",
+        icon: HelpCircle,
+        hasChevron: true,
+      },
+    ],
+  };
+
   return (
-    <Sidebar collapsible="offcanvas" {...props}>
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
-            >
-              <a href="#">
-                <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">Acme Inc.</span>
-              </a>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
+    <Sidebar
+      className="top-(--header-height) h-[calc(100svh-var(--header-height))]!"
+      collapsible="icon"
+      {...props}
+    >
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        {/* Home Section */}
+        <SidebarGroup>
+          <SidebarGroupContent className="flex flex-col gap-2">
+            <SidebarMenu>
+              {data.navMain.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    tooltip={item.title}
+                    isActive={pathname === item.url}
+                    asChild
+                    className="h-12 p-3 text-base group-data-[collapsible=icon]:!size-12 group-data-[collapsible=icon]:!p-3 [&>span]:group-data-[collapsible=icon]:hidden [&>svg]:!size-6"
+                  >
+                    <Link href={item.url}>
+                      <item.icon size={24} />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* PROGRESSO Section */}
+        <SidebarGroup>
+          <SidebarGroupLabel>PROGRESSO</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {data.navProgresso.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    tooltip={item.title}
+                    isActive={pathname === item.url}
+                    asChild
+                    className="h-12 p-3 text-base group-data-[collapsible=icon]:!size-12 group-data-[collapsible=icon]:!p-3 [&>span]:group-data-[collapsible=icon]:hidden [&>svg]:!size-6"
+                  >
+                    <Link href={item.url}>
+                      <item.icon size={24} />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* APRENDIZADO Section */}
+        <SidebarGroup>
+          <SidebarGroupLabel>APRENDIZADO</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {data.navAprendizado.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    tooltip={item.title}
+                    isActive={pathname === item.url}
+                    asChild
+                    className="h-12 p-3 text-base group-data-[collapsible=icon]:!size-12 group-data-[collapsible=icon]:!p-3 [&>span]:group-data-[collapsible=icon]:hidden [&>svg]:!size-6"
+                  >
+                    <Link href={item.url}>
+                      <item.icon size={24} />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Bottom Navigation - moved to bottom with mt-auto */}
+        {/* <div className="mt-auto">
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {data.navBottom.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      tooltip={item.title}
+                      isActive={pathname === item.url}
+                      asChild
+                      className="text-base group-data-[collapsible=icon]:!size-12 group-data-[collapsible=icon]:!p-3 [&>span]:group-data-[collapsible=icon]:hidden [&>svg]:!size-6 [&>svg:last-child]:group-data-[collapsible=icon]:hidden"
+                    >
+                      <Link href={item.url} className="group">
+                        <item.icon size={24} />
+                        <span>{item.title}</span>
+                        {item.hasChevron && (
+                          <ChevronRight
+                            size={16}
+                            className="ml-auto text-gray-500 transition-colors group-hover:text-gray-300"
+                          />
+                        )}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </div> */}
       </SidebarContent>
-      <SidebarFooter>
-        <NavUser user={data.user} />
-      </SidebarFooter>
     </Sidebar>
   );
 }
