@@ -1,9 +1,10 @@
 "use server";
 
-import { db } from "@repo/db/client";
+import { prisma } from "@repo/db";
 import { revalidatePath } from "next/cache";
 
 // User Actions
+
 export async function updateUserProfile(
   userId: string,
   data: {
@@ -18,7 +19,7 @@ export async function updateUserProfile(
   },
 ) {
   try {
-    const user = await db.user.update({
+    const user = await prisma.user.update({
       where: { id: userId },
       data,
     });
@@ -32,7 +33,7 @@ export async function updateUserProfile(
 
 export async function getUserProfile(userId: string) {
   try {
-    const user = await db.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
         enrollments: {
@@ -71,7 +72,7 @@ export async function getUserProfile(userId: string) {
 // Course Actions
 export async function getCourses() {
   try {
-    const courses = await db.course.findMany({
+    const courses = await prisma.course.findMany({
       where: { isPublished: true },
       include: {
         modules: {
@@ -96,7 +97,7 @@ export async function getCourses() {
 
 export async function getCourseBySlug(slug: string) {
   try {
-    const course = await db.course.findUnique({
+    const course = await prisma.course.findUnique({
       where: { slug },
       include: {
         modules: {
@@ -123,7 +124,7 @@ export async function getCourseBySlug(slug: string) {
 
 export async function enrollInCourse(userId: string, courseId: string) {
   try {
-    const enrollment = await db.enrollment.create({
+    const enrollment = await prisma.enrollment.create({
       data: {
         userId,
         courseId,
@@ -143,7 +144,7 @@ export async function enrollInCourse(userId: string, courseId: string) {
 // Lesson Actions
 export async function getLesson(lessonId: string) {
   try {
-    const lesson = await db.lesson.findUnique({
+    const lesson = await prisma.lesson.findUnique({
       where: { id: lessonId },
       include: {
         module: {
@@ -180,7 +181,7 @@ export async function updateLessonProgress(
   },
 ) {
   try {
-    const progress = await db.lessonProgress.upsert({
+    const progress = await prisma.lessonProgress.upsert({
       where: {
         userId_lessonId: {
           userId,
@@ -208,7 +209,7 @@ export async function updateLessonProgress(
 
 export async function getUserProgress(userId: string) {
   try {
-    const progress = await db.lessonProgress.findMany({
+    const progress = await prisma.lessonProgress.findMany({
       where: { userId },
       include: {
         lesson: {
@@ -232,7 +233,7 @@ export async function getUserProgress(userId: string) {
 // Event Actions
 export async function getEvents() {
   try {
-    const events = await db.event.findMany({
+    const events = await prisma.event.findMany({
       where: { isPublished: true },
       orderBy: { startDate: "asc" },
     });
@@ -246,7 +247,7 @@ export async function getEvents() {
 // Forum Actions
 export async function getForumPosts() {
   try {
-    const posts = await db.forumPost.findMany({
+    const posts = await prisma.forumPost.findMany({
       where: { isPublished: true },
       include: {
         user: {
@@ -281,7 +282,7 @@ export async function createForumPost(
   },
 ) {
   try {
-    const post = await db.forumPost.create({
+    const post = await prisma.forumPost.create({
       data: {
         userId,
         ...data,
@@ -308,7 +309,7 @@ export async function createForumPost(
 // Notification Actions
 export async function getNotifications(userId: string) {
   try {
-    const notifications = await db.notification.findMany({
+    const notifications = await prisma.notification.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
     });
@@ -321,7 +322,7 @@ export async function getNotifications(userId: string) {
 
 export async function markNotificationAsRead(notificationId: string) {
   try {
-    const notification = await db.notification.update({
+    const notification = await prisma.notification.update({
       where: { id: notificationId },
       data: { isRead: true },
     });
@@ -336,12 +337,12 @@ export async function markNotificationAsRead(notificationId: string) {
 // Search Actions
 export async function searchContent(query: string) {
   try {
-    const courses = await db.course.findMany({
+    const courses = await prisma.course.findMany({
       where: {
         isPublished: true,
         OR: [
-          { title: { contains: query, mode: "insensitive" } },
-          { description: { contains: query, mode: "insensitive" } },
+          { title: { contains: query } },
+          { description: { contains: query } },
         ],
       },
       include: {
@@ -353,12 +354,12 @@ export async function searchContent(query: string) {
       },
     });
 
-    const lessons = await db.lesson.findMany({
+    const lessons = await prisma.lesson.findMany({
       where: {
         isPublished: true,
         OR: [
-          { title: { contains: query, mode: "insensitive" } },
-          { description: { contains: query, mode: "insensitive" } },
+          { title: { contains: query } },
+          { description: { contains: query } },
         ],
       },
       include: {

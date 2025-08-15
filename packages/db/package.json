@@ -2,9 +2,13 @@
   "name": "@repo/db",
   "version": "1.0.0",
   "exports": {
-    ".": "./src/client.ts"
+    ".": "./src/client.ts",
+    "./client": "./src/client.ts",
+    "./schema": "./prisma/schema.prisma",
+    "./seed": "./src/seed.ts"
   },
   "scripts": {
+    "build": "pnpm generate",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",
     "db:push": "prisma db push",

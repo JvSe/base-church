@@ -3,6 +3,15 @@
   "version": "0.0.0",
   "private": true,
   "license": "PROPRIETARY",
+  "exports": {
+    "./base": "./base.json",
+    "./nextjs": "./nextjs.json",
+    "./nextjs.json": "./nextjs.json",
+    "./react-library": "./react-library.json"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  },
   "publishConfig": {
     "access": "public"
   }

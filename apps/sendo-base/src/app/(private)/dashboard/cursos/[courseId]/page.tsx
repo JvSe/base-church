@@ -29,18 +29,22 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function CoursePage({
   params,
 }: {
-  params: { courseId: string };
+  params: Promise<{ courseId: string }>;
 }) {
   const [expandedModules, setExpandedModules] = useState<string[]>(["1"]);
+  const [courseId, setCourseId] = useState<string>("1");
 
+  useEffect(() => {
+    params.then((p) => setCourseId(p.courseId)).catch(() => setCourseId("1"));
+  }, [params]);
   // Mock data - in real app this would come from server actions
   const course = {
-    id: params.courseId,
+    id: courseId,
     title: "Sendo Base - Fundamentos Ministeriais",
     description:
       "Aprenda os fundamentos ministeriais da Base Church, criando uma base sólida para o ministério com princípios bíblicos.",
