@@ -2,6 +2,10 @@
   "name": "base-church",
   "version": "0.0.1",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "prisma": {
     "schema": "packages/db/prisma/schema.prisma",
     "seed": "tsx packages/db/src/seed.ts"
