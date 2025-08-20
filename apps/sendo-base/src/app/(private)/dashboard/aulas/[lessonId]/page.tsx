@@ -27,12 +27,13 @@ import {
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
-export default function LessonPage({
+export default async function LessonPage({
   params,
 }: {
   params: Promise<{ lessonId: string }>;
 }) {
-  const [lessonId, setLessonId] = useState<string>("1");
+  const { lessonId: paramLessonId } = await params;
+  const [lessonId, setLessonId] = useState<string>(paramLessonId || "1");
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -47,10 +48,6 @@ export default function LessonPage({
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout>(null);
-
-  useEffect(() => {
-    params.then((p) => setLessonId(p.lessonId)).catch(() => setLessonId("1"));
-  }, [params]);
 
   // Mock data - in real app this would come from server actions
   const lesson = {

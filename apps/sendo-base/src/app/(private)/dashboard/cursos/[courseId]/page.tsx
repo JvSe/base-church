@@ -23,18 +23,19 @@ import Link from "next/link";
 import { useState } from "react";
 
 interface CoursePageProps {
-  params: {
+  params: Promise<{
     courseId: string;
-  };
+  }>;
 }
 
-export default function CoursePage({ params }: CoursePageProps) {
+export default async function CoursePage({ params }: CoursePageProps) {
+  const { courseId } = await params;
   const [isEnrolled, setIsEnrolled] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
 
   // Mock data - in real app this would come from server actions
   const course = {
-    id: params.courseId,
+    id: courseId,
     title: "Fundamentos Ministeriais - Base Church",
     description:
       "Um curso abrangente sobre os fundamentos ministeriais da Base Church, cobrindo princípios bíblicos, estrutura ministerial e práticas essenciais para líderes eficazes.",
