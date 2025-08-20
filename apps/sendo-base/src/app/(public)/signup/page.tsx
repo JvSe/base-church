@@ -23,23 +23,23 @@ export default function SignUpPage() {
   });
 
   return (
-    <div className="flex-1 flex flex-col justify-center w-[330px] sm:w-[384px]">
-      <div className="flex flex-col gap-5 mt-auto mb-auto">
+    <div className="flex w-[330px] flex-1 flex-col justify-center sm:w-[384px]">
+      <div className="mt-auto mb-auto flex flex-col gap-5">
         <div className="flex flex-col gap-4">
           <div className="mb-10">
             <h1 className="mt-8 mb-2 text-2xl lg:text-3xl">Vamos Começar</h1>
-            <h2 className="text-sm text-foreground-light">
+            <h2 className="text-foreground-light text-sm">
               Crie uma nova conta
             </h2>
           </div>
-          <Button variant="outline" className="font-semibold gap-2">
+          <Button variant="outline" className="gap-2 font-semibold">
             <FaGoogle /> Cadastro com Google
           </Button>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex-1 border border-neutral-600 h-0" />
+          <div className="h-0 flex-1 border border-neutral-600" />
           <p>ou</p>
-          <div className="flex-1 border border-neutral-600 h-0" />
+          <div className="h-0 flex-1 border border-neutral-600" />
         </div>
         <Form {...form}>
           <form className="flex flex-col gap-4">
@@ -58,10 +58,10 @@ export default function SignUpPage() {
             />
             <FormField
               control={form.control}
-              name="email"
+              name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>Senha</FormLabel>
                   <FormControl>
                     <Input type="password" placeholder="••••••••" {...field} />
                   </FormControl>
@@ -70,14 +70,14 @@ export default function SignUpPage() {
               )}
             />
 
-            <Button className="font-semibold mt-4" size="lg">
+            <Button className="mt-4 font-semibold" size="lg">
               Cadastrar
             </Button>
 
-            <p className="text-foreground-light text-sm text-center mt-8">
+            <p className="text-foreground-light mt-8 text-center text-sm">
               Tem uma conta?{" "}
               <a
-                className="underline transition text-foreground hover:text-foreground-light"
+                className="text-foreground hover:text-foreground-light underline transition"
                 href="signin"
               >
                 Faça seu login
@@ -86,8 +86,8 @@ export default function SignUpPage() {
           </form>
         </Form>
       </div>
-      <p className="text-xs text-foreground-lighter sm:mx-auto sm:max-w-sm text-center mt-auto">
-        By continuing, you agree to Agendify&apos;s{" "}
+      <p className="text-foreground-lighter mt-auto text-center text-xs sm:mx-auto sm:max-w-sm">
+        By continuing, you agree to Sendo Base{" "}
         <a className="underline">Terms of Service</a> and{" "}
         <a className="underline">Privacy Policy</a>, and to receive periodic
         emails with updates.

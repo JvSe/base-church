@@ -1,4 +1,5 @@
 import { cn } from "@repo/ui/lib/utils";
+import { BookOpen, User } from "lucide-react";
 import Image from "next/image";
 import { Teacher } from "../lib/types";
 
@@ -24,14 +25,13 @@ export const CourseCard = ({ title, teachers, variant }: CourseCardProps) => {
         variant === "provision" && "bg-emerald-500",
       )}
     >
-      <div className="bg-primary h-full w-full flex-1 overflow-hidden rounded-xl">
-        <Image
-          src="/assets/svg/dots.svg"
-          alt="dots"
-          width={200}
-          height={200}
-          className="h-full w-full scale-150"
-        />
+      <div className="bg-primary from-primary/80 to-primary flex h-full w-full flex-1 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br">
+        <div className="text-center">
+          <div className="bg-foreground/10 mx-auto mb-4 w-fit rounded-full p-8">
+            <BookOpen className="text-foreground" size={56} />
+          </div>
+          <div className="text-foreground/80 text-lg font-medium">Curso</div>
+        </div>
       </div>
       <div className="w-full flex-[0.4]">
         <h1 className="text-2xl font-semibold">{title}</h1>
@@ -41,17 +41,21 @@ export const CourseCard = ({ title, teachers, variant }: CourseCardProps) => {
             <div
               key={index}
               className={cn(
-                "min-h-12 min-w-12 overflow-hidden rounded-lg",
+                "bg-primary/20 flex min-h-12 min-w-12 items-center justify-center overflow-hidden rounded-lg",
                 index > 0 && "-ml-6",
               )}
             >
-              <Image
-                src={i}
-                alt="imgs pastors"
-                width={50}
-                height={50}
-                className="min-h-12 min-w-12 scale-125 object-cover"
-              />
+              {i ? (
+                <Image
+                  src={i}
+                  alt="imgs pastors"
+                  width={50}
+                  height={50}
+                  className="min-h-12 min-w-12 scale-125 object-cover"
+                />
+              ) : (
+                <User className="text-primary" size={20} />
+              )}
             </div>
           ))}
 

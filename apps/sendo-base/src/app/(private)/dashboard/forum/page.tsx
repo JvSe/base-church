@@ -1,19 +1,7 @@
 "use client";
 
 import { formatDate } from "@/src/lib/formatters";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@repo/ui/components/avatar";
-import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@repo/ui/components/card";
 import { Input } from "@repo/ui/components/input";
 import {
   Tabs,
@@ -33,7 +21,6 @@ import {
   Plus,
   Search,
   Share,
-  Tag,
   TrendingUp,
   Users,
 } from "lucide-react";
@@ -254,182 +241,220 @@ export default function ForumPage() {
   };
 
   return (
-    <div className="bg-background space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-foreground text-2xl font-bold">
-            Fórum da Comunidade
-          </h1>
-          <p className="text-muted-foreground">
-            Conecte-se, aprenda e compartilhe conhecimento com outros
-            desenvolvedores
-          </p>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-dark-2 hover:bg-dark-2/50 hover:border-primary/50"
-          >
-            <Filter size={16} className="mr-2" />
-            Filtrar
-          </Button>
-          <Button
-            onClick={() => setShowCreatePost(true)}
-            className="bg-primary hover:bg-primary/90 hover:shadow-primary/25 shadow-lg"
-          >
-            <Plus size={16} className="mr-2" />
-            Nova Publicação
-          </Button>
-        </div>
+    <div className="dark-bg-primary min-h-screen">
+      {/* Background Pattern */}
+      <div className="fixed inset-0 opacity-3">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search
-          className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2 transform"
-          size={20}
-        />
-        <Input
-          placeholder="Buscar por títulos, conteúdo ou tags..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="bg-dark-1/30 border-dark-2 focus:border-primary/50 pl-10"
-        />
-      </div>
+      <div className="relative mx-auto max-w-7xl space-y-6 p-6">
+        {/* Header */}
+        <div className="dark-glass dark-shadow-md rounded-2xl p-6">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h1 className="dark-text-primary mb-2 text-3xl font-bold">
+                Fórum Ministerial
+              </h1>
+              <p className="dark-text-secondary">
+                Conecte-se, aprenda e compartilhe experiências ministeriais com
+                nossa comunidade
+              </p>
+            </div>
 
-      {/* Create Post Modal */}
-      {showCreatePost && (
-        <Card className="border-dark-1 bg-dark-1/30 hover:shadow-primary/10 backdrop-blur-sm transition-all duration-300 hover:shadow-2xl">
-          <CardHeader>
-            <CardTitle className="text-foreground">Nova Publicação</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Input
-              placeholder="Título da publicação"
-              value={newPost.title}
-              onChange={(e) =>
-                setNewPost({ ...newPost, title: e.target.value })
-              }
-              className="bg-dark-1/30 border-dark-2 focus:border-primary/50"
-            />
-            <Textarea
-              placeholder="Conteúdo da publicação..."
-              value={newPost.content}
-              onChange={(e) =>
-                setNewPost({ ...newPost, content: e.target.value })
-              }
-              rows={6}
-              className="bg-dark-1/30 border-dark-2 focus:border-primary/50"
-            />
-            <Input
-              placeholder="Categoria (opcional)"
-              value={newPost.category}
-              onChange={(e) =>
-                setNewPost({ ...newPost, category: e.target.value })
-              }
-              className="bg-dark-1/30 border-dark-2 focus:border-primary/50"
-            />
-            <div className="flex justify-end space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => setShowCreatePost(false)}
-                className="border-dark-2 hover:bg-dark-2/50 hover:border-primary/50"
-              >
-                Cancelar
+            <div className="flex items-center space-x-3">
+              <Button className="dark-glass dark-border hover:dark-border-hover gap-2">
+                <Filter size={16} />
+                Filtrar
               </Button>
               <Button
-                onClick={handleCreatePost}
-                className="bg-primary hover:bg-primary/90 hover:shadow-primary/25 shadow-lg"
+                onClick={() => setShowCreatePost(true)}
+                className="dark-btn-primary gap-2"
               >
-                Publicar
+                <Plus size={16} />
+                Nova Discussão
               </Button>
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Tabs */}
-      <Tabs defaultValue="all" className="w-full">
-        <TabsList className="bg-dark-1/30 border-dark-1 grid w-full grid-cols-5">
-          <TabsTrigger
-            value="all"
-            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg"
-          >
-            Todas ({filteredPosts.length})
-          </TabsTrigger>
-          <TabsTrigger
-            value="trending"
-            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg"
-          >
-            <TrendingUp size={16} className="mr-2" />
-            Em Alta
-          </TabsTrigger>
-          <TabsTrigger
-            value="recent"
-            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg"
-          >
-            <Clock size={16} className="mr-2" />
-            Recentes
-          </TabsTrigger>
-          <TabsTrigger
-            value="solved"
-            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg"
-          >
-            <MessageCircle size={16} className="mr-2" />
-            Resolvidas ({solvedPosts.length})
-          </TabsTrigger>
-          <TabsTrigger
-            value="unsolved"
-            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg"
-          >
-            <Users size={16} className="mr-2" />
-            Não Resolvidas ({unsolvedPosts.length})
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="all" className="mt-6">
-          <div className="space-y-4">
-            {filteredPosts.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))}
           </div>
-        </TabsContent>
 
-        <TabsContent value="trending" className="mt-6">
-          <div className="space-y-4">
-            {trendingPosts.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))}
-          </div>
-        </TabsContent>
+          {/* Forum Stats */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+            <div className="dark-bg-secondary rounded-lg p-4 text-center">
+              <div className="dark-text-primary mb-1 text-2xl font-bold">
+                {posts.length}
+              </div>
+              <div className="dark-text-tertiary text-sm">
+                Discussões Ativas
+              </div>
+            </div>
 
-        <TabsContent value="recent" className="mt-6">
-          <div className="space-y-4">
-            {recentPosts.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))}
-          </div>
-        </TabsContent>
+            <div className="dark-bg-secondary rounded-lg p-4 text-center">
+              <div className="dark-text-primary mb-1 text-2xl font-bold">
+                {solvedPosts.length}
+              </div>
+              <div className="dark-text-tertiary text-sm">Resolvidas</div>
+            </div>
 
-        <TabsContent value="solved" className="mt-6">
-          <div className="space-y-4">
-            {solvedPosts.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))}
-          </div>
-        </TabsContent>
+            <div className="dark-bg-secondary rounded-lg p-4 text-center">
+              <div className="dark-text-primary mb-1 text-2xl font-bold">
+                {posts.reduce((acc, post) => acc + post.comments, 0)}
+              </div>
+              <div className="dark-text-tertiary text-sm">Respostas</div>
+            </div>
 
-        <TabsContent value="unsolved" className="mt-6">
-          <div className="space-y-4">
-            {unsolvedPosts.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))}
+            <div className="dark-bg-secondary rounded-lg p-4 text-center">
+              <div className="dark-text-primary mb-1 text-2xl font-bold">
+                {posts.reduce((acc, post) => acc + post.views, 0)}
+              </div>
+              <div className="dark-text-tertiary text-sm">Visualizações</div>
+            </div>
           </div>
-        </TabsContent>
-      </Tabs>
+        </div>
+
+        {/* Search */}
+        <div className="dark-glass dark-shadow-sm rounded-xl p-4">
+          <div className="relative">
+            <Search
+              className="dark-text-tertiary absolute top-1/2 left-4 -translate-y-1/2 transform"
+              size={20}
+            />
+            <Input
+              placeholder="Buscar discussões, temas ministeriais ou dúvidas..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="dark-input h-12 pl-12 text-base"
+            />
+          </div>
+        </div>
+
+        {/* Create Post Modal */}
+        {showCreatePost && (
+          <div className="dark-glass dark-shadow-md rounded-2xl p-6">
+            <h2 className="dark-text-primary mb-6 text-xl font-bold">
+              Nova Discussão Ministerial
+            </h2>
+            <div className="space-y-4">
+              <Input
+                placeholder="Título da discussão (ex: Como melhorar o discipulado?)"
+                value={newPost.title}
+                onChange={(e) =>
+                  setNewPost({ ...newPost, title: e.target.value })
+                }
+                className="dark-input h-12"
+              />
+              <Textarea
+                placeholder="Compartilhe sua experiência, dúvida ou insight ministerial..."
+                value={newPost.content}
+                onChange={(e) =>
+                  setNewPost({ ...newPost, content: e.target.value })
+                }
+                rows={6}
+                className="dark-input resize-none"
+              />
+              <Input
+                placeholder="Categoria (Células, Discipulado, Cultos, etc.)"
+                value={newPost.category}
+                onChange={(e) =>
+                  setNewPost({ ...newPost, category: e.target.value })
+                }
+                className="dark-input h-12"
+              />
+              <div className="flex justify-end space-x-3">
+                <Button
+                  onClick={() => setShowCreatePost(false)}
+                  className="dark-glass dark-border hover:dark-border-hover"
+                >
+                  Cancelar
+                </Button>
+                <Button onClick={handleCreatePost} className="dark-btn-primary">
+                  Publicar Discussão
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tabs */}
+        <div className="dark-glass dark-shadow-sm rounded-xl p-1">
+          <Tabs defaultValue="all" className="w-full">
+            <TabsList className="dark-bg-secondary grid h-12 w-full grid-cols-5">
+              <TabsTrigger
+                value="all"
+                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+              >
+                Todas ({filteredPosts.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="trending"
+                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+              >
+                <TrendingUp size={14} className="mr-1" />
+                Em Alta
+              </TabsTrigger>
+              <TabsTrigger
+                value="recent"
+                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+              >
+                <Clock size={14} className="mr-1" />
+                Recentes
+              </TabsTrigger>
+              <TabsTrigger
+                value="solved"
+                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+              >
+                <MessageCircle size={14} className="mr-1" />
+                Resolvidas ({solvedPosts.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="unsolved"
+                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+              >
+                <Users size={14} className="mr-1" />
+                Abertas ({unsolvedPosts.length})
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="all" className="mt-6">
+              <div className="space-y-4">
+                {filteredPosts.map((post) => (
+                  <PostCard key={post.id} post={post} />
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="trending" className="mt-6">
+              <div className="space-y-4">
+                {trendingPosts.map((post) => (
+                  <PostCard key={post.id} post={post} />
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="recent" className="mt-6">
+              <div className="space-y-4">
+                {recentPosts.map((post) => (
+                  <PostCard key={post.id} post={post} />
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="solved" className="mt-6">
+              <div className="space-y-4">
+                {solvedPosts.map((post) => (
+                  <PostCard key={post.id} post={post} />
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="unsolved" className="mt-6">
+              <div className="space-y-4">
+                {unsolvedPosts.map((post) => (
+                  <PostCard key={post.id} post={post} />
+                ))}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
     </div>
   );
 }
@@ -449,125 +474,111 @@ function PostCard({ post }: { post: any }) {
   };
 
   return (
-    <Card className="border-dark-1 bg-dark-1/30 hover:shadow-primary/10 backdrop-blur-sm transition-all duration-300 hover:shadow-2xl">
-      <CardContent className="p-6">
-        <div className="flex items-start space-x-4">
-          <Avatar className="ring-primary/20 h-10 w-10 ring-4">
-            <AvatarImage src={post.author.image} alt={post.author.name} />
-            <AvatarFallback className="bg-primary text-primary-foreground">
-              {post.author.name
-                .split(" ")
-                .map((n: string) => n[0])
-                .join("")
-                .toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+    <div className="dark-card dark-shadow-sm rounded-xl p-6">
+      <div className="flex items-start space-x-4">
+        <div className="dark-primary-subtle-bg flex-shrink-0 rounded-full p-3">
+          <Users className="dark-primary" size={20} />
+        </div>
 
-          <div className="min-w-0 flex-1">
-            <div className="mb-2 flex items-start justify-between">
-              <div className="flex-1">
-                <div className="mb-1 flex items-center space-x-2">
-                  <h3 className="text-foreground hover:text-primary cursor-pointer font-semibold transition-colors">
-                    {post.title}
-                  </h3>
-                  {post.isSolved && (
-                    <Badge
-                      variant="secondary"
-                      className="from-secondary to-secondary-1 text-secondary-foreground bg-gradient-to-r text-xs shadow-lg"
-                    >
-                      Resolvido
-                    </Badge>
-                  )}
-                </div>
-
-                <div className="text-muted-foreground mb-2 flex items-center space-x-2 text-sm">
-                  <span>{post.author.name}</span>
-                  <span>•</span>
-                  <span>{post.author.username}</span>
-                  <span>•</span>
-                  <span>{formatDate(post.createdAt)}</span>
-                  <span>•</span>
-                  <span>{post.category}</span>
-                </div>
-
-                <p className="text-muted-foreground mb-3 line-clamp-2 text-sm">
-                  {post.content}
-                </p>
-
-                <div className="mb-3 flex flex-wrap gap-1">
-                  {post.tags.map((tag: string) => (
-                    <Badge
-                      key={tag}
-                      variant="outline"
-                      className="border-dark-2 text-muted-foreground text-xs"
-                    >
-                      <Tag size={10} className="mr-1" />
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
+        <div className="min-w-0 flex-1">
+          <div className="mb-3 flex items-start justify-between">
+            <div className="flex-1">
+              <div className="mb-2 flex items-center space-x-2">
+                <h3 className="dark-text-primary hover:dark-primary cursor-pointer text-lg font-semibold transition-colors">
+                  {post.title}
+                </h3>
+                {post.isSolved && (
+                  <span className="dark-success-bg dark-success rounded-full px-2 py-1 text-xs font-medium">
+                    ✅ Resolvida
+                  </span>
+                )}
               </div>
 
-              <Button variant="ghost" size="sm" className="hover:bg-dark-2/50">
-                <MoreHorizontal size={16} />
-              </Button>
+              <div className="dark-text-tertiary mb-3 flex items-center space-x-2 text-sm">
+                <span className="dark-text-secondary font-medium">
+                  {post.author.name}
+                </span>
+                <span>•</span>
+                <span>{formatDate(post.createdAt)}</span>
+                <span>•</span>
+                <span className="dark-primary-subtle-bg dark-primary rounded-full px-2 py-1 text-xs font-medium">
+                  {post.category}
+                </span>
+              </div>
+
+              <p className="dark-text-secondary mb-4 line-clamp-3 leading-relaxed">
+                {post.content}
+              </p>
+
+              <div className="mb-4 flex flex-wrap gap-2">
+                {post.tags.map((tag: string) => (
+                  <span
+                    key={tag}
+                    className="dark-bg-tertiary dark-text-tertiary hover:dark-primary-subtle-bg hover:dark-primary cursor-pointer rounded-full px-2 py-1 text-xs transition-colors"
+                  >
+                    #{tag}
+                  </span>
+                ))}
+              </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleLike}
-                  className={
-                    isLiked
-                      ? "text-red-500 hover:bg-red-500/10"
-                      : "text-muted-foreground hover:bg-dark-2/50"
-                  }
-                >
-                  <Heart size={16} className="mr-1" />
-                  <span>{likes}</span>
-                </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="hover:dark-bg-tertiary"
+            >
+              <MoreHorizontal className="dark-text-secondary" size={16} />
+            </Button>
+          </div>
 
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-muted-foreground hover:bg-dark-2/50"
-                >
-                  <MessageCircle size={16} className="mr-1" />
-                  <span>{post.comments}</span>
-                </Button>
-
-                <div className="text-muted-foreground flex items-center text-sm">
-                  <Eye size={16} className="mr-1" />
-                  <span>{post.views}</span>
-                </div>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-muted-foreground hover:bg-dark-2/50"
-                >
-                  <Share size={16} />
-                </Button>
-              </div>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleBookmark}
-                className={
-                  isBookmarked
-                    ? "text-secondary hover:bg-secondary/10"
-                    : "text-muted-foreground hover:bg-dark-2/50"
-                }
+          <div className="dark-border flex items-center justify-between border-t pt-4">
+            <div className="flex items-center space-x-6">
+              <button
+                onClick={handleLike}
+                className={`flex items-center space-x-2 transition-colors ${
+                  isLiked
+                    ? "dark-error"
+                    : "dark-text-tertiary hover:dark-text-primary"
+                }`}
               >
-                <Bookmark size={16} />
-              </Button>
+                <Heart size={16} className={isLiked ? "fill-current" : ""} />
+                <span className="text-sm font-medium">{likes}</span>
+              </button>
+
+              <button className="dark-text-tertiary hover:dark-text-primary flex items-center space-x-2 transition-colors">
+                <MessageCircle size={16} />
+                <span className="text-sm font-medium">
+                  {post.comments} respostas
+                </span>
+              </button>
+
+              <div className="dark-text-tertiary flex items-center space-x-1 text-sm">
+                <Eye size={16} />
+                <span>{post.views} visualizações</span>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <button className="dark-text-tertiary hover:dark-text-primary transition-colors">
+                <Share className="" size={16} />
+              </button>
+              <button
+                onClick={handleBookmark}
+                className={`transition-colors ${
+                  isBookmarked
+                    ? "dark-secondary"
+                    : "dark-text-tertiary hover:dark-text-primary"
+                }`}
+              >
+                <Bookmark
+                  size={16}
+                  className={isBookmarked ? "fill-current" : ""}
+                />
+              </button>
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

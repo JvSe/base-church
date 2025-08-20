@@ -1,552 +1,758 @@
 "use client";
 
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@repo/ui/components/accordion";
-import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@repo/ui/components/card";
-import { Progress } from "@repo/ui/components/progress";
-import {
-  ArrowLeft,
   BookOpen,
+  Calendar,
   CheckCircle,
-  Circle,
   Clock,
+  Download,
+  FileText,
+  Globe,
+  Heart,
   MessageCircle,
   Play,
+  Share,
   Star,
   Target,
-  Trophy,
+  User,
   Users,
+  Video,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-export default function CoursePage({
-  params,
-}: {
-  params: Promise<{ courseId: string }>;
-}) {
-  const [expandedModules, setExpandedModules] = useState<string[]>(["1"]);
-  const [courseId, setCourseId] = useState<string>("1");
+interface CoursePageProps {
+  params: {
+    courseId: string;
+  };
+}
 
-  useEffect(() => {
-    params.then((p) => setCourseId(p.courseId)).catch(() => setCourseId("1"));
-  }, [params]);
+export default function CoursePage({ params }: CoursePageProps) {
+  const [isEnrolled, setIsEnrolled] = useState(true);
+  const [activeTab, setActiveTab] = useState("overview");
+
   // Mock data - in real app this would come from server actions
   const course = {
-    id: courseId,
-    title: "Sendo Base - Fundamentos Ministeriais",
+    id: params.courseId,
+    title: "Fundamentos Ministeriais - Base Church",
     description:
-      "Aprenda os fundamentos ministeriais da Base Church, criando uma base sólida para o ministério com princípios bíblicos.",
-    image: "/api/placeholder/300/200",
-    duration: 120,
+      "Um curso abrangente sobre os fundamentos ministeriais da Base Church, cobrindo princípios bíblicos, estrutura ministerial e práticas essenciais para líderes eficazes.",
+    longDescription:
+      "Este curso foi desenvolvido especificamente para formar líderes sólidos na Base Church. Você aprenderá desde os princípios bíblicos fundamentais até as práticas avançadas de liderança ministerial. O conteúdo é baseado em anos de experiência pastoral e está estruturado para proporcionar uma base sólida para seu ministério.",
+    image: null,
+    instructor: {
+      name: "Pr. Robson Silva",
+      role: "Pastor Principal",
+      experience: "15 anos de ministério",
+      avatar: null,
+      bio: "Pastor principal da Base Church há mais de 15 anos, formado em Teologia e especialista em liderança ministerial.",
+    },
     level: "Iniciante",
-    instructor: "Pr. Robson",
-    progress: 65,
-    totalLessons: 32,
-    completedLessons: 21,
-    enrolledStudents: 15420,
+    duration: 180, // minutes
+    totalLessons: 24,
+    completedLessons: 8,
+    progress: 33,
     rating: 4.8,
-    lastAccessed: new Date("2024-01-15"),
-    modules: [
-      {
-        id: "1",
-        title: "Introdução aos Fundamentos",
-        description: "Configuração inicial e conceitos básicos",
-        order: 1,
-        lessons: [
-          {
-            id: "1",
-            title: "O Que Você Vai Aprender",
-            description:
-              "Neste curso de Sendo Base, vamos explorar os fundamentos ministeriais da Base Church.",
-            duration: 177, // seconds
-            isCompleted: true,
-            isWatched: true,
-            order: 1,
-            videoUrl: "https://example.com/video1.mp4",
-          },
-        ],
-      },
-      {
-        id: "2",
-        title: "Princípios da Base Church",
-        description: "Fundamentos e primeiros princípios",
-        order: 2,
-        lessons: [
-          {
-            id: "2",
-            title: "Configurando sua base ministerial",
-            description:
-              "Aprenda a configurar sua base ministerial para o ministério.",
-            duration: 1268, // seconds
-            isCompleted: false,
-            isWatched: false,
-            order: 1,
-            videoUrl: "https://example.com/video2.mp4",
-          },
-          {
-            id: "3",
-            title: "Criando sua primeira célula",
-            description: "Crie sua primeira célula ministerial do zero.",
-            duration: 1016, // seconds
-            isCompleted: false,
-            isWatched: false,
-            order: 2,
-            videoUrl: "https://example.com/video3.mp4",
-          },
-          {
-            id: "4",
-            title: "Entendendo princípios bíblicos",
-            description: "Aprenda sobre princípios bíblicos fundamentais.",
-            duration: 856, // seconds
-            isCompleted: false,
-            isWatched: false,
-            order: 3,
-            videoUrl: "https://example.com/video4.mp4",
-          },
-          {
-            id: "5",
-            title: "Cultura da igreja",
-            description: "Aprenda a cultura da igreja com princípios bíblicos.",
-            duration: 933, // seconds
-            isCompleted: false,
-            isWatched: false,
-            order: 4,
-            videoUrl: "https://example.com/video5.mp4",
-          },
-        ],
-      },
-      {
-        id: "3",
-        title: "Fundamentos do React Native",
-        description: "Componentes principais e navegação",
-        order: 3,
-        lessons: [
-          {
-            id: "6",
-            title: "Instalação da Unity",
-            description:
-              "Aprenda a instalar e configurar a Unity para desenvolvimento.",
-            duration: 578, // seconds
-            isCompleted: false,
-            isWatched: false,
-            order: 1,
-            videoUrl: "https://example.com/video6.mp4",
-          },
-          {
-            id: "7",
-            title: "A interface da Unity",
-            description:
-              "Conheça a interface principal da Unity e suas ferramentas.",
-            duration: 1008, // seconds
-            isCompleted: false,
-            isWatched: false,
-            order: 2,
-            videoUrl: "https://example.com/video7.mp4",
-          },
-          {
-            id: "8",
-            title: "Criando e entendendo os GameObjects",
-            description: "Aprenda sobre GameObjects e como criá-los.",
-            duration: 1016, // seconds
-            isCompleted: false,
-            isWatched: false,
-            order: 3,
-            videoUrl: "https://example.com/video8.mp4",
-          },
-          {
-            id: "9",
-            title: "Entendendo os Componentes",
-            description: "Conheça os componentes principais da Unity.",
-            duration: 813, // seconds
-            isCompleted: false,
-            isWatched: false,
-            order: 4,
-            videoUrl: "https://example.com/video9.mp4",
-          },
-          {
-            id: "10",
-            title: "Iluminação",
-            description: "Aprenda sobre iluminação e renderização na Unity.",
-            duration: 931, // seconds
-            isCompleted: false,
-            isWatched: false,
-            order: 5,
-            videoUrl: "https://example.com/video10.mp4",
-          },
-          {
-            id: "11",
-            title: "Importando assets e arquivos",
-            description:
-              "Aprenda a importar e organizar assets no seu projeto.",
-            duration: 746, // seconds
-            isCompleted: false,
-            isWatched: false,
-            order: 6,
-            videoUrl: "https://example.com/video11.mp4",
-          },
-        ],
-      },
+    reviewsCount: 234,
+    studentsCount: 1247,
+    price: 0, // Free
+    tags: ["Fundamentos", "Liderança", "Ministério", "Princípios Bíblicos"],
+    certificate: true,
+    lastUpdated: new Date("2024-01-10"),
+    createdAt: new Date("2023-06-15"),
+    objectives: [
+      "Compreender os princípios bíblicos fundamentais da Base Church",
+      "Desenvolver habilidades de liderança ministerial eficaz",
+      "Aplicar estruturas organizacionais no ministério",
+      "Criar uma base sólida para crescimento ministerial",
+      "Implementar práticas de discipulado efetivas",
+    ],
+    requirements: [
+      "Compromisso com o ministério cristão",
+      "Disponibilidade de 3-4 horas semanais",
+      "Acesso à internet para aulas online",
+      "Bíblia para estudos práticos",
     ],
   };
 
-  const formatDuration = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes.toString().padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
+  const modules = [
+    {
+      id: "1",
+      title: "Introdução aos Fundamentos",
+      description: "Visão geral dos princípios da Base Church",
+      lessons: [
+        {
+          id: "1",
+          title: "Bem-vindo à Base Church",
+          duration: 8,
+          completed: true,
+          type: "video",
+        },
+        {
+          id: "2",
+          title: "Nossa História e Visão",
+          duration: 12,
+          completed: true,
+          type: "video",
+        },
+        {
+          id: "3",
+          title: "Princípios Fundamentais",
+          duration: 15,
+          completed: true,
+          type: "video",
+        },
+        {
+          id: "4",
+          title: "Leitura: Manual do Líder",
+          duration: 20,
+          completed: false,
+          type: "reading",
+        },
+      ],
+      duration: 55,
+      completed: 3,
+      total: 4,
+    },
+    {
+      id: "2",
+      title: "Estrutura Ministerial",
+      description: "Como organizar e estruturar seu ministério",
+      lessons: [
+        {
+          id: "5",
+          title: "Organização Ministerial",
+          duration: 18,
+          completed: true,
+          type: "video",
+        },
+        {
+          id: "6",
+          title: "Hierarquia e Responsabilidades",
+          duration: 22,
+          completed: true,
+          type: "video",
+        },
+        {
+          id: "7",
+          title: "Gestão de Equipes",
+          duration: 25,
+          completed: true,
+          type: "video",
+        },
+        {
+          id: "8",
+          title: "Exercício Prático: Estrutura",
+          duration: 30,
+          completed: true,
+          type: "exercise",
+        },
+        {
+          id: "9",
+          title: "Comunicação Interna",
+          duration: 15,
+          completed: true,
+          type: "video",
+        },
+      ],
+      duration: 110,
+      completed: 5,
+      total: 5,
+    },
+    {
+      id: "3",
+      title: "Discipulado e Mentoria",
+      description: "Técnicas eficazes de discipulado",
+      lessons: [
+        {
+          id: "10",
+          title: "Fundamentos do Discipulado",
+          duration: 20,
+          completed: false,
+          type: "video",
+        },
+        {
+          id: "11",
+          title: "Métodos de Mentoria",
+          duration: 25,
+          completed: false,
+          type: "video",
+        },
+        {
+          id: "12",
+          title: "Discipulado de Novos Convertidos",
+          duration: 30,
+          completed: false,
+          type: "video",
+        },
+        {
+          id: "13",
+          title: "Avaliação: Casos Práticos",
+          duration: 45,
+          completed: false,
+          type: "quiz",
+        },
+      ],
+      duration: 120,
+      completed: 0,
+      total: 4,
+    },
+  ];
+
+  const reviews = [
+    {
+      id: "1",
+      author: "Ana Costa",
+      role: "Líder de Célula",
+      rating: 5,
+      comment:
+        "Curso transformador! Me ajudou muito a entender melhor os princípios ministeriais e aplicar no meu dia a dia.",
+      date: new Date("2024-01-05"),
+      avatar: null,
+    },
+    {
+      id: "2",
+      author: "Carlos Silva",
+      role: "Pastor Auxiliar",
+      rating: 5,
+      comment:
+        "Conteúdo excelente e muito bem estruturado. O Pr. Robson tem uma didática excepcional.",
+      date: new Date("2023-12-20"),
+      avatar: null,
+    },
+    {
+      id: "3",
+      author: "Maria Santos",
+      role: "Coordenadora",
+      rating: 4,
+      comment:
+        "Muito bom para quem está começando no ministério. Recomendo fortemente!",
+      date: new Date("2023-12-15"),
+      avatar: null,
+    },
+  ];
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString("pt-BR");
   };
 
-  const formatTotalDuration = (minutes: number) => {
+  const formatDuration = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    return hours > 0 ? `${hours}h ${mins}min` : `${mins}min`;
+    if (hours > 0) {
+      return `${hours}h ${mins}min`;
+    }
+    return `${mins}min`;
   };
 
-  const getModuleProgress = (module: any) => {
-    const completedLessons = module.lessons.filter(
-      (lesson: any) => lesson.isCompleted,
-    ).length;
-    return Math.round((completedLessons / module.lessons.length) * 100);
-  };
-
-  const getTotalModuleDuration = (module: any) => {
-    return module.lessons.reduce(
-      (total: number, lesson: any) => total + lesson.duration,
-      0,
-    );
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case "video":
+        return Video;
+      case "reading":
+        return FileText;
+      case "exercise":
+        return Target;
+      case "quiz":
+        return CheckCircle;
+      default:
+        return BookOpen;
+    }
   };
 
   return (
-    <div className="bg-background flex flex-1 gap-6 p-6">
-      {/* Main Content */}
-      <div className="flex-1 space-y-6">
+    <div className="dark-bg-primary min-h-screen">
+      {/* Background Pattern */}
+      <div className="fixed inset-0 opacity-3">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
+      </div>
+
+      <div className="relative mx-auto max-w-7xl space-y-6 p-6">
         {/* Course Header */}
-        <div className="flex items-start space-x-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            asChild
-            className="hover:bg-dark-2/50"
-          >
-            <Link href="/dashboard/conteudos">
-              <ArrowLeft size={16} className="mr-2" />
-              Voltar
-            </Link>
-          </Button>
+        <div className="dark-glass dark-shadow-md rounded-2xl p-8">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <div className="mb-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="dark-primary-subtle-bg dark-primary rounded-full px-3 py-1 text-sm font-medium">
+                    {course.level}
+                  </span>
+                  <span className="dark-success-bg dark-success rounded-full px-3 py-1 text-sm font-medium">
+                    Gratuito
+                  </span>
+                  {course.certificate && (
+                    <span className="dark-warning-bg dark-warning rounded-full px-3 py-1 text-sm font-medium">
+                      📜 Certificado
+                    </span>
+                  )}
+                </div>
+                <h1 className="dark-text-primary mb-3 text-3xl font-bold">
+                  {course.title}
+                </h1>
+                <p className="dark-text-secondary text-lg leading-relaxed">
+                  {course.description}
+                </p>
+              </div>
 
-          <div className="flex-1">
-            <h1 className="text-foreground mb-2 text-2xl font-bold">
-              {course.title}
-            </h1>
-            <p className="text-muted-foreground mb-4">{course.description}</p>
+              <div className="mb-6 flex items-center gap-6">
+                <div className="flex items-center gap-2">
+                  <div className="dark-primary-subtle-bg rounded-full p-2">
+                    <User className="dark-primary" size={16} />
+                  </div>
+                  <div>
+                    <div className="dark-text-primary text-sm font-medium">
+                      {course.instructor.name}
+                    </div>
+                    <div className="dark-text-tertiary text-xs">
+                      {course.instructor.role}
+                    </div>
+                  </div>
+                </div>
 
-            <div className="text-muted-foreground flex items-center space-x-6 text-sm">
-              <div className="flex items-center">
-                <Users size={16} className="mr-2" />
-                <span>{course.enrolledStudents.toLocaleString()} alunos</span>
+                <div className="flex items-center gap-1">
+                  <Star className="dark-warning fill-current" size={16} />
+                  <span className="dark-text-primary font-semibold">
+                    {course.rating}
+                  </span>
+                  <span className="dark-text-tertiary text-sm">
+                    ({course.reviewsCount} avaliações)
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <Users className="dark-text-tertiary" size={16} />
+                  <span className="dark-text-tertiary text-sm">
+                    {course.studentsCount.toLocaleString()} alunos
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center">
-                <Star size={16} className="text-secondary mr-2" />
-                <span>{course.rating}</span>
+
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-1">
+                  <Clock className="dark-text-tertiary" size={16} />
+                  <span className="dark-text-tertiary">
+                    {formatDuration(course.duration)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <BookOpen className="dark-text-tertiary" size={16} />
+                  <span className="dark-text-tertiary">
+                    {course.totalLessons} aulas
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Globe className="dark-text-tertiary" size={16} />
+                  <span className="dark-text-tertiary">Acesso vitalício</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Calendar className="dark-text-tertiary" size={16} />
+                  <span className="dark-text-tertiary">
+                    Atualizado em {formatDate(course.lastUpdated)}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center">
-                <Clock size={16} className="mr-2" />
-                <span>{formatTotalDuration(course.duration)}</span>
+            </div>
+
+            {/* Course Preview */}
+            <div className="dark-card dark-shadow-sm rounded-xl p-6">
+              <div className="dark-bg-tertiary mb-4 flex h-48 items-center justify-center rounded-lg">
+                <Play className="dark-text-tertiary" size={48} />
               </div>
-              <div className="flex items-center">
-                <BookOpen size={16} className="mr-2" />
-                <span>{course.totalLessons} aulas</span>
+
+              {isEnrolled ? (
+                <div className="space-y-4">
+                  <div className="mb-4 text-center">
+                    <div className="dark-text-primary mb-1 text-2xl font-bold">
+                      {course.progress}%
+                    </div>
+                    <div className="dark-text-tertiary mb-2 text-sm">
+                      Concluído
+                    </div>
+                    <div className="dark-bg-tertiary h-2 w-full rounded-full">
+                      <div
+                        className="dark-gradient-primary h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${course.progress}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <Button asChild className="dark-btn-primary w-full">
+                    <Link href={`/dashboard/aulas/10`}>
+                      <Play className="mr-2" size={16} />
+                      Continuar Assistindo
+                    </Link>
+                  </Button>
+
+                  <Button className="dark-glass dark-border hover:dark-border-hover w-full">
+                    <Download className="mr-2" size={16} />
+                    Baixar Recursos
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <Button
+                    className="dark-btn-primary w-full"
+                    onClick={() => setIsEnrolled(true)}
+                  >
+                    <Play className="mr-2" size={16} />
+                    Matricular-se Gratuitamente
+                  </Button>
+
+                  <Button className="dark-glass dark-border hover:dark-border-hover w-full">
+                    <Heart className="mr-2" size={16} />
+                    Adicionar aos Favoritos
+                  </Button>
+                </div>
+              )}
+
+              <div className="mt-4 flex items-center justify-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hover:dark-bg-tertiary"
+                >
+                  <Share className="dark-text-secondary" size={16} />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hover:dark-bg-tertiary"
+                >
+                  <MessageCircle className="dark-text-secondary" size={16} />
+                </Button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Course Progress */}
-        <Card className="border-dark-1 bg-dark-1/30 hover:shadow-primary/10 backdrop-blur-sm transition-all duration-300 hover:shadow-2xl">
-          <CardContent className="p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-foreground text-lg font-semibold">
-                Seu Progresso
-              </h3>
-              <Badge
-                variant="secondary"
-                className="from-secondary to-secondary-1 text-secondary-foreground bg-gradient-to-r shadow-lg"
+        {/* Course Navigation */}
+        <div className="dark-glass dark-shadow-sm rounded-xl p-1">
+          <div className="flex items-center space-x-1">
+            {[
+              { id: "overview", label: "Visão Geral" },
+              { id: "curriculum", label: "Conteúdo" },
+              { id: "instructor", label: "Instrutor" },
+              { id: "reviews", label: "Avaliações" },
+            ].map((tab) => (
+              <Button
+                key={tab.id}
+                variant="ghost"
+                onClick={() => setActiveTab(tab.id)}
+                className={`${
+                  activeTab === tab.id
+                    ? "dark-btn-primary"
+                    : "dark-text-secondary hover:dark-text-primary"
+                }`}
               >
-                {course.progress}% completo
-              </Badge>
-            </div>
-
-            <Progress value={course.progress} className="bg-dark-2 mb-4 h-3" />
-
-            <div className="text-muted-foreground flex items-center justify-between text-sm">
-              <span>
-                {course.completedLessons} de {course.totalLessons} aulas
-                concluídas
-              </span>
-              <span>
-                {course.totalLessons - course.completedLessons} aulas restantes
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+                {tab.label}
+              </Button>
+            ))}
+          </div>
+        </div>
 
         {/* Course Content */}
-        <Card className="border-dark-1 bg-dark-1/30 hover:shadow-primary/10 backdrop-blur-sm transition-all duration-300 hover:shadow-2xl">
-          <CardHeader>
-            <CardTitle className="text-foreground text-lg">
-              Conteúdo do curso
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Accordion
-              type="multiple"
-              value={expandedModules}
-              onValueChange={setExpandedModules}
-              className="space-y-2"
-            >
-              {course.modules.map((module) => (
-                <AccordionItem
-                  key={module.id}
-                  value={module.id}
-                  className="border-dark-1 bg-dark-1/30 hover:shadow-primary/10 rounded-lg border backdrop-blur-sm transition-all duration-300 hover:shadow-lg"
-                >
-                  <AccordionTrigger className="px-4 py-3 hover:no-underline">
-                    <div className="flex w-full items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="from-primary to-primary-2 text-primary-foreground flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r text-sm font-semibold shadow-lg">
-                          {module.order}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            {activeTab === "overview" && (
+              <div className="space-y-6">
+                <div className="dark-glass dark-shadow-sm rounded-xl p-6">
+                  <h2 className="dark-text-primary mb-4 text-xl font-bold">
+                    Sobre este curso
+                  </h2>
+                  <p className="dark-text-secondary mb-6 leading-relaxed">
+                    {course.longDescription}
+                  </p>
+
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <div>
+                      <h3 className="dark-text-primary mb-3 font-semibold">
+                        O que você aprenderá
+                      </h3>
+                      <ul className="space-y-2">
+                        {course.objectives.map((objective, index) => (
+                          <li key={index} className="flex items-start gap-2">
+                            <CheckCircle
+                              className="dark-success mt-0.5 flex-shrink-0"
+                              size={16}
+                            />
+                            <span className="dark-text-secondary text-sm">
+                              {objective}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div>
+                      <h3 className="dark-text-primary mb-3 font-semibold">
+                        Pré-requisitos
+                      </h3>
+                      <ul className="space-y-2">
+                        {course.requirements.map((requirement, index) => (
+                          <li key={index} className="flex items-start gap-2">
+                            <Target
+                              className="dark-primary mt-0.5 flex-shrink-0"
+                              size={16}
+                            />
+                            <span className="dark-text-secondary text-sm">
+                              {requirement}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "curriculum" && (
+              <div className="dark-glass dark-shadow-sm rounded-xl p-6">
+                <h2 className="dark-text-primary mb-6 text-xl font-bold">
+                  Conteúdo do Curso
+                </h2>
+
+                <div className="space-y-4">
+                  {modules.map((module) => (
+                    <div key={module.id} className="dark-card rounded-xl p-4">
+                      <div className="mb-3 flex items-center justify-between">
+                        <h3 className="dark-text-primary font-semibold">
+                          {module.title}
+                        </h3>
+                        <div className="flex items-center gap-4 text-sm">
+                          <span className="dark-text-tertiary">
+                            {module.completed}/{module.total} aulas
+                          </span>
+                          <span className="dark-text-tertiary">
+                            {formatDuration(module.duration)}
+                          </span>
                         </div>
-                        <div className="text-left">
-                          <h4 className="text-foreground font-semibold">
-                            {module.title}
-                          </h4>
-                          <p className="text-muted-foreground text-sm">
-                            {module.description}
+                      </div>
+                      <p className="dark-text-secondary mb-4 text-sm">
+                        {module.description}
+                      </p>
+
+                      <div className="space-y-2">
+                        {module.lessons.map((lesson) => {
+                          const Icon = getTypeIcon(lesson.type);
+                          return (
+                            <div
+                              key={lesson.id}
+                              className="hover:dark-bg-secondary flex items-center justify-between rounded-lg px-3 py-2 transition-colors"
+                            >
+                              <div className="flex items-center gap-3">
+                                {lesson.completed ? (
+                                  <CheckCircle
+                                    className="dark-success"
+                                    size={16}
+                                  />
+                                ) : (
+                                  <div className="dark-bg-tertiary h-4 w-4 rounded-full" />
+                                )}
+                                <Icon
+                                  className="dark-text-tertiary"
+                                  size={16}
+                                />
+                                <span
+                                  className={`text-sm ${
+                                    lesson.completed
+                                      ? "dark-text-secondary"
+                                      : "dark-text-primary"
+                                  }`}
+                                >
+                                  {lesson.title}
+                                </span>
+                              </div>
+                              <span className="dark-text-tertiary text-xs">
+                                {formatDuration(lesson.duration)}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === "instructor" && (
+              <div className="dark-glass dark-shadow-sm rounded-xl p-6">
+                <h2 className="dark-text-primary mb-6 text-xl font-bold">
+                  Seu Instrutor
+                </h2>
+
+                <div className="flex items-start gap-6">
+                  <div className="dark-primary-subtle-bg rounded-full p-4">
+                    <User className="dark-primary" size={32} />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="dark-text-primary mb-1 text-lg font-semibold">
+                      {course.instructor.name}
+                    </h3>
+                    <p className="dark-text-secondary mb-2">
+                      {course.instructor.role}
+                    </p>
+                    <p className="dark-text-tertiary mb-4 text-sm">
+                      {course.instructor.experience}
+                    </p>
+                    <p className="dark-text-secondary leading-relaxed">
+                      {course.instructor.bio}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "reviews" && (
+              <div className="dark-glass dark-shadow-sm rounded-xl p-6">
+                <div className="mb-6 flex items-center justify-between">
+                  <h2 className="dark-text-primary text-xl font-bold">
+                    Avaliações dos Alunos
+                  </h2>
+                  <div className="flex items-center gap-2">
+                    <Star className="dark-warning fill-current" size={20} />
+                    <span className="dark-text-primary text-lg font-bold">
+                      {course.rating}
+                    </span>
+                    <span className="dark-text-tertiary">
+                      ({course.reviewsCount} avaliações)
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {reviews.map((review) => (
+                    <div key={review.id} className="dark-card rounded-xl p-4">
+                      <div className="flex items-start gap-4">
+                        <div className="dark-primary-subtle-bg rounded-full p-2">
+                          <User className="dark-primary" size={16} />
+                        </div>
+                        <div className="flex-1">
+                          <div className="mb-2 flex items-center justify-between">
+                            <div>
+                              <div className="dark-text-primary text-sm font-medium">
+                                {review.author}
+                              </div>
+                              <div className="dark-text-tertiary text-xs">
+                                {review.role}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              {Array.from({ length: 5 }).map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`${
+                                    i < review.rating
+                                      ? "dark-warning fill-current"
+                                      : "dark-text-tertiary"
+                                  }`}
+                                  size={12}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          <p className="dark-text-secondary mb-2 text-sm">
+                            {review.comment}
+                          </p>
+                          <p className="dark-text-tertiary text-xs">
+                            {formatDate(review.date)}
                           </p>
                         </div>
                       </div>
-
-                      <div className="text-muted-foreground flex items-center space-x-4 text-sm">
-                        <span>{module.lessons.length} aulas</span>
-                        <span>
-                          {formatDuration(getTotalModuleDuration(module))}
-                        </span>
-                        <Badge
-                          variant="secondary"
-                          className="from-secondary to-secondary-1 text-secondary-foreground bg-gradient-to-r shadow-lg"
-                        >
-                          {getModuleProgress(module)}%
-                        </Badge>
-                      </div>
                     </div>
-                  </AccordionTrigger>
-
-                  <AccordionContent className="px-4 pb-4">
-                    <div className="space-y-2">
-                      {module.lessons.map((lesson) => (
-                        <div
-                          key={lesson.id}
-                          className="hover:bg-dark-2/50 flex items-center justify-between rounded-lg p-3 transition-all duration-200 hover:shadow-lg"
-                        >
-                          <div className="flex items-center space-x-3">
-                            {lesson.isCompleted ? (
-                              <CheckCircle
-                                size={20}
-                                className="text-secondary"
-                              />
-                            ) : lesson.isWatched ? (
-                              <Circle size={20} className="text-primary" />
-                            ) : (
-                              <Circle
-                                size={20}
-                                className="text-muted-foreground"
-                              />
-                            )}
-
-                            <div className="flex-1">
-                              <h5 className="text-foreground font-medium">
-                                {lesson.title}
-                              </h5>
-                              <p className="text-muted-foreground text-sm">
-                                {lesson.description}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center space-x-3">
-                            <span className="text-muted-foreground text-sm">
-                              {formatDuration(lesson.duration)}
-                            </span>
-
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              asChild
-                              className={
-                                lesson.isCompleted
-                                  ? "text-secondary hover:bg-secondary/10"
-                                  : "hover:bg-dark-2/50"
-                              }
-                            >
-                              <Link href={`/dashboard/aulas/${lesson.id}`}>
-                                <Play size={16} />
-                              </Link>
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Right Sidebar */}
-      <div className="w-80 space-y-6">
-        {/* Course Info */}
-        <Card className="border-dark-1 bg-dark-1/30 hover:shadow-primary/10 backdrop-blur-sm transition-all duration-300 hover:shadow-2xl">
-          <CardContent className="p-6">
-            <img
-              src={course.image}
-              alt={course.title}
-              className="mb-4 h-32 w-full rounded-lg object-cover"
-            />
-
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground text-sm">Instrutor</span>
-                <span className="text-foreground text-sm">
-                  {course.instructor}
-                </span>
+                  ))}
+                </div>
               </div>
+            )}
+          </div>
 
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground text-sm">Nível</span>
-                <Badge
-                  variant="secondary"
-                  className="bg-dark-1/80 text-foreground border-dark-2 border backdrop-blur-sm"
-                >
-                  {course.level}
-                </Badge>
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Course Tags */}
+            <div className="dark-glass dark-shadow-sm rounded-xl p-6">
+              <h3 className="dark-text-primary mb-4 font-semibold">Tags</h3>
+              <div className="flex flex-wrap gap-2">
+                {course.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="dark-primary-subtle-bg dark-primary rounded-full px-3 py-1 text-xs font-medium"
+                  >
+                    {tag}
+                  </span>
+                ))}
               </div>
+            </div>
 
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground text-sm">Duração</span>
-                <span className="text-foreground text-sm">
-                  {formatTotalDuration(course.duration)}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground text-sm">Avaliação</span>
-                <div className="flex items-center">
-                  <Star size={14} className="text-secondary mr-1" />
-                  <span className="text-foreground text-sm">
-                    {course.rating}
+            {/* Course Stats */}
+            <div className="dark-glass dark-shadow-sm rounded-xl p-6">
+              <h3 className="dark-text-primary mb-4 font-semibold">
+                Estatísticas
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="dark-text-secondary text-sm">
+                    Total de aulas
+                  </span>
+                  <span className="dark-primary font-semibold">
+                    {course.totalLessons}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="dark-text-secondary text-sm">
+                    Duração total
+                  </span>
+                  <span className="dark-primary font-semibold">
+                    {formatDuration(course.duration)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="dark-text-secondary text-sm">
+                    Alunos matriculados
+                  </span>
+                  <span className="dark-primary font-semibold">
+                    {course.studentsCount.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="dark-text-secondary text-sm">
+                    Nota média
+                  </span>
+                  <span className="dark-primary font-semibold">
+                    {course.rating}/5
                   </span>
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Quick Actions */}
-        <Card className="border-dark-1 bg-dark-1/30 hover:shadow-primary/10 backdrop-blur-sm transition-all duration-300 hover:shadow-2xl">
-          <CardHeader>
-            <CardTitle className="text-foreground text-base">
-              Ações rápidas
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Button
-              className="bg-primary hover:bg-primary/90 hover:shadow-primary/25 w-full shadow-lg"
-              asChild
-            >
-              <Link
-                href={`/dashboard/aulas/${course.modules[0]?.lessons[0]?.id}`}
-              >
-                <Play size={16} className="mr-2" />
-                Continuar assistindo
-              </Link>
-            </Button>
-
-            <Button
-              variant="outline"
-              className="border-dark-2 hover:bg-dark-2/50 hover:border-primary/50 w-full"
-            >
-              <MessageCircle size={16} className="mr-2" />
-              Tirar dúvidas
-            </Button>
-
-            <Button
-              variant="outline"
-              className="border-dark-2 hover:bg-dark-2/50 hover:border-primary/50 w-full"
-            >
-              <Trophy size={16} className="mr-2" />
-              Ver certificado
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Course Stats */}
-        <Card className="border-dark-1 bg-dark-1/30 hover:shadow-primary/10 backdrop-blur-sm transition-all duration-300 hover:shadow-2xl">
-          <CardHeader>
-            <CardTitle className="text-foreground text-base">
-              Estatísticas
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Target size={16} className="text-secondary" />
-                <span className="text-muted-foreground text-sm">Progresso</span>
+            {/* Related Courses */}
+            <div className="dark-glass dark-shadow-sm rounded-xl p-6">
+              <h3 className="dark-text-primary mb-4 font-semibold">
+                Cursos Relacionados
+              </h3>
+              <div className="space-y-3">
+                {[
+                  { title: "Discipulado Avançado", rating: 4.7 },
+                  { title: "Liderança Ministerial", rating: 4.9 },
+                  { title: "Cultura da Igreja", rating: 4.6 },
+                ].map((related, index) => (
+                  <div key={index} className="dark-card rounded-lg p-3">
+                    <h4 className="dark-text-primary mb-1 text-sm font-medium">
+                      {related.title}
+                    </h4>
+                    <div className="flex items-center gap-1">
+                      <Star className="dark-warning fill-current" size={12} />
+                      <span className="dark-text-tertiary text-xs">
+                        {related.rating}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <span className="text-foreground text-sm font-semibold">
-                {course.progress}%
-              </span>
             </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <CheckCircle size={16} className="text-primary" />
-                <span className="text-muted-foreground text-sm">
-                  Aulas concluídas
-                </span>
-              </div>
-              <span className="text-foreground text-sm font-semibold">
-                {course.completedLessons}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Clock size={16} className="text-primary" />
-                <span className="text-muted-foreground text-sm">
-                  Tempo assistido
-                </span>
-              </div>
-              <span className="text-foreground text-sm font-semibold">
-                {formatTotalDuration(
-                  Math.round(course.duration * (course.progress / 100)),
-                )}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

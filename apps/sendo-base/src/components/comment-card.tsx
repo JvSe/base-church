@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { User } from "lucide-react";
 
 type CommentProps = {
   comment: string;
@@ -16,14 +16,8 @@ export const CommentCard = ({ comment, user }: CommentProps) => {
       </p>
 
       <div className="flex items-center gap-4">
-        <div className="h-12 w-12 overflow-hidden rounded-lg md:h-16 md:min-h-16 md:w-16 md:min-w-16">
-          <Image
-            src={`https://ui-avatars.com/api/?name=${user.name}&background=random`}
-            alt="img"
-            width={100}
-            height={100}
-            className="h-full w-full"
-          />
+        <div className="bg-primary/20 flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg md:h-16 md:min-h-16 md:w-16 md:min-w-16">
+          <User className="text-primary" size={24} />
         </div>
         <div>
           <p className="font-roboto text-xl font-semibold md:text-2xl">

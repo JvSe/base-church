@@ -172,168 +172,241 @@ export default function EventosPage() {
   const featuredEvents = filteredEvents.filter((event) => event.isFeatured);
 
   return (
-    <div className="bg-background space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-foreground text-2xl font-bold">Eventos</h1>
-          <p className="text-muted-foreground">
-            Participe de eventos exclusivos e conecte-se com a comunidade
-          </p>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-dark-2 hover:bg-dark-2/50 hover:border-primary/50"
-          >
-            <Filter size={16} className="mr-2" />
-            Filtrar
-          </Button>
-          <Button
-            variant={viewMode === "grid" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setViewMode("grid")}
-            className={
-              viewMode === "grid"
-                ? "bg-primary hover:bg-primary/90 hover:shadow-primary/25 shadow-lg"
-                : "border-dark-2 hover:bg-dark-2/50 hover:border-primary/50"
-            }
-          >
-            <Grid size={16} />
-          </Button>
-          <Button
-            variant={viewMode === "list" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setViewMode("list")}
-            className={
-              viewMode === "list"
-                ? "bg-primary hover:bg-primary/90 hover:shadow-primary/25 shadow-lg"
-                : "border-dark-2 hover:bg-dark-2/50 hover:border-primary/50"
-            }
-          >
-            <List size={16} />
-          </Button>
-        </div>
+    <div className="dark-bg-primary min-h-screen">
+      {/* Background Pattern */}
+      <div className="fixed inset-0 opacity-3">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search
-          className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2 transform"
-          size={20}
-        />
-        <Input
-          placeholder="Buscar por eventos, instrutores ou temas..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="bg-dark-1/30 border-dark-2 focus:border-primary/50 pl-10"
-        />
+      <div className="relative mx-auto max-w-7xl space-y-6 p-6">
+        {/* Header */}
+        <div className="dark-glass dark-shadow-md rounded-2xl p-6">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h1 className="dark-text-primary mb-2 text-3xl font-bold">
+                Eventos da Comunidade
+              </h1>
+              <p className="dark-text-secondary">
+                Participe de eventos exclusivos e conecte-se com nossa família
+                ministerial
+              </p>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <Button className="dark-glass dark-border hover:dark-border-hover gap-2">
+                <Filter size={16} />
+                Filtrar
+              </Button>
+              <div className="dark-bg-secondary flex items-center rounded-lg p-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setViewMode("grid")}
+                  className={
+                    viewMode === "grid"
+                      ? "dark-btn-primary"
+                      : "dark-text-secondary hover:dark-text-primary"
+                  }
+                >
+                  <Grid size={16} />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setViewMode("list")}
+                  className={
+                    viewMode === "list"
+                      ? "dark-btn-primary"
+                      : "dark-text-secondary hover:dark-text-primary"
+                  }
+                >
+                  <List size={16} />
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Stats */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+            <div className="dark-bg-secondary rounded-lg p-4">
+              <div className="mb-2 flex items-center justify-between">
+                <div className="dark-primary-subtle-bg rounded-lg p-2">
+                  <Calendar className="dark-primary" size={20} />
+                </div>
+                <span className="dark-success text-sm font-medium">+3</span>
+              </div>
+              <div className="dark-text-primary mb-1 text-2xl font-bold">
+                {upcomingEvents.length}
+              </div>
+              <div className="dark-text-tertiary text-sm">Próximos Eventos</div>
+            </div>
+
+            <div className="dark-bg-secondary rounded-lg p-4">
+              <div className="mb-2 flex items-center justify-between">
+                <div className="dark-secondary-subtle-bg rounded-lg p-2">
+                  <Zap className="dark-secondary" size={20} />
+                </div>
+                <span className="dark-error text-sm font-medium">LIVE</span>
+              </div>
+              <div className="dark-text-primary mb-1 text-2xl font-bold">
+                {ongoingEvents.length}
+              </div>
+              <div className="dark-text-tertiary text-sm">Ao Vivo Agora</div>
+            </div>
+
+            <div className="dark-bg-secondary rounded-lg p-4">
+              <div className="mb-2 flex items-center justify-between">
+                <div className="dark-info-bg rounded-lg p-2">
+                  <CheckCircle className="dark-info" size={20} />
+                </div>
+                <span className="dark-success text-sm font-medium">
+                  {enrolledEvents.length}
+                </span>
+              </div>
+              <div className="dark-text-primary mb-1 text-2xl font-bold">
+                Inscritos
+              </div>
+              <div className="dark-text-tertiary text-sm">Seus Eventos</div>
+            </div>
+
+            <div className="dark-bg-secondary rounded-lg p-4">
+              <div className="mb-2 flex items-center justify-between">
+                <div className="dark-warning-bg rounded-lg p-2">
+                  <TrendingUp className="dark-warning" size={20} />
+                </div>
+                <span className="dark-primary text-sm font-medium">
+                  {featuredEvents.length}
+                </span>
+              </div>
+              <div className="dark-text-primary mb-1 text-2xl font-bold">
+                Destaque
+              </div>
+              <div className="dark-text-tertiary text-sm">Em Alta</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Search */}
+        <div className="dark-glass dark-shadow-sm rounded-xl p-4">
+          <div className="relative">
+            <Search
+              className="dark-text-tertiary absolute top-1/2 left-4 -translate-y-1/2 transform"
+              size={20}
+            />
+            <Input
+              placeholder="Buscar por eventos, instrutores ou temas..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="dark-input h-12 pl-12 text-base"
+            />
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="dark-glass dark-shadow-sm rounded-xl p-1">
+          <Tabs defaultValue="all" className="w-full">
+            <TabsList className="dark-bg-secondary grid h-12 w-full grid-cols-6">
+              <TabsTrigger
+                value="all"
+                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+              >
+                Todos ({filteredEvents.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="upcoming"
+                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+              >
+                <Calendar size={14} className="mr-1" />
+                Próximos ({upcomingEvents.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="ongoing"
+                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+              >
+                <Zap size={14} className="mr-1" />
+                Ao Vivo ({ongoingEvents.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="enrolled"
+                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+              >
+                <CheckCircle size={14} className="mr-1" />
+                Inscritos ({enrolledEvents.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="featured"
+                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+              >
+                <TrendingUp size={14} className="mr-1" />
+                Destaques ({featuredEvents.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="past"
+                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+              >
+                <X size={14} className="mr-1" />
+                Passados ({pastEvents.length})
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="all" className="mt-6">
+              {viewMode === "grid" ? (
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {filteredEvents.map((event) => (
+                    <EventCard key={event.id} event={event} />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filteredEvents.map((event) => (
+                    <EventListCard key={event.id} event={event} />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="upcoming" className="mt-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {upcomingEvents.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="ongoing" className="mt-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {ongoingEvents.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="enrolled" className="mt-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {enrolledEvents.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="featured" className="mt-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {featuredEvents.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="past" className="mt-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {pastEvents.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
-
-      {/* Tabs */}
-      <Tabs defaultValue="all" className="w-full">
-        <TabsList className="bg-dark-1/30 border-dark-1 grid w-full grid-cols-6">
-          <TabsTrigger
-            value="all"
-            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg"
-          >
-            Todos ({filteredEvents.length})
-          </TabsTrigger>
-          <TabsTrigger
-            value="upcoming"
-            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg"
-          >
-            <Calendar size={16} className="mr-2" />
-            Próximos ({upcomingEvents.length})
-          </TabsTrigger>
-          <TabsTrigger
-            value="ongoing"
-            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg"
-          >
-            <Zap size={16} className="mr-2" />
-            Ao Vivo ({ongoingEvents.length})
-          </TabsTrigger>
-          <TabsTrigger
-            value="enrolled"
-            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg"
-          >
-            <CheckCircle size={16} className="mr-2" />
-            Inscritos ({enrolledEvents.length})
-          </TabsTrigger>
-          <TabsTrigger
-            value="featured"
-            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg"
-          >
-            <TrendingUp size={16} className="mr-2" />
-            Destaques ({featuredEvents.length})
-          </TabsTrigger>
-          <TabsTrigger
-            value="past"
-            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg"
-          >
-            <X size={16} className="mr-2" />
-            Passados ({pastEvents.length})
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="all" className="mt-6">
-          {viewMode === "grid" ? (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {filteredEvents.map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {filteredEvents.map((event) => (
-                <EventListCard key={event.id} event={event} />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="upcoming" className="mt-6">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {upcomingEvents.map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="ongoing" className="mt-6">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {ongoingEvents.map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="enrolled" className="mt-6">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {enrolledEvents.map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="featured" className="mt-6">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {featuredEvents.map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="past" className="mt-6">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {pastEvents.map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </div>
-        </TabsContent>
-      </Tabs>
     </div>
   );
 }
@@ -356,119 +429,109 @@ function EventCard({ event }: { event: any }) {
   );
 
   return (
-    <Card className="border-dark-1 bg-dark-1/30 group hover:shadow-primary/10 overflow-hidden backdrop-blur-sm transition-all duration-300 hover:shadow-2xl">
+    <div className="dark-card dark-shadow-sm group cursor-pointer overflow-hidden rounded-xl">
       <div className="relative">
-        <img
-          src={event.image}
-          alt={event.title}
-          className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105"
-        />
+        <div className="dark-bg-tertiary flex h-48 w-full items-center justify-center">
+          <Calendar className="dark-text-tertiary" size={48} />
+        </div>
         <div className="absolute top-3 left-3">
-          <Badge
-            variant="secondary"
-            className={`${
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-medium shadow-lg ${
               status === "ongoing"
-                ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg"
+                ? "dark-error-bg dark-error animate-pulse"
                 : status === "upcoming"
-                  ? "from-secondary to-secondary-1 text-secondary-foreground bg-gradient-to-r shadow-lg"
-                  : "bg-dark-2 text-muted-foreground border-dark-1 border"
+                  ? "dark-success-bg dark-success"
+                  : "dark-text-disabled bg-gray-600"
             }`}
           >
             {status === "ongoing"
-              ? "AO VIVO"
+              ? "🔴 AO VIVO"
               : status === "upcoming"
-                ? "EM BREVE"
-                : "FINALIZADO"}
-          </Badge>
+                ? "📅 EM BREVE"
+                : "✅ FINALIZADO"}
+          </span>
         </div>
         <div className="absolute top-3 right-3">
-          <Badge
-            variant="secondary"
-            className="bg-dark-1/80 text-foreground border-dark-2 border backdrop-blur-sm"
-          >
-            {event.isOnline ? "ONLINE" : "PRESENCIAL"}
-          </Badge>
+          <span className="dark-glass dark-primary rounded-full px-3 py-1 text-xs font-medium backdrop-blur-sm">
+            {event.isOnline ? "🌐 ONLINE" : "📍 PRESENCIAL"}
+          </span>
         </div>
         {event.isFeatured && (
           <div className="absolute bottom-3 left-3">
-            <Badge
-              variant="secondary"
-              className="from-primary to-primary-2 text-primary-foreground bg-gradient-to-r shadow-lg"
-            >
-              <TrendingUp size={12} className="mr-1" />
+            <span className="dark-gradient-primary flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium text-white shadow-lg">
+              <TrendingUp size={12} />
               Destaque
-            </Badge>
+            </span>
           </div>
         )}
       </div>
 
-      <CardContent className="p-6">
+      <div className="p-6">
         <div className="mb-3 flex items-start justify-between">
-          <h3 className="text-foreground group-hover:text-primary line-clamp-2 font-semibold transition-colors">
+          <h3 className="dark-text-primary group-hover:dark-primary line-clamp-2 font-semibold transition-colors">
             {event.title}
           </h3>
-          <Button variant="ghost" size="sm" className="hover:bg-dark-2/50">
-            <ArrowRight size={16} />
+          <Button variant="ghost" size="sm" className="hover:dark-bg-tertiary">
+            <ArrowRight className="dark-text-secondary" size={16} />
           </Button>
         </div>
 
-        <p className="text-muted-foreground mb-4 line-clamp-2 text-sm">
+        <p className="dark-text-secondary mb-4 line-clamp-2 text-sm">
           {event.description}
         </p>
 
         <div className="mb-4 space-y-2">
-          <div className="text-muted-foreground flex items-center text-sm">
+          <div className="dark-text-tertiary flex items-center text-sm">
             <Calendar size={14} className="mr-2" />
             <span>{formatDateTime(event.startDate)}</span>
           </div>
 
-          <div className="text-muted-foreground flex items-center text-sm">
+          <div className="dark-text-tertiary flex items-center text-sm">
             <Clock size={14} className="mr-2" />
             <span>
               {formatTime(event.startDate)} - {formatTime(event.endDate)}
             </span>
           </div>
 
-          <div className="text-muted-foreground flex items-center text-sm">
+          <div className="dark-text-tertiary flex items-center text-sm">
             <MapPin size={14} className="mr-2" />
             <span>{event.location}</span>
           </div>
 
-          <div className="text-muted-foreground flex items-center text-sm">
+          <div className="dark-text-tertiary flex items-center text-sm">
             <Users size={14} className="mr-2" />
             <span>{event.instructor}</span>
           </div>
         </div>
 
-        <div className="mb-4 flex flex-wrap gap-1">
+        <div className="mb-4 flex flex-wrap gap-2">
           {event.tags.map((tag: string) => (
-            <Badge
+            <span
               key={tag}
-              variant="outline"
-              className="border-dark-2 text-muted-foreground text-xs"
+              className="dark-primary-subtle-bg dark-primary rounded-full px-2 py-1 text-xs font-medium"
             >
               {tag}
-            </Badge>
+            </span>
           ))}
         </div>
 
         <div className="space-y-3">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Inscrições</span>
-            <span className="text-primary font-semibold">
+            <span className="dark-text-tertiary">Inscrições</span>
+            <span className="dark-primary font-semibold">
               {event.currentAttendees}/{event.maxAttendees}
             </span>
           </div>
 
-          <div className="bg-dark-2 h-2 w-full rounded-full">
+          <div className="dark-bg-tertiary h-2 w-full rounded-full">
             <div
-              className="from-primary to-primary-2 h-2 rounded-full bg-gradient-to-r transition-all duration-300"
+              className="dark-gradient-primary h-2 rounded-full transition-all duration-300"
               style={{ width: `${attendancePercentage}%` }}
             />
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-xs">
+            <span className="dark-text-tertiary text-xs">
               {attendancePercentage}% lotado
             </span>
 
@@ -476,8 +539,8 @@ function EventCard({ event }: { event: any }) {
               asChild
               className={
                 event.isEnrolled
-                  ? "from-secondary to-secondary-1 hover:from-secondary/90 hover:to-secondary-1/90 text-secondary-foreground hover:shadow-secondary/25 bg-gradient-to-r shadow-lg"
-                  : "bg-primary hover:bg-primary/90 hover:shadow-primary/25 shadow-lg"
+                  ? "dark-gradient-secondary"
+                  : "dark-btn-primary"
               }
               disabled={status === "past"}
             >
@@ -487,8 +550,8 @@ function EventCard({ event }: { event: any }) {
             </Button>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 

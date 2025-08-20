@@ -18,7 +18,8 @@
     "lint": "eslint . --max-warnings 0",
     "prebuild": "pnpm generate",
     "predev": "pnpm generate",
-    "studio": "prisma studio"
+    "studio": "prisma studio",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@prisma/client": "latest"
@@ -31,6 +32,6 @@
     "rimraf": "^5.0.5",
     "tsup": "^8.0.2",
     "tsx": "4.19.1",
-    "typescript": "5.5.4"
+    "typescript": "^5.7.3"
   }
 }

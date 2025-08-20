@@ -4,7 +4,6 @@ import {
   BookOpen,
   Calendar,
   FileText,
-  GraduationCap,
   HelpCircle,
   Home,
   Map,
@@ -20,9 +19,10 @@ import * as React from "react";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -33,13 +33,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const data = {
     user: {
-      name: "Joao Vitor Soares Egidio Nunes",
-      email: "joao@example.com",
-      avatar: "/avatars/joao.jpg",
+      name: "João Vitor Soares",
+      title: "Líder em Formação",
     },
-    navMain: [
+    navigation: [
       {
-        title: "Home",
+        title: "Dashboard",
         url: "/dashboard",
         icon: Home,
       },
@@ -48,10 +47,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/dashboard/profile",
         icon: User,
       },
-    ],
-    navProgresso: [
       {
-        title: "Meus conteúdos",
+        title: "Meus Conteúdos",
         url: "/dashboard/conteudos",
         icon: FileText,
       },
@@ -60,8 +57,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/dashboard/jornada",
         icon: Map,
       },
-    ],
-    navAprendizado: [
       {
         title: "Catálogo",
         url: "/dashboard/catalogo",
@@ -77,74 +72,57 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/dashboard/forum",
         icon: MessageCircle,
       },
-    ],
-    navBottom: [
       {
         title: "Comunidade",
         url: "/dashboard/comunidade",
         icon: Users,
-        hasChevron: true,
-      },
-      {
-        title: "Pós-Graduação",
-        url: "/dashboard/pos-graduacao",
-        icon: GraduationCap,
-        hasChevron: true,
       },
       {
         title: "Ajuda",
         url: "/dashboard/ajuda",
         icon: HelpCircle,
-        hasChevron: true,
       },
     ],
   };
 
   return (
-    <Sidebar
-      className="top-(--header-height) h-[calc(100svh-var(--header-height))]!"
-      collapsible="icon"
-      {...props}
-    >
-      <SidebarContent>
-        {/* Home Section */}
-        <SidebarGroup>
-          <SidebarGroupContent className="flex flex-col gap-2">
-            <SidebarMenu>
-              {data.navMain.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    tooltip={item.title}
-                    isActive={pathname === item.url}
-                    asChild
-                    className="h-12 p-3 text-base group-data-[collapsible=icon]:!size-12 group-data-[collapsible=icon]:!p-3 [&>span]:group-data-[collapsible=icon]:hidden [&>svg]:!size-6"
-                  >
-                    <Link href={item.url}>
-                      <item.icon size={24} />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+    <Sidebar className="rounded-xl" collapsible="icon" {...props}>
+      {/* Header Simples */}
+      <SidebarHeader className="dark-border border-b p-6">
+        <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
+          <div className="dark-primary-subtle-bg flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full">
+            <User className="dark-primary" size={20} />
+          </div>
+          <div className="flex-1 group-data-[collapsible=icon]:hidden">
+            <h3 className="dark-text-primary text-sm font-semibold">
+              {data.user.name}
+            </h3>
+            <p className="dark-text-tertiary mt-0.5 text-xs">
+              {data.user.title}
+            </p>
+          </div>
+        </div>
+      </SidebarHeader>
 
-        {/* PROGRESSO Section */}
+      {/* Navegação Principal */}
+      <SidebarContent className="p-3">
         <SidebarGroup>
-          <SidebarGroupLabel>PROGRESSO</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {data.navProgresso.map((item) => (
+            <SidebarMenu className="space-y-1">
+              {data.navigation.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     tooltip={item.title}
                     isActive={pathname === item.url}
                     asChild
-                    className="h-12 p-3 text-base group-data-[collapsible=icon]:!size-12 group-data-[collapsible=icon]:!p-3 [&>span]:group-data-[collapsible=icon]:hidden [&>svg]:!size-6"
+                    className={`h-10 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:!p-2 [&>span]:group-data-[collapsible=icon]:hidden [&>svg]:!size-5 ${
+                      pathname === item.url
+                        ? "dark-primary-subtle-bg dark-primary"
+                        : "dark-text-secondary hover:dark-text-primary hover:dark-bg-secondary"
+                    }`}
                   >
-                    <Link href={item.url}>
-                      <item.icon size={24} />
+                    <Link href={item.url} className="flex items-center gap-3">
+                      <item.icon />
                       <span>{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
@@ -153,62 +131,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        {/* APRENDIZADO Section */}
-        <SidebarGroup>
-          <SidebarGroupLabel>APRENDIZADO</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {data.navAprendizado.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    tooltip={item.title}
-                    isActive={pathname === item.url}
-                    asChild
-                    className="h-12 p-3 text-base group-data-[collapsible=icon]:!size-12 group-data-[collapsible=icon]:!p-3 [&>span]:group-data-[collapsible=icon]:hidden [&>svg]:!size-6"
-                  >
-                    <Link href={item.url}>
-                      <item.icon size={24} />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* Bottom Navigation - moved to bottom with mt-auto */}
-        {/* <div className="mt-auto">
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {data.navBottom.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      tooltip={item.title}
-                      isActive={pathname === item.url}
-                      asChild
-                      className="text-base group-data-[collapsible=icon]:!size-12 group-data-[collapsible=icon]:!p-3 [&>span]:group-data-[collapsible=icon]:hidden [&>svg]:!size-6 [&>svg:last-child]:group-data-[collapsible=icon]:hidden"
-                    >
-                      <Link href={item.url} className="group">
-                        <item.icon size={24} />
-                        <span>{item.title}</span>
-                        {item.hasChevron && (
-                          <ChevronRight
-                            size={16}
-                            className="ml-auto text-gray-500 transition-colors group-hover:text-gray-300"
-                          />
-                        )}
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </div> */}
       </SidebarContent>
+
+      {/* Footer Simples */}
+      <SidebarFooter className="dark-border border-t p-4 group-data-[collapsible=icon]:hidden">
+        <div className="text-center">
+          <p className="dark-text-tertiary text-xs">Base Church Platform</p>
+          <p className="dark-text-tertiary mt-1 text-xs">Versão 1.0</p>
+        </div>
+      </SidebarFooter>
     </Sidebar>
   );
 }

@@ -314,11 +314,14 @@ export default function LessonPage({
   );
 
   return (
-    <div className="bg-background flex h-screen flex-1">
+    <div className="dark-bg-primary flex h-screen flex-1">
       {/* Main Content */}
       <div className="flex flex-1 flex-col">
         {/* Video Player */}
-        <div className="relative flex-1 bg-black" onMouseMove={handleMouseMove}>
+        <div
+          className="relative flex-1 overflow-hidden rounded-lg bg-black"
+          onMouseMove={handleMouseMove}
+        >
           <video
             ref={videoRef}
             src={lesson.videoUrl}
@@ -331,14 +334,14 @@ export default function LessonPage({
 
           {/* Video Controls Overlay */}
           {showControls && (
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 to-transparent">
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 to-transparent">
               {/* Top Controls */}
               <div className="pointer-events-auto absolute top-4 right-4 left-4 flex items-center justify-between">
                 <Button
                   variant="ghost"
                   size="sm"
                   asChild
-                  className="bg-dark-1/80 hover:bg-dark-2/80 border-dark-2 border text-white backdrop-blur-sm"
+                  className="dark-glass dark-border hover:dark-border-hover text-white backdrop-blur-sm"
                 >
                   <Link href={`/dashboard/cursos/${lesson.module.course.id}`}>
                     <ArrowLeft size={16} className="mr-2" />
@@ -350,7 +353,7 @@ export default function LessonPage({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="bg-dark-1/80 hover:bg-dark-2/80 border-dark-2 border text-white backdrop-blur-sm"
+                    className="dark-glass dark-border hover:dark-border-hover text-white backdrop-blur-sm"
                   >
                     <Settings size={16} />
                   </Button>
@@ -358,7 +361,7 @@ export default function LessonPage({
                     variant="ghost"
                     size="sm"
                     onClick={toggleFullscreen}
-                    className="bg-dark-1/80 hover:bg-dark-2/80 border-dark-2 border text-white backdrop-blur-sm"
+                    className="dark-glass dark-border hover:dark-border-hover text-white backdrop-blur-sm"
                   >
                     <Maximize size={16} />
                   </Button>
@@ -371,7 +374,7 @@ export default function LessonPage({
                   variant="ghost"
                   size="lg"
                   onClick={handlePlayPause}
-                  className="bg-dark-1/80 hover:bg-dark-2/80 border-dark-2 hover:shadow-primary/25 border text-white shadow-lg backdrop-blur-sm"
+                  className="dark-glass dark-border hover:dark-border-hover text-white shadow-lg backdrop-blur-sm transition-transform hover:scale-105"
                 >
                   {isPlaying ? <Pause size={32} /> : <Play size={32} />}
                 </Button>
@@ -476,57 +479,54 @@ export default function LessonPage({
         </div>
 
         {/* Lesson Info */}
-        <div className="bg-dark-1/30 border-dark-1 border-t p-6 backdrop-blur-sm">
+        <div className="dark-glass dark-shadow-md dark-border border-t p-6">
           <div className="mb-4 flex items-start justify-between">
             <div>
-              <h1 className="text-foreground mb-2 text-xl font-bold">
+              <h1 className="dark-text-primary mb-2 text-xl font-bold">
                 {lesson.title}
               </h1>
-              <p className="text-muted-foreground">{lesson.description}</p>
+              <p className="dark-text-secondary">{lesson.description}</p>
             </div>
 
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                checked={isCompleted}
-                onCheckedChange={handleCompleteLesson}
-                className="data-[state=checked]:bg-secondary data-[state=checked]:border-secondary"
-              />
-              <span className="text-muted-foreground text-sm">
-                Marcar como assistida
-              </span>
-              <Button variant="ghost" size="sm" className="hover:bg-dark-2/50">
-                <Bookmark size={16} />
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  checked={isCompleted}
+                  onCheckedChange={handleCompleteLesson}
+                  className="data-[state=checked]:dark-secondary-bg data-[state=checked]:dark-border"
+                />
+                <span className="dark-text-tertiary text-sm">
+                  Marcar como assistida
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hover:dark-bg-tertiary"
+              >
+                <Bookmark className="dark-text-primary" size={16} />
               </Button>
             </div>
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="text-muted-foreground flex items-center space-x-4 text-sm">
+            <div className="dark-text-tertiary flex items-center space-x-4 text-sm">
               <div className="flex items-center">
                 <Clock size={14} className="mr-1" />
                 <span>{formatDuration(lesson.duration)}</span>
               </div>
               <div className="flex items-center">
-                <Star size={14} className="text-secondary mr-1" />
+                <Star size={14} className="dark-secondary mr-1" />
                 <span>O que você achou desta aula?</span>
               </div>
             </div>
 
             <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-dark-2 hover:bg-dark-2/50 hover:border-primary/50"
-              >
-                <MessageCircle size={16} className="mr-2" />
-                Utilizar o assistente inteligente
+              <Button className="dark-glass dark-border hover:dark-border-hover gap-2">
+                <MessageCircle size={16} />
+                Assistente IA
               </Button>
-              <Button
-                size="sm"
-                className="bg-primary hover:bg-primary/90 hover:shadow-primary/25 shadow-lg"
-              >
-                Perguntar
-              </Button>
+              <Button className="dark-btn-primary">Perguntar</Button>
             </div>
           </div>
         </div>
@@ -534,51 +534,53 @@ export default function LessonPage({
 
       {/* Sidebar */}
       {isSidebarOpen && (
-        <div className="border-dark-1 bg-dark-1/30 flex w-80 flex-col border-l backdrop-blur-sm">
+        <div className="dark-glass dark-border dark-shadow-lg flex w-80 flex-col border-l">
           {/* Sidebar Header */}
-          <div className="border-dark-1 border-b p-4">
+          <div className="dark-border border-b p-4">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-foreground font-semibold">Conteúdo</h3>
-              <div className="flex items-center space-x-2">
+              <h3 className="dark-text-primary font-semibold">
+                Conteúdo do Curso
+              </h3>
+              <div className="flex items-center space-x-1">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="hover:bg-dark-2/50"
+                  className="hover:dark-bg-tertiary"
                 >
-                  <ChevronLeft size={16} />
+                  <ChevronLeft className="dark-text-secondary" size={16} />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="hover:bg-dark-2/50"
+                  className="hover:dark-bg-tertiary"
                 >
-                  <ChevronRight size={16} />
+                  <ChevronRight className="dark-text-secondary" size={16} />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="hover:bg-dark-2/50"
+                  className="hover:dark-bg-tertiary"
                 >
-                  <Settings size={16} />
+                  <Settings className="dark-text-secondary" size={16} />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsSidebarOpen(false)}
-                  className="hover:bg-dark-2/50"
+                  className="hover:dark-bg-tertiary"
                 >
-                  <X size={16} />
+                  <X className="dark-text-secondary" size={16} />
                 </Button>
               </div>
             </div>
 
-            <div className="text-muted-foreground mb-4 text-sm">
-              Você possui 1 recomendação.
+            <div className="dark-info-bg dark-info mb-4 rounded-lg p-3 text-sm">
+              💡 Você possui 1 recomendação de estudo
             </div>
 
             <div className="relative">
               <Search
-                className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2 transform"
+                className="dark-text-tertiary absolute top-1/2 left-3 -translate-y-1/2 transform"
                 size={16}
               />
               <input
@@ -586,21 +588,21 @@ export default function LessonPage({
                 placeholder="Buscar conteúdo"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-dark-1/30 border-dark-2 text-foreground focus:border-primary/50 focus:ring-primary/20 w-full rounded-lg border py-2 pr-4 pl-10 text-sm focus:ring-2 focus:outline-none"
+                className="dark-input w-full py-2 pr-4 pl-10 text-sm"
               />
             </div>
           </div>
 
           {/* Lessons List */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="custom-scrollbar flex-1 overflow-y-auto">
             {lesson.module.course.modules.map((module) => (
-              <div key={module.id} className="border-dark-1 border-b">
+              <div key={module.id} className="dark-border border-b">
                 <div className="p-4">
                   <div className="mb-2 flex items-center justify-between">
-                    <h4 className="text-foreground font-medium">
+                    <h4 className="dark-text-primary font-medium">
                       {module.title}
                     </h4>
-                    <span className="text-muted-foreground text-sm">
+                    <span className="dark-text-tertiary text-sm">
                       {module.lessons.length} aulas •{" "}
                       {formatDuration(
                         module.lessons.reduce(
@@ -614,47 +616,54 @@ export default function LessonPage({
 
                 <div className="space-y-1 pb-4">
                   {module.lessons.map((moduleLesson) => (
-                    <div
+                    <Link
                       key={moduleLesson.id}
-                      className={`mx-4 flex cursor-pointer items-center space-x-3 rounded-lg px-4 py-2 transition-all duration-200 ${
+                      href={`/dashboard/aulas/${moduleLesson.id}`}
+                      className={`mx-4 flex cursor-pointer items-center space-x-3 rounded-lg px-4 py-3 transition-all duration-200 ${
                         moduleLesson.id === lessonId
-                          ? "from-primary to-primary-2 text-primary-foreground bg-gradient-to-r shadow-lg"
-                          : "hover:bg-dark-2/50 hover:shadow-lg"
+                          ? "dark-gradient-primary text-white shadow-lg"
+                          : "hover:dark-bg-tertiary hover:shadow-sm"
                       }`}
                     >
                       {moduleLesson.isCompleted ? (
                         <CheckCircle
                           size={16}
-                          className="text-secondary flex-shrink-0"
+                          className="dark-success flex-shrink-0"
                         />
                       ) : moduleLesson.isWatched ? (
                         <Circle
                           size={16}
-                          className="text-primary flex-shrink-0"
+                          className="dark-primary flex-shrink-0"
                         />
                       ) : (
                         <Circle
                           size={16}
-                          className="text-muted-foreground flex-shrink-0"
+                          className="dark-text-tertiary flex-shrink-0"
                         />
                       )}
 
                       <div className="min-w-0 flex-1">
                         <p
-                          className={`truncate text-sm ${
+                          className={`truncate text-sm font-medium ${
                             moduleLesson.id === lessonId
-                              ? "text-primary-foreground"
-                              : "text-foreground"
+                              ? "text-white"
+                              : "dark-text-primary"
                           }`}
                         >
                           {moduleLesson.title}
                         </p>
                       </div>
 
-                      <span className="text-muted-foreground flex-shrink-0 text-xs">
+                      <span
+                        className={`flex-shrink-0 text-xs ${
+                          moduleLesson.id === lessonId
+                            ? "text-white/80"
+                            : "dark-text-tertiary"
+                        }`}
+                      >
                         {formatDuration(moduleLesson.duration)}
                       </span>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </div>
@@ -669,7 +678,7 @@ export default function LessonPage({
           variant="ghost"
           size="sm"
           onClick={() => setIsSidebarOpen(true)}
-          className="bg-dark-1/80 hover:bg-dark-2/80 border-dark-2 absolute top-4 right-4 z-10 border text-white shadow-lg backdrop-blur-sm"
+          className="dark-glass dark-border hover:dark-border-hover absolute top-4 right-4 z-10 text-white shadow-lg backdrop-blur-sm"
         >
           <Menu size={16} />
         </Button>

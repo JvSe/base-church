@@ -1,7 +1,6 @@
 "use client";
 
 import { formatDuration } from "@/src/lib/formatters";
-import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
 import { Card, CardContent } from "@repo/ui/components/card";
 import { Input } from "@repo/ui/components/input";
@@ -199,241 +198,255 @@ export default function CatalogoPage() {
   const enrolledCourses = courses.filter((course) => course.isEnrolled);
 
   return (
-    <div className="bg-background space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-foreground text-2xl font-bold">
-            Catálogo de Cursos
-          </h1>
-          <p className="text-muted-foreground">
-            Explore milhares de cursos e encontre o que você precisa para
-            evoluir
-          </p>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-dark-2 hover:bg-dark-2/50 hover:border-primary/50"
-          >
-            <Filter size={16} className="mr-2" />
-            Filtros avançados
-          </Button>
-          <Button
-            variant={viewMode === "grid" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setViewMode("grid")}
-            className={
-              viewMode === "grid"
-                ? "bg-primary hover:bg-primary/90 hover:shadow-primary/25 shadow-lg"
-                : "border-dark-2 hover:bg-dark-2/50 hover:border-primary/50"
-            }
-          >
-            <Grid size={16} />
-          </Button>
-          <Button
-            variant={viewMode === "list" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setViewMode("list")}
-            className={
-              viewMode === "list"
-                ? "bg-primary hover:bg-primary/90 hover:shadow-primary/25 shadow-lg"
-                : "border-dark-2 hover:bg-dark-2/50 hover:border-primary/50"
-            }
-          >
-            <List size={16} />
-          </Button>
-        </div>
+    <div className="dark-bg-primary min-h-screen">
+      {/* Background Pattern */}
+      <div className="fixed inset-0 opacity-3">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
       </div>
 
-      {/* Search and Filters */}
-      <div className="flex items-center space-x-4">
-        <div className="relative flex-1">
-          <Search
-            className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2 transform"
-            size={20}
-          />
-          <Input
-            placeholder="Buscar por cursos, instrutores ou tecnologias..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="bg-dark-1/30 border-dark-2 focus:border-primary/50 pl-10"
-          />
+      <div className="relative mx-auto max-w-7xl space-y-6 p-6">
+        {/* Header */}
+        <div className="dark-glass dark-shadow-md rounded-2xl p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="dark-text-primary mb-2 text-3xl font-bold">
+                Catálogo de Cursos
+              </h1>
+              <p className="dark-text-secondary">
+                Explore milhares de cursos e encontre o que você precisa para
+                evoluir
+              </p>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <Button className="dark-glass dark-border hover:dark-border-hover gap-2">
+                <Filter size={16} />
+                Filtros avançados
+              </Button>
+              <div className="dark-bg-secondary flex items-center rounded-lg p-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setViewMode("grid")}
+                  className={
+                    viewMode === "grid"
+                      ? "dark-btn-primary"
+                      : "dark-text-secondary hover:dark-text-primary"
+                  }
+                >
+                  <Grid size={16} />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setViewMode("list")}
+                  className={
+                    viewMode === "list"
+                      ? "dark-btn-primary"
+                      : "dark-text-secondary hover:dark-text-primary"
+                  }
+                >
+                  <List size={16} />
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-          <SelectTrigger className="bg-dark-1/30 border-dark-2 focus:border-primary/50 w-48">
-            <SelectValue placeholder="Categoria" />
-          </SelectTrigger>
-          <SelectContent>
-            {categories.map((category) => (
-              <SelectItem key={category.id} value={category.id}>
-                <div className="flex items-center space-x-2">
-                  <category.icon size={16} />
-                  <span>{category.name}</span>
+        {/* Search and Filters */}
+        <div className="dark-glass dark-shadow-sm rounded-xl p-4">
+          <div className="flex items-center space-x-4">
+            <div className="relative flex-1">
+              <Search
+                className="dark-text-tertiary absolute top-1/2 left-4 -translate-y-1/2 transform"
+                size={20}
+              />
+              <Input
+                placeholder="Buscar por cursos, instrutores ou tecnologias..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="dark-input h-12 pl-12 text-base"
+              />
+            </div>
+
+            <Select
+              value={selectedCategory}
+              onValueChange={setSelectedCategory}
+            >
+              <SelectTrigger className="dark-input h-12 w-48">
+                <SelectValue placeholder="Categoria" />
+              </SelectTrigger>
+              <SelectContent className="dark-bg-secondary dark-border">
+                {categories.map((category) => (
+                  <SelectItem
+                    key={category.id}
+                    value={category.id}
+                    className="dark-text-primary hover:dark-bg-tertiary"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <category.icon size={16} />
+                      <span>{category.name}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+              <SelectTrigger className="dark-input h-12 w-48">
+                <SelectValue placeholder="Nível" />
+              </SelectTrigger>
+              <SelectContent className="dark-bg-secondary dark-border">
+                {levels.map((level) => (
+                  <SelectItem
+                    key={level.id}
+                    value={level.id}
+                    className="dark-text-primary hover:dark-bg-tertiary"
+                  >
+                    {level.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="dark-glass dark-shadow-sm rounded-xl p-1">
+          <Tabs defaultValue="all" className="w-full">
+            <TabsList className="dark-bg-secondary grid h-12 w-full grid-cols-4">
+              <TabsTrigger
+                value="all"
+                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary"
+              >
+                Todos ({courses.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="featured"
+                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary"
+              >
+                <TrendingUp size={16} className="mr-2" />
+                Em Destaque ({featuredCourses.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="enrolled"
+                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary"
+              >
+                <Zap size={16} className="mr-2" />
+                Matriculados ({enrolledCourses.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="recommended"
+                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary"
+              >
+                <Target size={16} className="mr-2" />
+                Recomendados
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="all" className="mt-6">
+              {viewMode === "grid" ? (
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {filteredCourses.map((course) => (
+                    <CourseCard key={course.id} course={course} />
+                  ))}
                 </div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+              ) : (
+                <div className="space-y-4">
+                  {filteredCourses.map((course) => (
+                    <CourseListCard key={course.id} course={course} />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
 
-        <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-          <SelectTrigger className="bg-dark-1/30 border-dark-2 focus:border-primary/50 w-48">
-            <SelectValue placeholder="Nível" />
-          </SelectTrigger>
-          <SelectContent>
-            {levels.map((level) => (
-              <SelectItem key={level.id} value={level.id}>
-                {level.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+            <TabsContent value="featured" className="mt-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {featuredCourses.map((course) => (
+                  <CourseCard key={course.id} course={course} />
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="enrolled" className="mt-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {enrolledCourses.map((course) => (
+                  <CourseCard key={course.id} course={course} />
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="recommended" className="mt-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {filteredCourses.slice(0, 6).map((course) => (
+                  <CourseCard key={course.id} course={course} />
+                ))}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
-
-      {/* Tabs */}
-      <Tabs defaultValue="all" className="w-full">
-        <TabsList className="bg-dark-1/30 border-dark-1 grid w-full grid-cols-4">
-          <TabsTrigger
-            value="all"
-            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg"
-          >
-            Todos ({courses.length})
-          </TabsTrigger>
-          <TabsTrigger
-            value="featured"
-            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg"
-          >
-            <TrendingUp size={16} className="mr-2" />
-            Em Destaque ({featuredCourses.length})
-          </TabsTrigger>
-          <TabsTrigger
-            value="enrolled"
-            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg"
-          >
-            <Zap size={16} className="mr-2" />
-            Matriculados ({enrolledCourses.length})
-          </TabsTrigger>
-          <TabsTrigger
-            value="recommended"
-            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg"
-          >
-            <Target size={16} className="mr-2" />
-            Recomendados
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="all" className="mt-6">
-          {viewMode === "grid" ? (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {filteredCourses.map((course) => (
-                <CourseCard key={course.id} course={course} />
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {filteredCourses.map((course) => (
-                <CourseListCard key={course.id} course={course} />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="featured" className="mt-6">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {featuredCourses.map((course) => (
-              <CourseCard key={course.id} course={course} />
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="enrolled" className="mt-6">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {enrolledCourses.map((course) => (
-              <CourseCard key={course.id} course={course} />
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="recommended" className="mt-6">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredCourses.slice(0, 6).map((course) => (
-              <CourseCard key={course.id} course={course} />
-            ))}
-          </div>
-        </TabsContent>
-      </Tabs>
     </div>
   );
 }
 
 function CourseCard({ course }: { course: any }) {
   return (
-    <Card className="border-dark-1 bg-dark-1/30 group hover:shadow-primary/10 overflow-hidden backdrop-blur-sm transition-all duration-300 hover:shadow-2xl">
+    <div className="dark-card dark-shadow-sm group cursor-pointer overflow-hidden rounded-xl">
       <div className="relative">
-        <img
-          src={course.image}
-          alt={course.title}
-          className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105"
-        />
+        <div className="dark-bg-tertiary flex h-48 w-full items-center justify-center">
+          <BookOpen className="dark-text-tertiary" size={48} />
+        </div>
         <div className="absolute top-3 left-3">
-          <Badge
-            variant="secondary"
-            className="bg-dark-1/80 text-foreground border-dark-2 border backdrop-blur-sm"
-          >
+          <span className="dark-glass dark-primary-subtle-bg dark-primary rounded-full px-3 py-1 text-xs font-medium backdrop-blur-sm">
             {course.level}
-          </Badge>
+          </span>
         </div>
         <div className="absolute top-3 right-3">
           <Button
             variant="ghost"
             size="sm"
-            className="bg-dark-1/80 hover:bg-dark-2/50 border-dark-2 border backdrop-blur-sm"
+            className="dark-glass dark-border hover:dark-border-hover backdrop-blur-sm"
           >
-            <Heart size={16} />
+            <Heart className="dark-text-primary" size={16} />
           </Button>
         </div>
         {course.isFeatured && (
           <div className="absolute bottom-3 left-3">
-            <Badge
-              variant="secondary"
-              className="from-primary to-primary-2 text-primary-foreground bg-gradient-to-r shadow-lg"
-            >
-              <TrendingUp size={12} className="mr-1" />
+            <span className="dark-gradient-primary dark-text-primary flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium shadow-lg">
+              <TrendingUp size={12} />
               Em Destaque
-            </Badge>
+            </span>
           </div>
         )}
       </div>
 
-      <CardContent className="p-6">
+      <div className="p-6">
         <div className="mb-3 flex items-start justify-between">
-          <h3 className="text-foreground group-hover:text-primary line-clamp-2 font-semibold transition-colors">
+          <h3 className="dark-text-primary group-hover:dark-primary line-clamp-2 font-semibold transition-colors">
             {course.title}
           </h3>
-          <Button variant="ghost" size="sm" className="hover:bg-dark-2/50">
-            <ArrowRight size={16} />
+          <Button variant="ghost" size="sm" className="hover:dark-bg-tertiary">
+            <ArrowRight className="dark-text-secondary" size={16} />
           </Button>
         </div>
 
-        <p className="text-muted-foreground mb-4 line-clamp-2 text-sm">
+        <p className="dark-text-secondary mb-4 line-clamp-2 text-sm">
           {course.description}
         </p>
 
-        <div className="text-muted-foreground mb-3 flex items-center text-sm">
+        <div className="dark-text-tertiary mb-3 flex items-center text-sm">
           <Users size={14} className="mr-1" />
           <span>{course.instructor}</span>
         </div>
 
-        <div className="text-muted-foreground mb-4 flex items-center justify-between text-sm">
+        <div className="dark-text-tertiary mb-4 flex items-center justify-between text-sm">
           <div className="flex items-center">
             <Clock size={14} className="mr-1" />
             <span>{formatDuration(course.duration)}</span>
           </div>
           <div className="flex items-center">
-            <Star size={14} className="text-secondary mr-1" />
+            <Star size={14} className="dark-secondary mr-1" />
             <span>{course.rating}</span>
           </div>
           <div className="flex items-center">
@@ -442,29 +455,26 @@ function CourseCard({ course }: { course: any }) {
           </div>
         </div>
 
-        <div className="mb-4 flex flex-wrap gap-1">
+        <div className="mb-4 flex flex-wrap gap-2">
           {course.tags.slice(0, 3).map((tag: string) => (
-            <Badge
+            <span
               key={tag}
-              variant="outline"
-              className="border-dark-2 text-muted-foreground text-xs"
+              className="dark-primary-subtle-bg dark-primary rounded-full px-2 py-1 text-xs font-medium"
             >
               {tag}
-            </Badge>
+            </span>
           ))}
         </div>
 
         <div className="flex items-center justify-between">
-          <div className="text-foreground text-lg font-bold">
+          <div className="dark-text-primary text-lg font-bold">
             {course.price === 0 ? "Gratuito" : `R$ ${course.price}`}
           </div>
 
           <Button
             asChild
             className={
-              course.isEnrolled
-                ? "from-secondary to-secondary-1 hover:from-secondary/90 hover:to-secondary-1/90 text-secondary-foreground hover:shadow-secondary/25 bg-gradient-to-r shadow-lg"
-                : "bg-primary hover:bg-primary/90 hover:shadow-primary/25 shadow-lg"
+              course.isEnrolled ? "dark-gradient-secondary" : "dark-btn-primary"
             }
           >
             <Link
@@ -479,8 +489,8 @@ function CourseCard({ course }: { course: any }) {
             </Link>
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
