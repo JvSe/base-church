@@ -1,7 +1,12 @@
 {
   "buildCommand": "pnpm build",
   "devCommand": "pnpm dev",
-  "installCommand": "pnpm install --frozen-lockfile",
+  "installCommand": "pnpm install --frozen-lockfile --strict-peer-dependencies=false",
   "framework": "nextjs",
-  "outputDirectory": "apps/sendo-base/.next"
+  "outputDirectory": "apps/sendo-base/.next",
+  "functions": {
+    "apps/sendo-base/app/**/*.tsx": {
+      "maxDuration": 30
+    }
+  }
 }
