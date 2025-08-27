@@ -28,8 +28,8 @@ interface CoursePageProps {
   }>;
 }
 
-export default async function CoursePage({ params }: CoursePageProps) {
-  const { courseId } = await params;
+export default function CoursePage() {
+  const courseId = 1;
   const [isEnrolled, setIsEnrolled] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -379,7 +379,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
                   </div>
 
                   <Button asChild className="dark-btn-primary w-full">
-                    <Link href={`/dashboard/lessons/10`}>
+                    <Link href={`/dashboard/courses/${courseId}/lessons/10`}>
                       <Play className="mr-2" size={16} />
                       Continuar Assistindo
                     </Link>

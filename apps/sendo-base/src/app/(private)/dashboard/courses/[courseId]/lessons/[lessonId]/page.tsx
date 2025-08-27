@@ -10,44 +10,23 @@ import {
   ChevronRight,
   Circle,
   Clock,
-  Maximize,
   Menu,
   MessageCircle,
-  Pause,
-  Play,
   Search,
   Settings,
-  SkipBack,
-  SkipForward,
   Star,
-  Volume2,
-  VolumeX,
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
-export default async function LessonPage({
-  params,
-}: {
-  params: Promise<{ lessonId: string }>;
-}) {
-  const { lessonId: paramLessonId } = await params;
+export default function LessonPage() {
+  const { lessonId: paramLessonId } = { lessonId: "1" };
   const [lessonId, setLessonId] = useState<string>(paramLessonId || "1");
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(1);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isCompleted, setIsCompleted] = useState(false);
   const [isWatched, setIsWatched] = useState(false);
-  const [showControls, setShowControls] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const controlsTimeoutRef = useRef<NodeJS.Timeout>(null);
 
   // Mock data - in real app this would come from server actions
   const lesson = {
@@ -55,8 +34,8 @@ export default async function LessonPage({
     title: "O Que Você Vai Aprender",
     description:
       "Neste curso de Sendo Base, vamos explorar os fundamentos ministeriais da Base Church.",
-    videoUrl:
-      "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4", // Sample video URL
+    videoUrl: "https://youtu.be/fzfOUJos-GU", // YouTube video URL
+    youtubeEmbedId: "fzfOUJos-GU", // YouTube video ID for embedding
     duration: 177, // seconds
     isCompleted: false,
     isWatched: false,
@@ -81,6 +60,7 @@ export default async function LessonPage({
                 isCompleted: true,
                 isWatched: true,
                 order: 1,
+                youtubeEmbedId: "fzfOUJos-GU",
               },
             ],
           },
@@ -96,6 +76,7 @@ export default async function LessonPage({
                 isCompleted: false,
                 isWatched: false,
                 order: 1,
+                youtubeEmbedId: "fzfOUJos-GU",
               },
               {
                 id: "3",
@@ -104,6 +85,7 @@ export default async function LessonPage({
                 isCompleted: false,
                 isWatched: false,
                 order: 2,
+                youtubeEmbedId: "fzfOUJos-GU",
               },
               {
                 id: "4",
@@ -112,6 +94,7 @@ export default async function LessonPage({
                 isCompleted: false,
                 isWatched: false,
                 order: 3,
+                youtubeEmbedId: "fzfOUJos-GU",
               },
               {
                 id: "5",
@@ -120,6 +103,7 @@ export default async function LessonPage({
                 isCompleted: false,
                 isWatched: false,
                 order: 4,
+                youtubeEmbedId: "fzfOUJos-GU",
               },
             ],
           },
@@ -135,6 +119,7 @@ export default async function LessonPage({
                 isCompleted: false,
                 isWatched: false,
                 order: 1,
+                youtubeEmbedId: "fzfOUJos-GU",
               },
               {
                 id: "7",
@@ -143,6 +128,7 @@ export default async function LessonPage({
                 isCompleted: false,
                 isWatched: false,
                 order: 2,
+                youtubeEmbedId: "fzfOUJos-GU",
               },
               {
                 id: "8",
@@ -151,6 +137,7 @@ export default async function LessonPage({
                 isCompleted: false,
                 isWatched: false,
                 order: 3,
+                youtubeEmbedId: "fzfOUJos-GU",
               },
               {
                 id: "9",
@@ -159,6 +146,7 @@ export default async function LessonPage({
                 isCompleted: false,
                 isWatched: false,
                 order: 4,
+                youtubeEmbedId: "fzfOUJos-GU",
               },
               {
                 id: "10",
@@ -167,6 +155,7 @@ export default async function LessonPage({
                 isCompleted: false,
                 isWatched: false,
                 order: 5,
+                youtubeEmbedId: "fzfOUJos-GU",
               },
               {
                 id: "11",
@@ -175,6 +164,7 @@ export default async function LessonPage({
                 isCompleted: false,
                 isWatched: false,
                 order: 6,
+                youtubeEmbedId: "fzfOUJos-GU",
               },
             ],
           },
@@ -183,110 +173,10 @@ export default async function LessonPage({
     },
   };
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
-
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
-
-  const handlePlayPause = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
-    }
-  };
-
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const time = parseFloat(e.target.value);
-    if (videoRef.current) {
-      videoRef.current.currentTime = time;
-      setCurrentTime(time);
-    }
-  };
-
-  const handleSkip = (seconds: number) => {
-    if (videoRef.current) {
-      videoRef.current.currentTime += seconds;
-    }
-  };
-
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newVolume = parseFloat(e.target.value);
-    setVolume(newVolume);
-    if (videoRef.current) {
-      videoRef.current.volume = newVolume;
-    }
-    setIsMuted(newVolume === 0);
-  };
-
-  const toggleMute = () => {
-    if (videoRef.current) {
-      if (isMuted) {
-        videoRef.current.volume = volume;
-        setIsMuted(false);
-      } else {
-        videoRef.current.volume = 0;
-        setIsMuted(true);
-      }
-    }
-  };
-
-  const toggleFullscreen = () => {
-    if (videoRef.current) {
-      if (!isFullscreen) {
-        videoRef.current.requestFullscreen();
-      } else {
-        document.exitFullscreen();
-      }
-      setIsFullscreen(!isFullscreen);
-    }
-  };
-
-  const handleVideoTimeUpdate = () => {
-    if (videoRef.current) {
-      setCurrentTime(videoRef.current.currentTime);
-
-      // Mark as watched if video is more than 90% complete
-      if (videoRef.current.currentTime / videoRef.current.duration > 0.9) {
-        setIsWatched(true);
-      }
-    }
-  };
-
-  const handleVideoLoadedMetadata = () => {
-    if (videoRef.current) {
-      setDuration(videoRef.current.duration);
-    }
-  };
-
-  const handleVideoClick = () => {
-    setShowControls(true);
-    if (controlsTimeoutRef.current) {
-      clearTimeout(controlsTimeoutRef.current);
-    }
-    controlsTimeoutRef.current = setTimeout(() => {
-      setShowControls(false);
-    }, 3000);
-  };
-
-  const handleMouseMove = () => {
-    setShowControls(true);
-    if (controlsTimeoutRef.current) {
-      clearTimeout(controlsTimeoutRef.current);
-    }
-    controlsTimeoutRef.current = setTimeout(() => {
-      setShowControls(false);
-    }, 3000);
   };
 
   const handleCompleteLesson = () => {
@@ -314,169 +204,37 @@ export default async function LessonPage({
     <div className="dark-bg-primary flex h-screen flex-1">
       {/* Main Content */}
       <div className="flex flex-1 flex-col">
-        {/* Video Player */}
-        <div
-          className="relative flex-1 overflow-hidden rounded-lg bg-black"
-          onMouseMove={handleMouseMove}
-        >
-          <video
-            ref={videoRef}
-            src={lesson.videoUrl}
-            className="h-full w-full object-contain"
-            onClick={handleVideoClick}
-            onTimeUpdate={handleVideoTimeUpdate}
-            onLoadedMetadata={handleVideoLoadedMetadata}
-            onEnded={() => setIsPlaying(false)}
+        {/* YouTube Video Player */}
+        <div className="relative flex-1 overflow-hidden rounded-lg bg-black">
+          <div className="absolute top-4 left-4 z-10">
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              className="dark-glass dark-border hover:dark-border-hover text-white backdrop-blur-sm"
+            >
+              <Link href={`/dashboard/courses/${lesson.module.course.id}`}>
+                <ArrowLeft size={16} className="mr-2" />
+                Voltar ao Curso
+              </Link>
+            </Button>
+          </div>
+
+          <iframe
+            src={`https://www.youtube.com/embed/${lesson.youtubeEmbedId}?autoplay=0&controls=1&modestbranding=1&rel=0&showinfo=0&fs=1&cc_load_policy=1&iv_load_policy=3&autohide=0&color=white&theme=dark`}
+            title={lesson.title}
+            className="h-full w-full"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+            style={{
+              border: "none",
+              background: "#000",
+            }}
           />
-
-          {/* Video Controls Overlay */}
-          {showControls && (
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 to-transparent">
-              {/* Top Controls */}
-              <div className="pointer-events-auto absolute top-4 right-4 left-4 flex items-center justify-between">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  asChild
-                  className="dark-glass dark-border hover:dark-border-hover text-white backdrop-blur-sm"
-                >
-                  <Link href={`/dashboard/courses/${lesson.module.course.id}`}>
-                    <ArrowLeft size={16} className="mr-2" />
-                    Voltar
-                  </Link>
-                </Button>
-
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="dark-glass dark-border hover:dark-border-hover text-white backdrop-blur-sm"
-                  >
-                    <Settings size={16} />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={toggleFullscreen}
-                    className="dark-glass dark-border hover:dark-border-hover text-white backdrop-blur-sm"
-                  >
-                    <Maximize size={16} />
-                  </Button>
-                </div>
-              </div>
-
-              {/* Center Play Button */}
-              <div className="pointer-events-auto absolute inset-0 flex items-center justify-center">
-                <Button
-                  variant="ghost"
-                  size="lg"
-                  onClick={handlePlayPause}
-                  className="dark-glass dark-border hover:dark-border-hover text-white shadow-lg backdrop-blur-sm transition-transform hover:scale-105"
-                >
-                  {isPlaying ? <Pause size={32} /> : <Play size={32} />}
-                </Button>
-              </div>
-
-              {/* Bottom Controls */}
-              <div className="pointer-events-auto absolute right-0 bottom-0 left-0 p-4">
-                {/* Progress Bar */}
-                <div className="mb-4">
-                  <input
-                    type="range"
-                    min="0"
-                    max={duration}
-                    value={currentTime}
-                    onChange={handleSeek}
-                    className="slider bg-dark-2 h-1 w-full cursor-pointer appearance-none rounded-lg"
-                  />
-                </div>
-
-                {/* Control Buttons */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleSkip(-10)}
-                    >
-                      <SkipBack size={16} />
-                      <span className="ml-1">10</span>
-                    </Button>
-
-                    <Button variant="ghost" size="sm" onClick={handlePlayPause}>
-                      {isPlaying ? <Pause size={16} /> : <Play size={16} />}
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleSkip(10)}
-                    >
-                      <SkipForward size={16} />
-                      <span className="ml-1">10</span>
-                    </Button>
-
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={toggleMute}
-                        className="bg-dark-1/80 hover:bg-dark-2/80 border-dark-2 border text-white backdrop-blur-sm"
-                      >
-                        {isMuted ? (
-                          <VolumeX size={16} />
-                        ) : (
-                          <Volume2 size={16} />
-                        )}
-                      </Button>
-                      <input
-                        type="range"
-                        min="0"
-                        max="1"
-                        step="0.1"
-                        value={isMuted ? 0 : volume}
-                        onChange={handleVolumeChange}
-                        className="slider bg-dark-2 h-1 w-20 cursor-pointer appearance-none rounded-lg"
-                      />
-                    </div>
-
-                    <span className="text-sm text-white">
-                      {formatTime(currentTime)} / {formatTime(duration)}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="bg-dark-1/80 hover:bg-dark-2/80 border-dark-2 border text-white backdrop-blur-sm"
-                    >
-                      CC
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="bg-dark-1/80 hover:bg-dark-2/80 border-dark-2 border text-white backdrop-blur-sm"
-                    >
-                      <Settings size={16} />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={toggleFullscreen}
-                      className="bg-dark-1/80 hover:bg-dark-2/80 border-dark-2 border text-white backdrop-blur-sm"
-                    >
-                      <Maximize size={16} />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Lesson Info */}
-        <div className="dark-glass dark-shadow-md dark-border border-t p-6">
+        <div className="dark-glass dark-shadow-md dark-border flex-[0.2] border-t p-6">
           <div className="mb-4 flex items-start justify-between">
             <div>
               <h1 className="dark-text-primary mb-2 text-xl font-bold">
@@ -514,7 +272,26 @@ export default async function LessonPage({
               </div>
               <div className="flex items-center">
                 <Star size={14} className="dark-secondary mr-1" />
-                <span>O que você achou desta aula?</span>
+                <span>Avalie esta aula</span>
+              </div>
+              <div className="flex items-center">
+                <a
+                  href={lesson.videoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="dark-primary hover:dark-primary-hover flex items-center transition-colors"
+                >
+                  <svg
+                    className="mr-1"
+                    width={14}
+                    height={14}
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                  </svg>
+                  <span>Ver no YouTube</span>
+                </a>
               </div>
             </div>
 
@@ -523,7 +300,7 @@ export default async function LessonPage({
                 <MessageCircle size={16} />
                 Assistente IA
               </Button>
-              <Button className="dark-btn-primary">Perguntar</Button>
+              <Button className="dark-btn-primary">Fazer Pergunta</Button>
             </div>
           </div>
         </div>
@@ -531,7 +308,7 @@ export default async function LessonPage({
 
       {/* Sidebar */}
       {isSidebarOpen && (
-        <div className="dark-glass dark-border dark-shadow-lg flex w-80 flex-col border-l">
+        <div className="dark-glass dark-border dark-shadow-lg flex w-96 flex-col border-l">
           {/* Sidebar Header */}
           <div className="dark-border border-b p-4">
             <div className="mb-4 flex items-center justify-between">
@@ -615,7 +392,7 @@ export default async function LessonPage({
                   {module.lessons.map((moduleLesson) => (
                     <Link
                       key={moduleLesson.id}
-                      href={`/dashboard/lessons/${moduleLesson.id}`}
+                      href={`/dashboard/courses/${lesson.module.course.id}/lessons/${moduleLesson.id}`}
                       className={`mx-4 flex cursor-pointer items-center space-x-3 rounded-lg px-4 py-3 transition-all duration-200 ${
                         moduleLesson.id === lessonId
                           ? "dark-gradient-primary text-white shadow-lg"

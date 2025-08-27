@@ -1,9 +1,7 @@
 "use client";
 
 import { formatDateTime, formatTime } from "@/src/lib/formatters";
-import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
-import { Card, CardContent } from "@repo/ui/components/card";
 import { Input } from "@repo/ui/components/input";
 import {
   Tabs,
@@ -303,49 +301,80 @@ export default function EventosPage() {
         </div>
 
         {/* Tabs */}
-        <div className="dark-glass dark-shadow-sm rounded-xl p-1">
+        <div className="dark-shadow-sm rounded-xl p-1">
           <Tabs defaultValue="all" className="w-full">
-            <TabsList className="dark-bg-secondary grid h-12 w-full grid-cols-6">
+            <TabsList className="dark-bg-secondary grid h-14 w-full grid-cols-6 gap-1">
               <TabsTrigger
                 value="all"
-                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary flex items-center justify-center gap-1 px-1 text-sm transition-all"
               >
-                Todos ({filteredEvents.length})
+                <Calendar size={14} className="shrink-0" />
+                <span className="hidden text-xs font-medium md:inline">
+                  Todos
+                </span>
+                <span className="dark-text-tertiary text-xs font-normal">
+                  ({filteredEvents.length})
+                </span>
               </TabsTrigger>
               <TabsTrigger
                 value="upcoming"
-                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary flex items-center justify-center gap-1 px-1 text-sm transition-all"
               >
-                <Calendar size={14} className="mr-1" />
-                Próximos ({upcomingEvents.length})
+                <Clock size={14} className="shrink-0" />
+                <span className="hidden text-xs font-medium md:inline">
+                  Próximos
+                </span>
+                <span className="dark-text-tertiary text-xs font-normal">
+                  ({upcomingEvents.length})
+                </span>
               </TabsTrigger>
               <TabsTrigger
                 value="ongoing"
-                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary flex items-center justify-center gap-1 px-1 text-sm transition-all"
               >
-                <Zap size={14} className="mr-1" />
-                Ao Vivo ({ongoingEvents.length})
+                <Zap size={14} className="shrink-0" />
+                <span className="hidden text-xs font-medium md:inline">
+                  Ao Vivo
+                </span>
+                <span className="dark-text-tertiary text-xs font-normal">
+                  ({ongoingEvents.length})
+                </span>
               </TabsTrigger>
               <TabsTrigger
                 value="enrolled"
-                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary flex items-center justify-center gap-1 px-1 text-sm transition-all"
               >
-                <CheckCircle size={14} className="mr-1" />
-                Inscritos ({enrolledEvents.length})
+                <CheckCircle size={14} className="shrink-0" />
+                <span className="hidden text-xs font-medium md:inline">
+                  Inscritos
+                </span>
+                <span className="dark-text-tertiary text-xs font-normal">
+                  ({enrolledEvents.length})
+                </span>
               </TabsTrigger>
               <TabsTrigger
                 value="featured"
-                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary flex items-center justify-center gap-1 px-1 text-sm transition-all"
               >
-                <TrendingUp size={14} className="mr-1" />
-                Destaques ({featuredEvents.length})
+                <TrendingUp size={14} className="shrink-0" />
+                <span className="hidden text-xs font-medium md:inline">
+                  Destaques
+                </span>
+                <span className="dark-text-tertiary text-xs font-normal">
+                  ({featuredEvents.length})
+                </span>
               </TabsTrigger>
               <TabsTrigger
                 value="past"
-                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary flex items-center justify-center gap-1 px-1 text-sm transition-all"
               >
-                <X size={14} className="mr-1" />
-                Passados ({pastEvents.length})
+                <X size={14} className="shrink-0" />
+                <span className="hidden text-xs font-medium md:inline">
+                  Passados
+                </span>
+                <span className="dark-text-tertiary text-xs font-normal">
+                  ({pastEvents.length})
+                </span>
               </TabsTrigger>
             </TabsList>
 
@@ -441,7 +470,7 @@ function EventCard({ event }: { event: any }) {
                 ? "dark-error-bg dark-error animate-pulse"
                 : status === "upcoming"
                   ? "dark-success-bg dark-success"
-                  : "dark-text-disabled bg-gray-600"
+                  : "dark-bg-tertiary dark-text-disabled"
             }`}
           >
             {status === "ongoing"
@@ -573,58 +602,60 @@ function EventListCard({ event }: { event: any }) {
   );
 
   return (
-    <Card className="border-dark-1 bg-dark-1/30 hover:shadow-primary/10 backdrop-blur-sm transition-all duration-300 hover:shadow-2xl">
-      <CardContent className="p-6">
+    <div className="dark-card dark-shadow-sm group cursor-pointer overflow-hidden rounded-xl transition-all duration-300">
+      <div className="p-6">
         <div className="flex items-center space-x-4">
-          <img
-            src={event.image}
-            alt={event.title}
-            className="h-20 w-20 rounded-lg object-cover"
-          />
+          <div className="relative">
+            <div className="dark-bg-tertiary flex h-20 w-20 items-center justify-center rounded-lg">
+              <Calendar className="dark-text-tertiary" size={24} />
+            </div>
+            {event.isFeatured && (
+              <div className="absolute -top-2 -right-2">
+                <div className="dark-gradient-primary flex h-6 w-6 items-center justify-center rounded-full">
+                  <TrendingUp className="dark-text-primary" size={12} />
+                </div>
+              </div>
+            )}
+          </div>
 
           <div className="flex-1">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <div className="mb-2 flex items-center space-x-2">
-                  <Badge
-                    variant="secondary"
-                    className={`${
-                      status === "ongoing"
-                        ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg"
+                <div className="mb-2 flex items-start justify-between">
+                  <h3 className="dark-text-primary group-hover:dark-primary line-clamp-1 font-semibold transition-colors">
+                    {event.title}
+                  </h3>
+                  <div className="ml-2 flex items-center space-x-2">
+                    <span
+                      className={`rounded-full px-2 py-1 text-xs font-medium ${
+                        status === "ongoing"
+                          ? "dark-error-bg dark-error animate-pulse"
+                          : status === "upcoming"
+                            ? "dark-success-bg dark-success"
+                            : "dark-text-disabled dark-bg-tertiary"
+                      }`}
+                    >
+                      {status === "ongoing"
+                        ? "AO VIVO"
                         : status === "upcoming"
-                          ? "from-secondary to-secondary-1 text-secondary-foreground bg-gradient-to-r shadow-lg"
-                          : "bg-dark-2 text-muted-foreground border-dark-1 border"
-                    }`}
-                  >
-                    {status === "ongoing"
-                      ? "AO VIVO"
-                      : status === "upcoming"
-                        ? "EM BREVE"
-                        : "FINALIZADO"}
-                  </Badge>
-                  <Badge
-                    variant="outline"
-                    className="border-dark-2 text-muted-foreground text-xs"
-                  >
-                    {event.isOnline ? "ONLINE" : "PRESENCIAL"}
-                  </Badge>
+                          ? "EM BREVE"
+                          : "FINALIZADO"}
+                    </span>
+                  </div>
                 </div>
 
-                <h3 className="text-foreground mb-1 font-semibold">
-                  {event.title}
-                </h3>
-                <p className="text-muted-foreground mb-2 text-sm">
+                <p className="dark-text-secondary mb-3 line-clamp-1 text-sm">
                   {event.description}
                 </p>
 
-                <div className="text-muted-foreground flex items-center space-x-4 text-sm">
+                <div className="dark-text-tertiary flex items-center space-x-4 text-sm">
                   <div className="flex items-center">
                     <Calendar size={14} className="mr-1" />
                     <span>{formatDateTime(event.startDate)}</span>
                   </div>
                   <div className="flex items-center">
                     <MapPin size={14} className="mr-1" />
-                    <span>{event.location}</span>
+                    <span className="truncate">{event.location}</span>
                   </div>
                   <div className="flex items-center">
                     <Users size={14} className="mr-1" />
@@ -633,17 +664,23 @@ function EventListCard({ event }: { event: any }) {
                 </div>
               </div>
 
-              <div className="text-right">
-                <div className="text-primary mb-2 text-sm font-semibold">
-                  {event.currentAttendees}/{event.maxAttendees} inscritos
+              <div className="ml-6 text-right">
+                <div className="dark-text-primary mb-3 text-sm font-medium">
+                  {event.currentAttendees}/{event.maxAttendees}
+                </div>
+                <div className="dark-text-tertiary mb-3 text-xs">
+                  {Math.round(
+                    (event.currentAttendees / event.maxAttendees) * 100,
+                  )}
+                  % lotado
                 </div>
                 <Button
                   asChild
                   size="sm"
                   className={
                     event.isEnrolled
-                      ? "from-secondary to-secondary-1 hover:from-secondary/90 hover:to-secondary-1/90 text-secondary-foreground hover:shadow-secondary/25 bg-gradient-to-r shadow-lg"
-                      : "bg-primary hover:bg-primary/90 hover:shadow-primary/25 shadow-lg"
+                      ? "dark-gradient-secondary"
+                      : "dark-btn-primary"
                   }
                   disabled={status === "past"}
                 >
@@ -655,7 +692,7 @@ function EventListCard({ event }: { event: any }) {
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

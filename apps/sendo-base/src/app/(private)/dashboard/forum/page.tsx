@@ -374,7 +374,7 @@ export default function ForumPage() {
         )}
 
         {/* Tabs */}
-        <div className="dark-glass dark-shadow-sm rounded-xl p-1">
+        <div className="dark-shadow-sm rounded-xl p-1">
           <Tabs defaultValue="all" className="w-full">
             <TabsList className="dark-bg-secondary grid h-12 w-full grid-cols-5">
               <TabsTrigger
