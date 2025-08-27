@@ -395,7 +395,7 @@ function CourseCard({ enrollment }: { enrollment: any }) {
                   : "dark-gradient-primary"
             }`}
           >
-            <Link href={`/dashboard/cursos/${course.id}`}>
+            <Link href={`/dashboard/courses/${course.id}`}>
               <Play size={16} className="mr-2" />
               {course.progress === 0
                 ? "Começar"
@@ -471,7 +471,7 @@ function CourseListCard({ enrollment }: { enrollment: any }) {
                   size="sm"
                   className="bg-primary hover:bg-primary/90 hover:shadow-primary/25 shadow-lg"
                 >
-                  <Link href={`/dashboard/cursos/${course.id}`}>
+                  <Link href={`/dashboard/courses/${course.id}`}>
                     <Play size={16} className="mr-2" />
                     Continuar
                   </Link>

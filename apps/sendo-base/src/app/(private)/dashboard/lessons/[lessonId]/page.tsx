@@ -340,7 +340,7 @@ export default async function LessonPage({
                   asChild
                   className="dark-glass dark-border hover:dark-border-hover text-white backdrop-blur-sm"
                 >
-                  <Link href={`/dashboard/cursos/${lesson.module.course.id}`}>
+                  <Link href={`/dashboard/courses/${lesson.module.course.id}`}>
                     <ArrowLeft size={16} className="mr-2" />
                     Voltar
                   </Link>
@@ -615,7 +615,7 @@ export default async function LessonPage({
                   {module.lessons.map((moduleLesson) => (
                     <Link
                       key={moduleLesson.id}
-                      href={`/dashboard/aulas/${moduleLesson.id}`}
+                      href={`/dashboard/lessons/${moduleLesson.id}`}
                       className={`mx-4 flex cursor-pointer items-center space-x-3 rounded-lg px-4 py-3 transition-all duration-200 ${
                         moduleLesson.id === lessonId
                           ? "dark-gradient-primary text-white shadow-lg"

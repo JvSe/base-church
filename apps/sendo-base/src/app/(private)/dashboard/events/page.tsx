@@ -544,7 +544,7 @@ function EventCard({ event }: { event: any }) {
               }
               disabled={status === "past"}
             >
-              <Link href={`/dashboard/eventos/${event.id}`}>
+              <Link href={`/dashboard/events/${event.id}`}>
                 {event.isEnrolled ? "Ver detalhes" : "Inscrever-se"}
               </Link>
             </Button>
@@ -647,7 +647,7 @@ function EventListCard({ event }: { event: any }) {
                   }
                   disabled={status === "past"}
                 >
-                  <Link href={`/dashboard/eventos/${event.id}`}>
+                  <Link href={`/dashboard/events/${event.id}`}>
                     {event.isEnrolled ? "Ver detalhes" : "Inscrever-se"}
                   </Link>
                 </Button>

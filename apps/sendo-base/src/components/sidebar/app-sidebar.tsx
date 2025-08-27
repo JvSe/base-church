@@ -49,22 +49,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       },
       {
         title: "Meus Conteúdos",
-        url: "/dashboard/conteudos",
+        url: "/dashboard/contents",
         icon: FileText,
       },
       {
         title: "Minha Jornada",
-        url: "/dashboard/jornada",
+        url: "/dashboard/journey",
         icon: Map,
       },
       {
         title: "Catálogo",
-        url: "/dashboard/catalogo",
+        url: "/dashboard/catalog",
         icon: BookOpen,
       },
       {
         title: "Eventos",
-        url: "/dashboard/eventos",
+        url: "/dashboard/events",
         icon: Calendar,
       },
       {
@@ -74,12 +74,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       },
       {
         title: "Comunidade",
-        url: "/dashboard/comunidade",
+        url: "/dashboard/community",
         icon: Users,
       },
       {
         title: "Ajuda",
-        url: "/dashboard/ajuda",
+        url: "/dashboard/help",
         icon: HelpCircle,
       },
     ],

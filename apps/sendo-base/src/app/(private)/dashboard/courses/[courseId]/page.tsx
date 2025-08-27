@@ -379,7 +379,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
                   </div>
 
                   <Button asChild className="dark-btn-primary w-full">
-                    <Link href={`/dashboard/aulas/10`}>
+                    <Link href={`/dashboard/lessons/10`}>
                       <Play className="mr-2" size={16} />
                       Continuar Assistindo
                     </Link>

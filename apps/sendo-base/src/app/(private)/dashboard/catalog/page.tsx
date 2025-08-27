@@ -479,8 +479,8 @@ function CourseCard({ course }: { course: any }) {
             <Link
               href={
                 course.isEnrolled
-                  ? `/dashboard/cursos/${course.id}`
-                  : `/dashboard/catalogo/${course.id}`
+                  ? `/dashboard/courses/${course.id}`
+                  : `/dashboard/catalog/${course.id}`
               }
             >
               <Play size={16} className="mr-2" />
@@ -572,8 +572,8 @@ function CourseListCard({ course }: { course: any }) {
                   <Link
                     href={
                       course.isEnrolled
-                        ? `/dashboard/cursos/${course.id}`
-                        : `/dashboard/catalogo/${course.id}`
+                        ? `/dashboard/courses/${course.id}`
+                        : `/dashboard/catalog/${course.id}`
                     }
                   >
                     <Play size={16} className="mr-2" />

@@ -134,7 +134,7 @@ export async function enrollInCourse(userId: string, courseId: string) {
       },
     });
 
-    revalidatePath("/dashboard/conteudos");
+    revalidatePath("/dashboard/contents");
     return { success: true, enrollment };
   } catch (error) {
     return { success: false, error: "Failed to enroll in course" };
@@ -200,7 +200,7 @@ export async function updateLessonProgress(
       },
     });
 
-    revalidatePath("/dashboard/conteudos");
+    revalidatePath("/dashboard/contents");
     return { success: true, progress };
   } catch (error) {
     return { success: false, error: "Failed to update progress" };
