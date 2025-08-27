@@ -2,7 +2,6 @@
 
 import { formatDuration } from "@/src/lib/formatters";
 import { Button } from "@repo/ui/components/button";
-import { Card, CardContent } from "@repo/ui/components/card";
 import { Input } from "@repo/ui/components/input";
 import {
   Select,
@@ -312,7 +311,7 @@ export default function CatalogoPage() {
         </div>
 
         {/* Tabs */}
-        <div className="dark-glass dark-shadow-sm rounded-xl p-1">
+        <div className="dark-shadow-sm rounded-xl p-1">
           <Tabs defaultValue="all" className="w-full">
             <TabsList className="dark-bg-secondary grid h-12 w-full grid-cols-4">
               <TabsTrigger
@@ -496,26 +495,48 @@ function CourseCard({ course }: { course: any }) {
 
 function CourseListCard({ course }: { course: any }) {
   return (
-    <Card className="border-dark-1 bg-dark-1/30 hover:shadow-primary/10 backdrop-blur-sm transition-all duration-300 hover:shadow-2xl">
-      <CardContent className="p-6">
+    <div className="dark-card dark-shadow-sm group cursor-pointer overflow-hidden rounded-xl transition-all duration-300">
+      <div className="p-6">
         <div className="flex items-center space-x-4">
-          <img
-            src={course.image}
-            alt={course.title}
-            className="h-20 w-20 rounded-lg object-cover"
-          />
+          <div className="relative">
+            <div className="dark-bg-tertiary flex h-20 w-20 items-center justify-center rounded-lg">
+              <BookOpen className="dark-text-tertiary" size={24} />
+            </div>
+            {course.isFeatured && (
+              <div className="absolute -top-2 -right-2">
+                <div className="dark-gradient-primary flex h-6 w-6 items-center justify-center rounded-full">
+                  <TrendingUp className="dark-text-primary" size={12} />
+                </div>
+              </div>
+            )}
+          </div>
 
           <div className="flex-1">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <h3 className="text-foreground mb-1 font-semibold">
-                  {course.title}
-                </h3>
-                <p className="text-muted-foreground mb-2 text-sm">
+                <div className="mb-2 flex items-start justify-between">
+                  <h3 className="dark-text-primary group-hover:dark-primary line-clamp-1 font-semibold transition-colors">
+                    {course.title}
+                  </h3>
+                  <div className="ml-2 flex items-center space-x-2">
+                    <span className="dark-primary-subtle-bg dark-primary rounded-full px-2 py-1 text-xs font-medium">
+                      {course.level}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="dark-glass dark-border hover:dark-border-hover h-8 w-8 p-0 backdrop-blur-sm"
+                    >
+                      <Heart className="dark-text-primary" size={14} />
+                    </Button>
+                  </div>
+                </div>
+
+                <p className="dark-text-secondary mb-3 line-clamp-1 text-sm">
                   {course.description}
                 </p>
 
-                <div className="text-muted-foreground flex items-center space-x-4 text-sm">
+                <div className="dark-text-tertiary flex items-center space-x-4 text-sm">
                   <div className="flex items-center">
                     <Users size={14} className="mr-1" />
                     <span>{course.instructor}</span>
@@ -525,7 +546,7 @@ function CourseListCard({ course }: { course: any }) {
                     <span>{formatDuration(course.duration)}</span>
                   </div>
                   <div className="flex items-center">
-                    <Star size={14} className="text-secondary mr-1" />
+                    <Star size={14} className="dark-secondary mr-1" />
                     <span>{course.rating}</span>
                   </div>
                   <div className="flex items-center">
@@ -535,8 +556,8 @@ function CourseListCard({ course }: { course: any }) {
                 </div>
               </div>
 
-              <div className="text-right">
-                <div className="text-foreground mb-2 text-lg font-bold">
+              <div className="ml-6 text-right">
+                <div className="dark-text-primary mb-3 text-lg font-bold">
                   {course.price === 0 ? "Gratuito" : `R$ ${course.price}`}
                 </div>
                 <Button
@@ -544,8 +565,8 @@ function CourseListCard({ course }: { course: any }) {
                   size="sm"
                   className={
                     course.isEnrolled
-                      ? "from-secondary to-secondary-1 hover:from-secondary/90 hover:to-secondary-1/90 text-secondary-foreground hover:shadow-secondary/25 bg-gradient-to-r shadow-lg"
-                      : "bg-primary hover:bg-primary/90 hover:shadow-primary/25 shadow-lg"
+                      ? "dark-gradient-secondary"
+                      : "dark-btn-primary"
                   }
                 >
                   <Link
@@ -563,7 +584,7 @@ function CourseListCard({ course }: { course: any }) {
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

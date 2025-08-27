@@ -9,27 +9,27 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow-lg hover:bg-primary-hover hover:shadow-primary/25 active:bg-primary-active btn-hover-lift",
+          "dark-btn-primary shadow-lg btn-hover-lift",
         destructive:
-          "bg-destructive text-destructive-foreground shadow-lg hover:bg-destructive/90 hover:shadow-destructive/25 btn-hover-lift",
+          "dark-btn-destructive shadow-lg btn-hover-lift",
         outline:
-          "border border-border bg-background shadow-sm hover:bg-accent-hover hover:text-accent-foreground hover:border-border-hover btn-hover-lift",
+          "dark-btn-outline shadow-sm btn-hover-lift",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-lg hover:bg-secondary-hover hover:shadow-secondary/25 active:bg-secondary-active btn-hover-lift",
+          "dark-btn-secondary shadow-lg btn-hover-lift",
         ghost:
-          "hover:bg-accent-hover hover:text-accent-foreground transition-colors",
-        link: "text-primary underline-offset-4 hover:underline hover:text-primary-hover",
+          "dark-btn-ghost transition-colors",
+        link: "dark-text-primary underline-offset-4 hover:underline hover:dark-primary",
         clean: "text-inherit p-0",
         gradient:
-          "gradient-primary text-primary-foreground shadow-lg btn-hover-lift btn-hover-glow",
+          "dark-gradient-primary dark-text-primary shadow-lg btn-hover-lift btn-hover-glow",
         "gradient-secondary":
-          "gradient-secondary text-secondary-foreground shadow-lg btn-hover-lift",
+          "dark-gradient-secondary dark-text-primary shadow-lg btn-hover-lift",
         glass:
-          "glass-dark text-foreground shadow-lg hover:bg-background-tertiary btn-hover-lift",
+          "dark-glass dark-text-primary shadow-lg hover:dark-bg-tertiary btn-hover-lift",
         success:
-          "bg-success text-success-foreground shadow-lg hover:shadow-success/25 btn-hover-lift",
+          "dark-btn-success shadow-lg btn-hover-lift",
         warning:
-          "bg-warning text-warning-foreground shadow-lg hover:shadow-warning/25 btn-hover-lift",
+          "dark-btn-warning shadow-lg btn-hover-lift",
       },
       size: {
         default: "h-11 px-4 py-2",

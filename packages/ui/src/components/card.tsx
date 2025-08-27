@@ -4,16 +4,16 @@ import * as React from "react";
 import { cn } from "@repo/ui/lib/utils";
 
 const cardVariants = cva(
-  "bg-card text-card-foreground flex flex-col gap-6 rounded-xl border shadow-lg transition-all duration-300",
+  "dark-card dark-text-primary flex flex-col gap-6 rounded-xl shadow-lg transition-all duration-300",
   {
     variants: {
       variant: {
-        default: "border-border py-6",
-        elevated: "border-border shadow-2xl card-hover py-6",
-        glass: "glass-dark border-border/50 py-6",
-        gradient: "gradient-surface border-border/50 py-6",
-        outline: "border-2 border-border bg-transparent py-6",
-        filled: "bg-background-secondary border-border py-6",
+        default: "dark-border py-6",
+        elevated: "dark-border dark-shadow-lg card-hover py-6",
+        glass: "dark-glass dark-border/50 py-6",
+        gradient: "dark-gradient-surface dark-border/50 py-6",
+        outline: "border-2 dark-border bg-transparent py-6",
+        filled: "dark-bg-secondary dark-border py-6",
       },
     },
     defaultVariants: {
@@ -65,7 +65,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-title"
       className={cn(
-        "leading-tight font-bold text-lg text-foreground",
+        "leading-tight font-bold text-lg dark-text-primary",
         className
       )}
       {...props}
@@ -77,7 +77,7 @@ function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-description"
-      className={cn("text-foreground-muted text-sm leading-relaxed", className)}
+      className={cn("dark-text-secondary text-sm leading-relaxed", className)}
       {...props}
     />
   );
