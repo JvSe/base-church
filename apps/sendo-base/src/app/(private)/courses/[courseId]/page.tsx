@@ -379,7 +379,7 @@ export default function CoursePage() {
                   </div>
 
                   <Button asChild className="dark-btn-primary w-full">
-                    <Link href={`/dashboard/courses/${courseId}/lessons/10`}>
+                    <Link href={`/courses/${courseId}/lessons/10`}>
                       <Play className="mr-2" size={16} />
                       Continuar Assistindo
                     </Link>

@@ -357,7 +357,7 @@ export default function JornadaPage() {
                               }
                               size="sm"
                             >
-                              <Link href={`/dashboard/courses`}>
+                              <Link href={`/courses`}>
                                 <Play size={14} className="mr-1" />
                                 {step.status === "completed"
                                   ? "Revisar"

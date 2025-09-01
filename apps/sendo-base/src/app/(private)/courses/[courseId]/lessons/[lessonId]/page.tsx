@@ -6,8 +6,6 @@ import {
   ArrowLeft,
   Bookmark,
   CheckCircle,
-  ChevronLeft,
-  ChevronRight,
   Circle,
   Clock,
   Menu,
@@ -15,7 +13,6 @@ import {
   Search,
   Settings,
   Star,
-  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -201,25 +198,50 @@ export default function LessonPage() {
   );
 
   return (
-    <div className="dark-bg-primary flex h-screen flex-1">
+    <div className="dark-bg-primary flex h-screen">
       {/* Main Content */}
       <div className="flex flex-1 flex-col">
-        {/* YouTube Video Player */}
-        <div className="relative flex-1 overflow-hidden rounded-lg bg-black">
-          <div className="absolute top-4 left-4 z-10">
+        {/* Header Navigation */}
+        <div className="dark-bg-secondary dark-border-b flex items-center justify-between px-6 py-4">
+          <div className="flex items-center space-x-4">
             <Button
               variant="ghost"
               size="sm"
               asChild
-              className="dark-glass dark-border hover:dark-border-hover text-white backdrop-blur-sm"
+              className="dark-text-secondary hover:dark-text-primary"
             >
-              <Link href={`/dashboard/courses/${lesson.module.course.id}`}>
+              <Link href={`/courses/${lesson.module.course.id}`}>
                 <ArrowLeft size={16} className="mr-2" />
-                Voltar ao Curso
+                {lesson.module.course.title}
               </Link>
             </Button>
+            <span className="dark-text-tertiary text-sm">/</span>
+            <span className="dark-text-secondary text-sm">
+              {lesson.module.title}
+            </span>
           </div>
 
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="dark-text-secondary hover:dark-text-primary"
+            >
+              <Settings size={16} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="dark-text-secondary hover:dark-text-primary"
+            >
+              <Menu size={16} />
+            </Button>
+          </div>
+        </div>
+
+        {/* Video Player */}
+        <div className="flex-1 bg-black">
           <iframe
             src={`https://www.youtube.com/embed/${lesson.youtubeEmbedId}?autoplay=0&controls=1&modestbranding=1&rel=0&showinfo=0&fs=1&cc_load_policy=1&iv_load_policy=3&autohide=0&color=white&theme=dark`}
             title={lesson.title}
@@ -279,18 +301,17 @@ export default function LessonPage() {
                   href={lesson.videoUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="dark-primary hover:dark-primary-hover flex items-center transition-colors"
+                  className="dark-primary hover:dark-primary-hover flex items-center space-x-2 text-sm font-medium transition-colors"
                 >
                   <svg
-                    className="mr-1"
-                    width={14}
-                    height={14}
+                    width={16}
+                    height={16}
                     viewBox="0 0 24 24"
                     fill="currentColor"
                   >
                     <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                   </svg>
-                  <span>Ver no YouTube</span>
+                  <span>Abrir no YouTube</span>
                 </a>
               </div>
             </div>
@@ -306,7 +327,7 @@ export default function LessonPage() {
         </div>
       </div>
 
-      {/* Sidebar */}
+      {/* Sidebar - Clean & Simplified */}
       {isSidebarOpen && (
         <div className="dark-glass dark-border dark-shadow-lg flex w-96 flex-col border-l">
           {/* Sidebar Header */}
@@ -315,54 +336,19 @@ export default function LessonPage() {
               <h3 className="dark-text-primary font-semibold">
                 Conteúdo do Curso
               </h3>
-              <div className="flex items-center space-x-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="hover:dark-bg-tertiary"
-                >
-                  <ChevronLeft className="dark-text-secondary" size={16} />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="hover:dark-bg-tertiary"
-                >
-                  <ChevronRight className="dark-text-secondary" size={16} />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="hover:dark-bg-tertiary"
-                >
-                  <Settings className="dark-text-secondary" size={16} />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsSidebarOpen(false)}
-                  className="hover:dark-bg-tertiary"
-                >
-                  <X className="dark-text-secondary" size={16} />
-                </Button>
-              </div>
-            </div>
-
-            <div className="dark-info-bg dark-info mb-4 rounded-lg p-3 text-sm">
-              💡 Você possui 1 recomendação de estudo
             </div>
 
             <div className="relative">
               <Search
-                className="dark-text-tertiary absolute top-1/2 left-3 -translate-y-1/2 transform"
+                className="dark-text-tertiary absolute top-1/2 left-3 -translate-y-1/2"
                 size={16}
               />
               <input
                 type="text"
-                placeholder="Buscar conteúdo"
+                placeholder="Buscar aula..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="dark-input w-full py-2 pr-4 pl-10 text-sm"
+                className="dark-input w-full py-2.5 pr-4 pl-10 text-sm"
               />
             </div>
           </div>
@@ -392,7 +378,7 @@ export default function LessonPage() {
                   {module.lessons.map((moduleLesson) => (
                     <Link
                       key={moduleLesson.id}
-                      href={`/dashboard/courses/${lesson.module.course.id}/lessons/${moduleLesson.id}`}
+                      href={`/courses/${lesson.module.course.id}/lessons/${moduleLesson.id}`}
                       className={`mx-4 flex cursor-pointer items-center space-x-3 rounded-lg px-4 py-3 transition-all duration-200 ${
                         moduleLesson.id === lessonId
                           ? "dark-gradient-primary text-white shadow-lg"
@@ -444,18 +430,6 @@ export default function LessonPage() {
             ))}
           </div>
         </div>
-      )}
-
-      {/* Sidebar Toggle Button */}
-      {!isSidebarOpen && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsSidebarOpen(true)}
-          className="dark-glass dark-border hover:dark-border-hover absolute top-4 right-4 z-10 text-white shadow-lg backdrop-blur-sm"
-        >
-          <Menu size={16} />
-        </Button>
       )}
     </div>
   );

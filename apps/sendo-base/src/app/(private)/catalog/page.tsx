@@ -1,6 +1,7 @@
 "use client";
 
-import { formatDuration } from "@/src/lib/formatters";
+import { DashboardCourseCard } from "@/src/components/dashboard-course-card";
+import { DashboardCourseListCard } from "@/src/components/dashboard-course-list-card";
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
 import {
@@ -17,28 +18,20 @@ import {
   TabsTrigger,
 } from "@repo/ui/components/tabs";
 import {
-  ArrowRight,
-  BookOpen,
-  Clock,
   Code,
   Database,
   Filter,
   Globe,
   Grid,
-  Heart,
   List,
   Palette,
-  Play,
   Search,
   Server,
   Smartphone,
-  Star,
   Target,
   TrendingUp,
-  Users,
   Zap,
 } from "lucide-react";
-import Link from "next/link";
 import { useState } from "react";
 
 export default function CatalogoPage() {
@@ -347,13 +340,17 @@ export default function CatalogoPage() {
               {viewMode === "grid" ? (
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {filteredCourses.map((course) => (
-                    <CourseCard key={course.id} course={course} />
+                    <DashboardCourseCard
+                      key={course.id}
+                      course={course}
+                      variant="catalog"
+                    />
                   ))}
                 </div>
               ) : (
                 <div className="space-y-4">
                   {filteredCourses.map((course) => (
-                    <CourseListCard key={course.id} course={course} />
+                    <DashboardCourseListCard key={course.id} course={course} />
                   ))}
                 </div>
               )}
@@ -362,7 +359,11 @@ export default function CatalogoPage() {
             <TabsContent value="featured" className="mt-6">
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {featuredCourses.map((course) => (
-                  <CourseCard key={course.id} course={course} />
+                  <DashboardCourseCard
+                    key={course.id}
+                    course={course}
+                    variant="catalog"
+                  />
                 ))}
               </div>
             </TabsContent>
@@ -370,7 +371,11 @@ export default function CatalogoPage() {
             <TabsContent value="enrolled" className="mt-6">
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {enrolledCourses.map((course) => (
-                  <CourseCard key={course.id} course={course} />
+                  <DashboardCourseCard
+                    key={course.id}
+                    course={course}
+                    variant="catalog"
+                  />
                 ))}
               </div>
             </TabsContent>
@@ -378,211 +383,15 @@ export default function CatalogoPage() {
             <TabsContent value="recommended" className="mt-6">
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {filteredCourses.slice(0, 6).map((course) => (
-                  <CourseCard key={course.id} course={course} />
+                  <DashboardCourseCard
+                    key={course.id}
+                    course={course}
+                    variant="catalog"
+                  />
                 ))}
               </div>
             </TabsContent>
           </Tabs>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CourseCard({ course }: { course: any }) {
-  return (
-    <div className="dark-card dark-shadow-sm group cursor-pointer overflow-hidden rounded-xl">
-      <div className="relative">
-        <div className="dark-bg-tertiary flex h-48 w-full items-center justify-center">
-          <BookOpen className="dark-text-tertiary" size={48} />
-        </div>
-        <div className="absolute top-3 left-3">
-          <span className="dark-glass dark-primary-subtle-bg dark-primary rounded-full px-3 py-1 text-xs font-medium backdrop-blur-sm">
-            {course.level}
-          </span>
-        </div>
-        <div className="absolute top-3 right-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="dark-glass dark-border hover:dark-border-hover backdrop-blur-sm"
-          >
-            <Heart className="dark-text-primary" size={16} />
-          </Button>
-        </div>
-        {course.isFeatured && (
-          <div className="absolute bottom-3 left-3">
-            <span className="dark-gradient-primary dark-text-primary flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium shadow-lg">
-              <TrendingUp size={12} />
-              Em Destaque
-            </span>
-          </div>
-        )}
-      </div>
-
-      <div className="p-6">
-        <div className="mb-3 flex items-start justify-between">
-          <h3 className="dark-text-primary group-hover:dark-primary line-clamp-2 font-semibold transition-colors">
-            {course.title}
-          </h3>
-          <Button variant="ghost" size="sm" className="hover:dark-bg-tertiary">
-            <ArrowRight className="dark-text-secondary" size={16} />
-          </Button>
-        </div>
-
-        <p className="dark-text-secondary mb-4 line-clamp-2 text-sm">
-          {course.description}
-        </p>
-
-        <div className="dark-text-tertiary mb-3 flex items-center text-sm">
-          <Users size={14} className="mr-1" />
-          <span>{course.instructor}</span>
-        </div>
-
-        <div className="dark-text-tertiary mb-4 flex items-center justify-between text-sm">
-          <div className="flex items-center">
-            <Clock size={14} className="mr-1" />
-            <span>{formatDuration(course.duration)}</span>
-          </div>
-          <div className="flex items-center">
-            <Star size={14} className="dark-secondary mr-1" />
-            <span>{course.rating}</span>
-          </div>
-          <div className="flex items-center">
-            <BookOpen size={14} className="mr-1" />
-            <span>{course.enrolledStudents.toLocaleString()}</span>
-          </div>
-        </div>
-
-        <div className="mb-4 flex flex-wrap gap-2">
-          {course.tags.slice(0, 3).map((tag: string) => (
-            <span
-              key={tag}
-              className="dark-primary-subtle-bg dark-primary rounded-full px-2 py-1 text-xs font-medium"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div className="dark-text-primary text-lg font-bold">
-            {course.price === 0 ? "Gratuito" : `R$ ${course.price}`}
-          </div>
-
-          <Button
-            asChild
-            className={
-              course.isEnrolled ? "dark-gradient-secondary" : "dark-btn-primary"
-            }
-          >
-            <Link
-              href={
-                course.isEnrolled
-                  ? `/dashboard/courses/${course.id}`
-                  : `/dashboard/catalog/${course.id}`
-              }
-            >
-              <Play size={16} className="mr-2" />
-              {course.isEnrolled ? "Continuar" : "Matricular"}
-            </Link>
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CourseListCard({ course }: { course: any }) {
-  return (
-    <div className="dark-card dark-shadow-sm group cursor-pointer overflow-hidden rounded-xl transition-all duration-300">
-      <div className="p-6">
-        <div className="flex items-center space-x-4">
-          <div className="relative">
-            <div className="dark-bg-tertiary flex h-20 w-20 items-center justify-center rounded-lg">
-              <BookOpen className="dark-text-tertiary" size={24} />
-            </div>
-            {course.isFeatured && (
-              <div className="absolute -top-2 -right-2">
-                <div className="dark-gradient-primary flex h-6 w-6 items-center justify-center rounded-full">
-                  <TrendingUp className="dark-text-primary" size={12} />
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="flex-1">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="mb-2 flex items-start justify-between">
-                  <h3 className="dark-text-primary group-hover:dark-primary line-clamp-1 font-semibold transition-colors">
-                    {course.title}
-                  </h3>
-                  <div className="ml-2 flex items-center space-x-2">
-                    <span className="dark-primary-subtle-bg dark-primary rounded-full px-2 py-1 text-xs font-medium">
-                      {course.level}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="dark-glass dark-border hover:dark-border-hover h-8 w-8 p-0 backdrop-blur-sm"
-                    >
-                      <Heart className="dark-text-primary" size={14} />
-                    </Button>
-                  </div>
-                </div>
-
-                <p className="dark-text-secondary mb-3 line-clamp-1 text-sm">
-                  {course.description}
-                </p>
-
-                <div className="dark-text-tertiary flex items-center space-x-4 text-sm">
-                  <div className="flex items-center">
-                    <Users size={14} className="mr-1" />
-                    <span>{course.instructor}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Clock size={14} className="mr-1" />
-                    <span>{formatDuration(course.duration)}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Star size={14} className="dark-secondary mr-1" />
-                    <span>{course.rating}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <BookOpen size={14} className="mr-1" />
-                    <span>{course.enrolledStudents.toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="ml-6 text-right">
-                <div className="dark-text-primary mb-3 text-lg font-bold">
-                  {course.price === 0 ? "Gratuito" : `R$ ${course.price}`}
-                </div>
-                <Button
-                  asChild
-                  size="sm"
-                  className={
-                    course.isEnrolled
-                      ? "dark-gradient-secondary"
-                      : "dark-btn-primary"
-                  }
-                >
-                  <Link
-                    href={
-                      course.isEnrolled
-                        ? `/dashboard/courses/${course.id}`
-                        : `/dashboard/catalog/${course.id}`
-                    }
-                  >
-                    <Play size={16} className="mr-2" />
-                    {course.isEnrolled ? "Continuar" : "Matricular"}
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

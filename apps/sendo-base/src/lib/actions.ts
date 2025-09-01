@@ -24,7 +24,7 @@ export async function updateUserProfile(
       data,
     });
 
-    revalidatePath("/dashboard/profile");
+    revalidatePath("/profile");
     return { success: true, user };
   } catch (error) {
     return { success: false, error: "Failed to update profile" };
@@ -134,7 +134,7 @@ export async function enrollInCourse(userId: string, courseId: string) {
       },
     });
 
-    revalidatePath("/dashboard/contents");
+    revalidatePath("/contents");
     return { success: true, enrollment };
   } catch (error) {
     return { success: false, error: "Failed to enroll in course" };
@@ -200,7 +200,7 @@ export async function updateLessonProgress(
       },
     });
 
-    revalidatePath("/dashboard/contents");
+    revalidatePath("/contents");
     return { success: true, progress };
   } catch (error) {
     return { success: false, error: "Failed to update progress" };
@@ -299,7 +299,7 @@ export async function createForumPost(
       },
     });
 
-    revalidatePath("/dashboard/forum");
+    revalidatePath("/forum");
     return { success: true, post };
   } catch (error) {
     return { success: false, error: "Failed to create post" };
@@ -327,7 +327,7 @@ export async function markNotificationAsRead(notificationId: string) {
       data: { isRead: true },
     });
 
-    revalidatePath("/dashboard");
+    revalidatePath("/home");
     return { success: true, notification };
   } catch (error) {
     return { success: false, error: "Failed to mark notification as read" };
