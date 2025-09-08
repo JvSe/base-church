@@ -1,6 +1,8 @@
 "use client";
 
+import { getCommunityData } from "@/src/lib/actions";
 import { Button } from "@repo/ui/components/button";
+import { useQuery } from "@tanstack/react-query";
 import {
   Award,
   Bookmark,
@@ -25,10 +27,24 @@ export default function ComunidadePage() {
   const [activeTab, setActiveTab] = useState("feed");
   const [newPost, setNewPost] = useState("");
 
+  // Fetch community data from database
+  const {
+    data: communityData,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["community-data"],
+    queryFn: getCommunityData,
+    select: (data) => data.data,
+  });
+
+  // Transform community data for compatibility with existing components
   const communityStats = [
     {
       title: "Membros Ativos",
-      value: "12.4k",
+      value: communityData?.stats?.totalUsers
+        ? `${(communityData.stats.totalUsers / 1000).toFixed(1)}k`
+        : "0",
       icon: Users,
       color: "dark-primary",
       bgColor: "dark-primary-subtle-bg",
@@ -36,7 +52,7 @@ export default function ComunidadePage() {
     },
     {
       title: "Posts Esta Semana",
-      value: "847",
+      value: communityData?.stats?.totalPosts?.toString() || "0",
       icon: MessageCircle,
       color: "dark-secondary",
       bgColor: "dark-secondary-subtle-bg",
@@ -44,7 +60,7 @@ export default function ComunidadePage() {
     },
     {
       title: "Eventos Ativos",
-      value: "23",
+      value: communityData?.stats?.totalEvents?.toString() || "0",
       icon: Calendar,
       color: "dark-info",
       bgColor: "dark-info-bg",
@@ -52,7 +68,7 @@ export default function ComunidadePage() {
     },
     {
       title: "Conquistas",
-      value: "156",
+      value: communityData?.stats?.totalAchievements?.toString() || "0",
       icon: Award,
       color: "dark-warning",
       bgColor: "dark-warning-bg",
@@ -60,68 +76,34 @@ export default function ComunidadePage() {
     },
   ];
 
-  const feedPosts = [
-    {
-      id: "1",
+  // Transform recent posts for feed
+  const feedPosts =
+    communityData?.recentPosts?.map((post: any) => ({
+      id: post.id,
       author: {
-        name: "João Silva",
-        role: "Líder de Célula",
-        avatar: null,
+        name: post.user.name || "Usuário",
+        role: post.user.role || "Membro",
+        avatar: post.user.image,
       },
-      content:
-        "Acabei de concluir o curso de Fundamentos Ministeriais! As aulas sobre princípios bíblicos foram transformadoras. Recomendo muito para quem está começando na liderança. 🙏",
-      timestamp: "2 horas atrás",
-      likes: 24,
-      comments: 8,
-      shares: 3,
-      isLiked: false,
-      tags: ["#fundamentos", "#liderança"],
+      content: post.content,
+      timestamp: formatTimeAgo(new Date(post.createdAt)),
+      likes: 0, // TODO: Add likes to forum posts
+      comments: post._count?.comments || 0,
+      shares: 0, // TODO: Add shares to forum posts
+      isLiked: false, // TODO: Implement user likes
+      tags: [], // TODO: Add tags to forum posts
       type: "text",
-    },
-    {
-      id: "2",
-      author: {
-        name: "Maria Santos",
-        role: "Pastora",
-        avatar: null,
-      },
-      content:
-        "Compartilhando algumas reflexões sobre o último módulo de Cultura da Igreja. Como vocês aplicam esses princípios no dia a dia do ministério?",
-      timestamp: "4 horas atrás",
-      likes: 18,
-      comments: 12,
-      shares: 5,
-      isLiked: true,
-      tags: ["#cultura", "#ministério"],
-      type: "text",
-    },
-    {
-      id: "3",
-      author: {
-        name: "Carlos Mendes",
-        role: "Discipulador",
-        avatar: null,
-      },
-      content:
-        "Evento especial amanhã às 19h! Vamos discutir estratégias de discipulado para jovens. Quem vai participar? 🎯",
-      timestamp: "6 horas atrás",
-      likes: 32,
-      comments: 15,
-      shares: 8,
-      isLiked: false,
-      tags: ["#evento", "#discipulado", "#jovens"],
-      type: "event",
-    },
-  ];
+    })) || [];
 
-  const activeMembers = [
-    { name: "Ana Costa", role: "Coordenadora", online: true },
-    { name: "Pedro Lima", role: "Líder", online: true },
-    { name: "Julia Rocha", role: "Discipuladora", online: false },
-    { name: "Rafael Santos", role: "Pastor", online: true },
-    { name: "Camila Dias", role: "Líder de Célula", online: false },
-  ];
+  // Transform active users
+  const activeMembers =
+    communityData?.activeUsers?.map((user: any) => ({
+      name: user.name || "Usuário",
+      role: user.role || "Membro",
+      online: true, // TODO: Implement online status
+    })) || [];
 
+  // Mock trending topics for now
   const trendingTopics = [
     { topic: "#fundamentos", posts: 45 },
     { topic: "#liderança", posts: 32 },
@@ -129,6 +111,77 @@ export default function ComunidadePage() {
     { topic: "#cultura", posts: 24 },
     { topic: "#ministério", posts: 19 },
   ];
+
+  // Helper function to format time ago
+  function formatTimeAgo(date: Date) {
+    const now = new Date();
+    const diffInHours = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60 * 60),
+    );
+
+    if (diffInHours < 1) {
+      return "Agora mesmo";
+    } else if (diffInHours < 24) {
+      return `${diffInHours}h atrás`;
+    } else {
+      const diffInDays = Math.floor(diffInHours / 24);
+      return `${diffInDays}d atrás`;
+    }
+  }
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="dark-bg-primary min-h-screen">
+        <div className="fixed inset-0 opacity-3">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
+        </div>
+        <div className="relative mx-auto max-w-7xl space-y-6 p-6">
+          <div className="dark-glass dark-shadow-md rounded-2xl p-8 text-center">
+            <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+              <Users className="dark-text-tertiary" size={32} />
+            </div>
+            <h1 className="dark-text-primary mb-2 text-2xl font-bold">
+              Carregando comunidade...
+            </h1>
+            <p className="dark-text-secondary">
+              Conectando com nossa família ministerial
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="dark-bg-primary min-h-screen">
+        <div className="fixed inset-0 opacity-3">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
+        </div>
+        <div className="relative mx-auto max-w-7xl space-y-6 p-6">
+          <div className="dark-glass dark-shadow-md rounded-2xl p-8 text-center">
+            <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+              <Users className="dark-text-tertiary" size={32} />
+            </div>
+            <h1 className="dark-text-primary mb-2 text-2xl font-bold">
+              Erro ao carregar comunidade
+            </h1>
+            <p className="dark-text-secondary mb-4">
+              Não foi possível carregar os dados da comunidade. Tente novamente.
+            </p>
+            <Button
+              className="dark-btn-primary"
+              onClick={() => window.location.reload()}
+            >
+              Tentar Novamente
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="dark-bg-primary min-h-screen">
@@ -251,96 +304,113 @@ export default function ComunidadePage() {
 
             {/* Feed Posts */}
             <div className="space-y-4">
-              {feedPosts.map((post) => (
-                <div
-                  key={post.id}
-                  className="dark-card dark-shadow-sm rounded-xl p-6"
-                >
-                  {/* Post Header */}
-                  <div className="mb-4 flex items-start justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="dark-primary-subtle-bg rounded-full p-3">
-                        <User className="dark-primary" size={20} />
-                      </div>
-                      <div>
-                        <h3 className="dark-text-primary font-semibold">
-                          {post.author.name}
-                        </h3>
-                        <div className="flex items-center space-x-2 text-sm">
-                          <span className="dark-text-tertiary">
-                            {post.author.role}
-                          </span>
-                          <span className="dark-text-tertiary">•</span>
-                          <span className="dark-text-tertiary">
-                            {post.timestamp}
-                          </span>
+              {feedPosts.length > 0 ? (
+                feedPosts.map((post) => (
+                  <div
+                    key={post.id}
+                    className="dark-card dark-shadow-sm rounded-xl p-6"
+                  >
+                    {/* Post Header */}
+                    <div className="mb-4 flex items-start justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="dark-primary-subtle-bg rounded-full p-3">
+                          <User className="dark-primary" size={20} />
+                        </div>
+                        <div>
+                          <h3 className="dark-text-primary font-semibold">
+                            {post.author.name}
+                          </h3>
+                          <div className="flex items-center space-x-2 text-sm">
+                            <span className="dark-text-tertiary">
+                              {post.author.role}
+                            </span>
+                            <span className="dark-text-tertiary">•</span>
+                            <span className="dark-text-tertiary">
+                              {post.timestamp}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="hover:dark-bg-tertiary"
-                    >
-                      <MoreHorizontal
-                        className="dark-text-secondary"
-                        size={16}
-                      />
-                    </Button>
-                  </div>
-
-                  {/* Post Content */}
-                  <div className="mb-4">
-                    <p className="dark-text-primary mb-3 leading-relaxed">
-                      {post.content}
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {post.tags.map((tag, index) => (
-                        <span
-                          key={index}
-                          className="dark-primary-subtle-bg dark-primary rounded-full px-2 py-1 text-xs font-medium"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Post Actions */}
-                  <div className="dark-border flex items-center justify-between border-t pt-4">
-                    <div className="flex items-center space-x-6">
-                      <button
-                        className={`flex items-center space-x-2 transition-colors ${
-                          post.isLiked
-                            ? "dark-error"
-                            : "dark-text-tertiary hover:dark-text-primary"
-                        }`}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="hover:dark-bg-tertiary"
                       >
-                        <Heart
+                        <MoreHorizontal
+                          className="dark-text-secondary"
                           size={16}
-                          className={post.isLiked ? "fill-current" : ""}
                         />
-                        <span className="text-sm">{post.likes}</span>
-                      </button>
-                      <button className="dark-text-tertiary hover:dark-text-primary flex items-center space-x-2 transition-colors">
-                        <MessageCircle size={16} />
-                        <span className="text-sm">{post.comments}</span>
-                      </button>
-                      <button className="dark-text-tertiary hover:dark-text-primary flex items-center space-x-2 transition-colors">
-                        <Share2 size={16} />
-                        <span className="text-sm">{post.shares}</span>
-                      </button>
+                      </Button>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="hover:dark-bg-tertiary"
-                    >
-                      <Bookmark className="dark-text-secondary" size={16} />
-                    </Button>
+
+                    {/* Post Content */}
+                    <div className="mb-4">
+                      <p className="dark-text-primary mb-3 leading-relaxed">
+                        {post.content}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {post.tags.map((tag, index) => (
+                          <span
+                            key={index}
+                            className="dark-primary-subtle-bg dark-primary rounded-full px-2 py-1 text-xs font-medium"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Post Actions */}
+                    <div className="dark-border flex items-center justify-between border-t pt-4">
+                      <div className="flex items-center space-x-6">
+                        <button
+                          className={`flex items-center space-x-2 transition-colors ${
+                            post.isLiked
+                              ? "dark-error"
+                              : "dark-text-tertiary hover:dark-text-primary"
+                          }`}
+                        >
+                          <Heart
+                            size={16}
+                            className={post.isLiked ? "fill-current" : ""}
+                          />
+                          <span className="text-sm">{post.likes}</span>
+                        </button>
+                        <button className="dark-text-tertiary hover:dark-text-primary flex items-center space-x-2 transition-colors">
+                          <MessageCircle size={16} />
+                          <span className="text-sm">{post.comments}</span>
+                        </button>
+                        <button className="dark-text-tertiary hover:dark-text-primary flex items-center space-x-2 transition-colors">
+                          <Share2 size={16} />
+                          <span className="text-sm">{post.shares}</span>
+                        </button>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="hover:dark-bg-tertiary"
+                      >
+                        <Bookmark className="dark-text-secondary" size={16} />
+                      </Button>
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
+                  <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                    <MessageCircle className="dark-text-tertiary" size={24} />
+                  </div>
+                  <h3 className="dark-text-primary mb-2 font-semibold">
+                    Nenhum post no feed
+                  </h3>
+                  <p className="dark-text-tertiary mb-4 text-sm">
+                    Ainda não há posts da comunidade para exibir
+                  </p>
+                  <Button className="dark-btn-primary">
+                    Criar Primeiro Post
+                  </Button>
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
@@ -385,28 +455,30 @@ export default function ComunidadePage() {
               </div>
             </div>
 
-            {/* Trending Topics */}
-            <div className="dark-glass dark-shadow-sm rounded-xl p-6">
-              <h3 className="dark-text-primary mb-4 flex items-center gap-2 font-semibold">
-                <TrendingUp size={18} />
-                Tópicos em Alta
-              </h3>
-              <div className="space-y-3">
-                {trendingTopics.map((topic, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between"
-                  >
-                    <span className="dark-primary cursor-pointer font-medium hover:underline">
-                      {topic.topic}
-                    </span>
-                    <span className="dark-text-tertiary text-sm">
-                      {topic.posts} posts
-                    </span>
-                  </div>
-                ))}
+            {/* Trending Topics - Only show if there are posts */}
+            {feedPosts.length > 0 && (
+              <div className="dark-glass dark-shadow-sm rounded-xl p-6">
+                <h3 className="dark-text-primary mb-4 flex items-center gap-2 font-semibold">
+                  <TrendingUp size={18} />
+                  Tópicos em Alta
+                </h3>
+                <div className="space-y-3">
+                  {trendingTopics.map((topic, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between"
+                    >
+                      <span className="dark-primary cursor-pointer font-medium hover:underline">
+                        {topic.topic}
+                      </span>
+                      <span className="dark-text-tertiary text-sm">
+                        {topic.posts} posts
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Quick Actions */}
             <div className="dark-glass dark-shadow-sm rounded-xl p-6">

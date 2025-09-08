@@ -1,5 +1,6 @@
 "use client";
 
+import { getEvents } from "@/src/lib/actions";
 import { formatDateTime, formatTime } from "@/src/lib/formatters";
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
@@ -9,6 +10,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@repo/ui/components/tabs";
+import { useQuery } from "@tanstack/react-query";
 import {
   ArrowRight,
   Calendar,
@@ -31,111 +33,37 @@ export default function EventosPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  // Mock data - in real app this would come from server actions
-  const events = [
-    {
-      id: "1",
-      title: "Café com Pastores: Revisão de Perfis Ministeriais AO VIVO",
-      description:
-        "O Café com Pastores é um evento online, ao vivo e semanal que acontece às terças-feiras na comunidade. Nesta edição, vamos revisar e otimizar perfis ministeriais.",
-      image: "/api/placeholder/300/200",
-      startDate: new Date("2024-01-16T19:00:00"),
-      endDate: new Date("2024-01-16T20:30:00"),
-      location: "Online, Palco de Líderes - Discord",
-      isOnline: true,
-      maxAttendees: 500,
-      currentAttendees: 342,
-      isEnrolled: true,
-      isFeatured: true,
-      tags: ["LÍDERES", "LIVE", "MINISTÉRIO"],
-      instructor: "Pr. Robson",
-    },
-    {
-      id: "2",
-      title: "English Hub | General English: English Foundations",
-      description:
-        "Recomendado: A1 - B1. If you're just starting your English journey or want to strengthen your foundations, this is the perfect class for you.",
-      image: "/api/placeholder/300/200",
-      startDate: new Date("2024-01-17T10:00:00"),
-      endDate: new Date("2024-01-17T11:00:00"),
-      location: "Online, Classroom do Discord",
-      isOnline: true,
-      maxAttendees: 100,
-      currentAttendees: 78,
-      isEnrolled: false,
-      isFeatured: false,
-      tags: ["ASSINANTES", "INICIANTE", "CARREIRA", "INGLÊS"],
-      instructor: "Sarah Johnson",
-    },
-    {
-      id: "3",
-      title: "Desafio: Sua primeira célula com princípios bíblicos",
-      description:
-        "Construa uma célula do zero com princípios bíblicos e coloque em prática em apenas 4 aulas. Domine o discipulado na prática.",
-      image: "/api/placeholder/300/200",
-      startDate: new Date("2024-01-18T19:00:00"),
-      endDate: new Date("2024-01-18T20:00:00"),
-      location: "Online, Discord",
-      isOnline: true,
-      maxAttendees: 200,
-      currentAttendees: 156,
-      isEnrolled: false,
-      isFeatured: true,
-      tags: ["CÉLULAS", "DISCIPULADO", "MINISTÉRIO"],
-      instructor: "Pr. João",
-    },
-    {
-      id: "4",
-      title: "Workshop: Criando Cultos Modernos com Excelência",
-      description:
-        "Aprenda a criar cultos modernos e impactantes usando princípios bíblicos, tecnologia e criatividade.",
-      image: "/api/placeholder/300/200",
-      startDate: new Date("2024-01-20T14:00:00"),
-      endDate: new Date("2024-01-20T17:00:00"),
-      location: "São Paulo, SP - Base Church",
-      isOnline: false,
-      maxAttendees: 50,
-      currentAttendees: 32,
-      isEnrolled: false,
-      isFeatured: false,
-      tags: ["CULTOS", "EXCELÊNCIA", "PRESENCIAL"],
-      instructor: "Pr. Maria",
-    },
-    {
-      id: "5",
-      title: "Meetup: Ministério em Igreja - Como se destacar no chamado",
-      description:
-        "Um encontro presencial para discutir ministério em igreja, networking e oportunidades no Reino.",
-      image: "/api/placeholder/300/200",
-      startDate: new Date("2024-01-25T18:00:00"),
-      endDate: new Date("2024-01-25T21:00:00"),
-      location: "Rio de Janeiro, RJ - Base Church",
-      isOnline: false,
-      maxAttendees: 80,
-      currentAttendees: 45,
-      isEnrolled: false,
-      isFeatured: false,
-      tags: ["MINISTÉRIO", "CHAMADO", "PRESENCIAL"],
-      instructor: "Pr. Carlos",
-    },
-    {
-      id: "6",
-      title: "Live: Construindo uma igreja com princípios da Base",
-      description:
-        "Acompanhe em tempo real a construção de uma igreja completa usando princípios da Base Church.",
-      image: "/api/placeholder/300/200",
-      startDate: new Date("2024-01-30T20:00:00"),
-      endDate: new Date("2024-01-30T22:00:00"),
-      location: "Online, Twitch",
-      isOnline: true,
-      maxAttendees: 1000,
-      currentAttendees: 567,
-      isEnrolled: false,
-      isFeatured: true,
-      tags: ["NEXT.JS", "E-COMMERCE", "LIVE CODING"],
-      instructor: "Rodrigo Gonçalves",
-    },
-  ];
+  // Fetch events from database
+  const {
+    data: eventsData,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["events"],
+    queryFn: getEvents,
+    select: (data) => data.events,
+  });
+
+  // Transform events data for compatibility with existing components
+  const events =
+    eventsData?.map((event: any) => ({
+      id: event.id,
+      title: event.title,
+      description: event.description,
+      image: event.image || "/api/placeholder/300/200",
+      startDate: new Date(event.startDate),
+      endDate: event.endDate ? new Date(event.endDate) : null,
+      location: event.location || "Local não definido",
+      isOnline: event.isOnline,
+      maxAttendees: event.maxAttendees || 100,
+      currentAttendees: event.currentAttendees || 0,
+      isEnrolled: false, // TODO: Implement user enrollment check
+      isFeatured: event.isFeatured,
+      tags: event.tags || [],
+      instructor: event.instructor?.name || "Instrutor não definido",
+      rating: event.rating || 0,
+      price: event.price || 0,
+    })) || [];
 
   const getEventStatus = (event: any) => {
     const now = new Date();
@@ -168,6 +96,60 @@ export default function EventosPage() {
   );
   const enrolledEvents = filteredEvents.filter((event) => event.isEnrolled);
   const featuredEvents = filteredEvents.filter((event) => event.isFeatured);
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="dark-bg-primary min-h-screen">
+        <div className="fixed inset-0 opacity-3">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
+        </div>
+        <div className="relative mx-auto max-w-7xl space-y-6 p-6">
+          <div className="dark-glass dark-shadow-md rounded-2xl p-8 text-center">
+            <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+              <Calendar className="dark-text-tertiary" size={32} />
+            </div>
+            <h1 className="dark-text-primary mb-2 text-2xl font-bold">
+              Carregando eventos...
+            </h1>
+            <p className="dark-text-secondary">
+              Buscando eventos da comunidade
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="dark-bg-primary min-h-screen">
+        <div className="fixed inset-0 opacity-3">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
+        </div>
+        <div className="relative mx-auto max-w-7xl space-y-6 p-6">
+          <div className="dark-glass dark-shadow-md rounded-2xl p-8 text-center">
+            <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+              <Calendar className="dark-text-tertiary" size={32} />
+            </div>
+            <h1 className="dark-text-primary mb-2 text-2xl font-bold">
+              Erro ao carregar eventos
+            </h1>
+            <p className="dark-text-secondary mb-4">
+              Não foi possível carregar os eventos. Tente novamente.
+            </p>
+            <Button
+              className="dark-btn-primary"
+              onClick={() => window.location.reload()}
+            >
+              Tentar Novamente
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="dark-bg-primary min-h-screen">
@@ -379,59 +361,163 @@ export default function EventosPage() {
             </TabsList>
 
             <TabsContent value="all" className="mt-6">
-              {viewMode === "grid" ? (
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {filteredEvents.map((event) => (
-                    <EventCard key={event.id} event={event} />
-                  ))}
-                </div>
+              {filteredEvents.length > 0 ? (
+                viewMode === "grid" ? (
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {filteredEvents.map((event) => (
+                      <EventCard key={event.id} event={event} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {filteredEvents.map((event) => (
+                      <EventListCard key={event.id} event={event} />
+                    ))}
+                  </div>
+                )
               ) : (
-                <div className="space-y-4">
-                  {filteredEvents.map((event) => (
-                    <EventListCard key={event.id} event={event} />
-                  ))}
+                <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
+                  <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                    <Calendar className="dark-text-tertiary" size={24} />
+                  </div>
+                  <h3 className="dark-text-primary mb-2 font-semibold">
+                    {searchQuery
+                      ? "Nenhum evento encontrado"
+                      : "Nenhum evento disponível"}
+                  </h3>
+                  <p className="dark-text-tertiary mb-4 text-sm">
+                    {searchQuery
+                      ? "Tente ajustar sua busca"
+                      : "Não há eventos disponíveis no momento"}
+                  </p>
+                  <Button className="dark-btn-primary">
+                    {searchQuery ? "Limpar Busca" : "Ver Eventos"}
+                  </Button>
                 </div>
               )}
             </TabsContent>
 
             <TabsContent value="upcoming" className="mt-6">
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {upcomingEvents.map((event) => (
-                  <EventCard key={event.id} event={event} />
-                ))}
-              </div>
+              {upcomingEvents.length > 0 ? (
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {upcomingEvents.map((event) => (
+                    <EventCard key={event.id} event={event} />
+                  ))}
+                </div>
+              ) : (
+                <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
+                  <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                    <Clock className="dark-text-tertiary" size={24} />
+                  </div>
+                  <h3 className="dark-text-primary mb-2 font-semibold">
+                    Nenhum evento próximo
+                  </h3>
+                  <p className="dark-text-tertiary mb-4 text-sm">
+                    Não há eventos programados para o futuro próximo
+                  </p>
+                  <Button className="dark-btn-primary">
+                    Ver Todos os Eventos
+                  </Button>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="ongoing" className="mt-6">
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {ongoingEvents.map((event) => (
-                  <EventCard key={event.id} event={event} />
-                ))}
-              </div>
+              {ongoingEvents.length > 0 ? (
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {ongoingEvents.map((event) => (
+                    <EventCard key={event.id} event={event} />
+                  ))}
+                </div>
+              ) : (
+                <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
+                  <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                    <Zap className="dark-text-tertiary" size={24} />
+                  </div>
+                  <h3 className="dark-text-primary mb-2 font-semibold">
+                    Nenhum evento ao vivo
+                  </h3>
+                  <p className="dark-text-tertiary mb-4 text-sm">
+                    Não há eventos acontecendo no momento
+                  </p>
+                  <Button className="dark-btn-primary">
+                    Ver Próximos Eventos
+                  </Button>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="enrolled" className="mt-6">
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {enrolledEvents.map((event) => (
-                  <EventCard key={event.id} event={event} />
-                ))}
-              </div>
+              {enrolledEvents.length > 0 ? (
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {enrolledEvents.map((event) => (
+                    <EventCard key={event.id} event={event} />
+                  ))}
+                </div>
+              ) : (
+                <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
+                  <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                    <CheckCircle className="dark-text-tertiary" size={24} />
+                  </div>
+                  <h3 className="dark-text-primary mb-2 font-semibold">
+                    Nenhum evento inscrito
+                  </h3>
+                  <p className="dark-text-tertiary mb-4 text-sm">
+                    Você ainda não se inscreveu em nenhum evento
+                  </p>
+                  <Button className="dark-btn-primary">Explorar Eventos</Button>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="featured" className="mt-6">
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {featuredEvents.map((event) => (
-                  <EventCard key={event.id} event={event} />
-                ))}
-              </div>
+              {featuredEvents.length > 0 ? (
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {featuredEvents.map((event) => (
+                    <EventCard key={event.id} event={event} />
+                  ))}
+                </div>
+              ) : (
+                <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
+                  <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                    <TrendingUp className="dark-text-tertiary" size={24} />
+                  </div>
+                  <h3 className="dark-text-primary mb-2 font-semibold">
+                    Nenhum evento em destaque
+                  </h3>
+                  <p className="dark-text-tertiary mb-4 text-sm">
+                    Não há eventos em destaque no momento
+                  </p>
+                  <Button className="dark-btn-primary">
+                    Ver Todos os Eventos
+                  </Button>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="past" className="mt-6">
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {pastEvents.map((event) => (
-                  <EventCard key={event.id} event={event} />
-                ))}
-              </div>
+              {pastEvents.length > 0 ? (
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {pastEvents.map((event) => (
+                    <EventCard key={event.id} event={event} />
+                  ))}
+                </div>
+              ) : (
+                <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
+                  <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                    <X className="dark-text-tertiary" size={24} />
+                  </div>
+                  <h3 className="dark-text-primary mb-2 font-semibold">
+                    Nenhum evento passado
+                  </h3>
+                  <p className="dark-text-tertiary mb-4 text-sm">
+                    Não há eventos passados registrados
+                  </p>
+                  <Button className="dark-btn-primary">
+                    Ver Próximos Eventos
+                  </Button>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </div>

@@ -4,20 +4,15 @@ import * as React from "react";
 import { cn } from "../lib/utils.ts";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 relative overflow-hidden",
+  "inline-flex items-center justify-center cursor-pointer whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 relative overflow-hidden",
   {
     variants: {
       variant: {
-        default:
-          "dark-btn-primary shadow-lg btn-hover-lift",
-        destructive:
-          "dark-btn-destructive shadow-lg btn-hover-lift",
-        outline:
-          "dark-btn-outline shadow-sm btn-hover-lift",
-        secondary:
-          "dark-btn-secondary shadow-lg btn-hover-lift",
-        ghost:
-          "dark-btn-ghost transition-colors",
+        default: "dark-btn-primary shadow-lg btn-hover-lift",
+        destructive: "dark-btn-destructive shadow-lg btn-hover-lift",
+        outline: "dark-btn-outline shadow-sm btn-hover-lift",
+        secondary: "dark-btn-secondary shadow-lg btn-hover-lift",
+        ghost: "dark-btn-ghost transition-colors",
         link: "dark-text-primary underline-offset-4 hover:underline hover:dark-primary",
         clean: "text-inherit p-0",
         gradient:
@@ -26,10 +21,8 @@ const buttonVariants = cva(
           "dark-gradient-secondary dark-text-primary shadow-lg btn-hover-lift",
         glass:
           "dark-glass dark-text-primary shadow-lg hover:dark-bg-tertiary btn-hover-lift",
-        success:
-          "dark-btn-success shadow-lg btn-hover-lift",
-        warning:
-          "dark-btn-warning shadow-lg btn-hover-lift",
+        success: "dark-btn-success shadow-lg btn-hover-lift",
+        warning: "dark-btn-warning shadow-lg btn-hover-lift",
       },
       size: {
         default: "h-11 px-4 py-2",

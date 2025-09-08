@@ -1,5 +1,6 @@
 "use client";
 
+import { getForumPosts } from "@/src/lib/actions";
 import { formatDate } from "@/src/lib/formatters";
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
@@ -10,6 +11,7 @@ import {
   TabsTrigger,
 } from "@repo/ui/components/tabs";
 import { Textarea } from "@repo/ui/components/textarea";
+import { useQuery } from "@tanstack/react-query";
 import {
   Bookmark,
   Clock,
@@ -35,135 +37,41 @@ export default function ForumPage() {
     category: "",
   });
 
-  // Mock data - in real app this would come from server actions
-  const posts = [
-    {
-      id: "1",
-      title: "Como começar com células ministeriais?",
-      content:
-        "Olá pessoal! Sou iniciante no ministério e quero implementar células ministeriais. Alguém pode me dar algumas dicas de por onde começar? Quais são os pré-requisitos necessários?",
+  // Fetch forum posts from database
+  const {
+    data: postsData,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["forum-posts"],
+    queryFn: getForumPosts,
+    select: (data) => data.posts,
+  });
+
+  // Transform posts data for compatibility with existing components
+  const posts =
+    postsData?.map((post: any) => ({
+      id: post.id,
+      title: post.title,
+      content: post.content,
       author: {
-        id: "1",
-        name: "Pr. João Silva",
-        username: "@joaosilva",
-        image: "/api/placeholder/40/40",
+        id: post.user.id,
+        name: post.user.name || "Usuário",
+        username:
+          post.user.username ||
+          `@${post.user.name?.toLowerCase().replace(/\s+/g, "") || "usuario"}`,
+        image: post.user.image || "/api/placeholder/40/40",
       },
-      category: "Células",
-      tags: ["Células", "Ministério", "Dúvida"],
-      likes: 24,
-      comments: 12,
-      views: 156,
-      isLiked: false,
-      isBookmarked: false,
-      createdAt: new Date("2024-01-15T10:30:00"),
-      isSolved: false,
-    },
-    {
-      id: "2",
-      title: "Problema com discipulado de novos convertidos",
-      content:
-        "Estou desenvolvendo um programa de discipulado, mas estou tendo problemas com a implementação para novos convertidos. O processo não está sendo eficaz. Alguém pode ajudar?",
-      author: {
-        id: "2",
-        name: "Pr. Maria Santos",
-        username: "@mariasantos",
-        image: "/api/placeholder/40/40",
-      },
-      category: "Discipulado",
-      tags: ["Discipulado", "Novos Convertidos", "Ministério"],
-      likes: 18,
-      comments: 8,
-      views: 89,
-      isLiked: true,
-      isBookmarked: false,
-      createdAt: new Date("2024-01-14T15:45:00"),
-      isSolved: true,
-    },
-    {
-      id: "3",
-      title: "Dicas para melhorar impacto dos cultos",
-      content:
-        "Compartilhando algumas técnicas que aprendi para otimizar o impacto dos cultos: adoração, pregação, acolhimento, etc. Quais outras técnicas vocês usam?",
-      author: {
-        id: "3",
-        name: "Pr. Carlos Oliveira",
-        username: "@carlosoliveira",
-        image: "/api/placeholder/40/40",
-      },
-      category: "Cultos",
-      tags: ["Cultos", "Impacto", "Otimização", "Dicas"],
-      likes: 45,
-      comments: 23,
-      views: 234,
-      isLiked: false,
-      isBookmarked: true,
-      createdAt: new Date("2024-01-13T09:15:00"),
-      isSolved: false,
-    },
-    {
-      id: "4",
-      title: "Como implementar testes unitários com Jest?",
-      content:
-        "Preciso implementar testes unitários no meu projeto. Estou usando Jest, mas não sei por onde começar. Alguém pode me dar um exemplo prático de como estruturar os testes?",
-      author: {
-        id: "4",
-        name: "Ana Costa",
-        username: "@anacosta",
-        image: "/api/placeholder/40/40",
-      },
-      category: "Testes",
-      tags: ["Jest", "Testes", "Unitários", "JavaScript"],
-      likes: 32,
-      comments: 15,
-      views: 178,
-      isLiked: false,
-      isBookmarked: false,
-      createdAt: new Date("2024-01-12T14:20:00"),
-      isSolved: false,
-    },
-    {
-      id: "5",
-      title: "Melhores práticas para deploy de aplicações Next.js",
-      content:
-        "Quais são as melhores práticas para fazer deploy de aplicações Next.js? Estou usando Vercel, mas gostaria de saber sobre outras opções e como otimizar o processo.",
-      author: {
-        id: "5",
-        name: "Pedro Lima",
-        username: "@pedrolima",
-        image: "/api/placeholder/40/40",
-      },
-      category: "DevOps",
-      tags: ["Next.js", "Deploy", "Vercel", "DevOps"],
-      likes: 28,
-      comments: 11,
-      views: 145,
-      isLiked: true,
-      isBookmarked: false,
-      createdAt: new Date("2024-01-11T11:30:00"),
-      isSolved: false,
-    },
-    {
-      id: "6",
-      title: "Como escolher entre TypeScript e JavaScript?",
-      content:
-        "Estou começando um novo projeto e não sei se devo usar TypeScript ou JavaScript. Quais são as vantagens e desvantagens de cada um? Quando usar cada um?",
-      author: {
-        id: "6",
-        name: "Lucia Ferreira",
-        username: "@luciaferreira",
-        image: "/api/placeholder/40/40",
-      },
-      category: "Discussão",
-      tags: ["TypeScript", "JavaScript", "Comparação", "Escolha"],
-      likes: 56,
-      comments: 34,
-      views: 312,
-      isLiked: false,
-      isBookmarked: true,
-      createdAt: new Date("2024-01-10T16:45:00"),
-      isSolved: false,
-    },
-  ];
+      category: post.category || "Geral",
+      tags: [], // TODO: Add tags to forum posts schema
+      likes: 0, // TODO: Add likes to forum posts schema
+      comments: post._count?.comments || 0,
+      views: 0, // TODO: Add views to forum posts schema
+      isLiked: false, // TODO: Implement user likes
+      isBookmarked: false, // TODO: Implement user bookmarks
+      createdAt: new Date(post.createdAt),
+      isSolved: false, // TODO: Add solved status to forum posts schema
+    })) || [];
 
   const categories = [
     { id: "all", name: "Todas", count: posts.length },
@@ -239,6 +147,60 @@ export default function ForumPage() {
     setShowCreatePost(false);
     setNewPost({ title: "", content: "", category: "" });
   };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="dark-bg-primary min-h-screen">
+        <div className="fixed inset-0 opacity-3">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
+        </div>
+        <div className="relative mx-auto max-w-7xl space-y-6 p-6">
+          <div className="dark-glass dark-shadow-md rounded-2xl p-8 text-center">
+            <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+              <MessageCircle className="dark-text-tertiary" size={32} />
+            </div>
+            <h1 className="dark-text-primary mb-2 text-2xl font-bold">
+              Carregando fórum...
+            </h1>
+            <p className="dark-text-secondary">
+              Buscando discussões da comunidade
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="dark-bg-primary min-h-screen">
+        <div className="fixed inset-0 opacity-3">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
+        </div>
+        <div className="relative mx-auto max-w-7xl space-y-6 p-6">
+          <div className="dark-glass dark-shadow-md rounded-2xl p-8 text-center">
+            <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+              <MessageCircle className="dark-text-tertiary" size={32} />
+            </div>
+            <h1 className="dark-text-primary mb-2 text-2xl font-bold">
+              Erro ao carregar fórum
+            </h1>
+            <p className="dark-text-secondary mb-4">
+              Não foi possível carregar as discussões. Tente novamente.
+            </p>
+            <Button
+              className="dark-btn-primary"
+              onClick={() => window.location.reload()}
+            >
+              Tentar Novamente
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="dark-bg-primary min-h-screen">
@@ -414,43 +376,132 @@ export default function ForumPage() {
             </TabsList>
 
             <TabsContent value="all" className="mt-6">
-              <div className="space-y-4">
-                {filteredPosts.map((post) => (
-                  <PostCard key={post.id} post={post} />
-                ))}
-              </div>
+              {filteredPosts.length > 0 ? (
+                <div className="space-y-4">
+                  {filteredPosts.map((post) => (
+                    <PostCard key={post.id} post={post} />
+                  ))}
+                </div>
+              ) : (
+                <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
+                  <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                    <MessageCircle className="dark-text-tertiary" size={24} />
+                  </div>
+                  <h3 className="dark-text-primary mb-2 font-semibold">
+                    {searchQuery
+                      ? "Nenhuma discussão encontrada"
+                      : "Nenhuma discussão disponível"}
+                  </h3>
+                  <p className="dark-text-tertiary mb-4 text-sm">
+                    {searchQuery
+                      ? "Tente ajustar sua busca"
+                      : "Não há discussões no momento"}
+                  </p>
+                  <Button className="dark-btn-primary">
+                    {searchQuery ? "Limpar Busca" : "Iniciar Discussão"}
+                  </Button>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="trending" className="mt-6">
-              <div className="space-y-4">
-                {trendingPosts.map((post) => (
-                  <PostCard key={post.id} post={post} />
-                ))}
-              </div>
+              {trendingPosts.length > 0 ? (
+                <div className="space-y-4">
+                  {trendingPosts.map((post) => (
+                    <PostCard key={post.id} post={post} />
+                  ))}
+                </div>
+              ) : (
+                <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
+                  <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                    <TrendingUp className="dark-text-tertiary" size={24} />
+                  </div>
+                  <h3 className="dark-text-primary mb-2 font-semibold">
+                    Nenhuma discussão em alta
+                  </h3>
+                  <p className="dark-text-tertiary mb-4 text-sm">
+                    Não há discussões populares no momento
+                  </p>
+                  <Button className="dark-btn-primary">
+                    Ver Todas as Discussões
+                  </Button>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="recent" className="mt-6">
-              <div className="space-y-4">
-                {recentPosts.map((post) => (
-                  <PostCard key={post.id} post={post} />
-                ))}
-              </div>
+              {recentPosts.length > 0 ? (
+                <div className="space-y-4">
+                  {recentPosts.map((post) => (
+                    <PostCard key={post.id} post={post} />
+                  ))}
+                </div>
+              ) : (
+                <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
+                  <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                    <Clock className="dark-text-tertiary" size={24} />
+                  </div>
+                  <h3 className="dark-text-primary mb-2 font-semibold">
+                    Nenhuma discussão recente
+                  </h3>
+                  <p className="dark-text-tertiary mb-4 text-sm">
+                    Não há discussões recentes no momento
+                  </p>
+                  <Button className="dark-btn-primary">
+                    Iniciar Discussão
+                  </Button>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="solved" className="mt-6">
-              <div className="space-y-4">
-                {solvedPosts.map((post) => (
-                  <PostCard key={post.id} post={post} />
-                ))}
-              </div>
+              {solvedPosts.length > 0 ? (
+                <div className="space-y-4">
+                  {solvedPosts.map((post) => (
+                    <PostCard key={post.id} post={post} />
+                  ))}
+                </div>
+              ) : (
+                <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
+                  <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                    <MessageCircle className="dark-text-tertiary" size={24} />
+                  </div>
+                  <h3 className="dark-text-primary mb-2 font-semibold">
+                    Nenhuma discussão resolvida
+                  </h3>
+                  <p className="dark-text-tertiary mb-4 text-sm">
+                    Não há discussões resolvidas no momento
+                  </p>
+                  <Button className="dark-btn-primary">
+                    Ver Todas as Discussões
+                  </Button>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="unsolved" className="mt-6">
-              <div className="space-y-4">
-                {unsolvedPosts.map((post) => (
-                  <PostCard key={post.id} post={post} />
-                ))}
-              </div>
+              {unsolvedPosts.length > 0 ? (
+                <div className="space-y-4">
+                  {unsolvedPosts.map((post) => (
+                    <PostCard key={post.id} post={post} />
+                  ))}
+                </div>
+              ) : (
+                <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
+                  <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                    <Users className="dark-text-tertiary" size={24} />
+                  </div>
+                  <h3 className="dark-text-primary mb-2 font-semibold">
+                    Nenhuma discussão aberta
+                  </h3>
+                  <p className="dark-text-tertiary mb-4 text-sm">
+                    Todas as discussões foram resolvidas!
+                  </p>
+                  <Button className="dark-btn-primary">
+                    Iniciar Nova Discussão
+                  </Button>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </div>

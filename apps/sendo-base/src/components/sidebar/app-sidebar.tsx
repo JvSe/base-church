@@ -2,21 +2,25 @@
 
 import {
   BookOpen,
-  Calendar,
   FileText,
   HelpCircle,
   Home,
   Map,
   MessageCircle,
-  Settings,
   User,
-  Users,
 } from "lucide-react";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
 
+import { getUserProfile } from "@/src/lib/actions";
+import { getInitials } from "@/src/lib/get-initial-by-name";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@repo/ui/components/avatar";
 import { Separator } from "@repo/ui/components/separator";
 import {
   Sidebar,
@@ -24,14 +28,23 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
 } from "@repo/ui/components/sidebar";
+import { useQuery } from "@tanstack/react-query";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
+
+  const { data: userAuth } = useQuery({
+    queryKey: ["user", "30d453b9-88c9-429e-9700-81d2db735f7a"],
+    queryFn: () => getUserProfile("30d453b9-88c9-429e-9700-81d2db735f7a"),
+    select: (data) => data.user,
+  });
 
   const data = {
     user: {
@@ -42,9 +55,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     },
     navMain: [
       {
-        title: "Dashboard",
+        title: "Início",
         url: "/home",
         icon: Home,
+      },
+      {
+        title: "Perfil",
+        url: "/profile",
+        icon: User,
       },
     ],
     navLearning: [
@@ -91,21 +109,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           },
         ],
       },
-      {
-        title: "Eventos",
-        icon: Calendar,
-        url: "/events",
-        items: [
-          {
-            title: "Próximos Eventos",
-            url: "/events?upcoming=true",
-          },
-          {
-            title: "Meus Eventos",
-            url: "/events?my-events=true",
-          },
-        ],
-      },
+      // {
+      //   title: "Eventos",
+      //   icon: Calendar,
+      //   url: "/events",
+      //   items: [
+      //     {
+      //       title: "Próximos Eventos",
+      //       url: "/events?upcoming=true",
+      //     },
+      //     {
+      //       title: "Meus Eventos",
+      //       url: "/events?my-events=true",
+      //     },
+      //   ],
+      // },
     ],
     navCommunity: [
       {
@@ -123,21 +141,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           },
         ],
       },
-      {
-        title: "Comunidade",
-        icon: Users,
-        url: "/community",
-        items: [
-          {
-            title: "Membros",
-            url: "/community/members",
-          },
-          {
-            title: "Grupos",
-            url: "/community/groups",
-          },
-        ],
-      },
+      // {
+      //   title: "Comunidade",
+      //   icon: Users,
+      //   url: "/community",
+      //   items: [
+      //     {
+      //       title: "Membros",
+      //       url: "/community/members",
+      //     },
+      //     {
+      //       title: "Grupos",
+      //       url: "/community/groups",
+      //     },
+      //   ],
+      // },
     ],
     navSecondary: [
       {
@@ -145,11 +163,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/help",
         icon: HelpCircle,
       },
-      {
-        title: "Configurações",
-        url: "/settings",
-        icon: Settings,
-      },
+      // {
+      //   title: "Configurações",
+      //   url: "/settings",
+      //   icon: Settings,
+      // },
     ],
     documents: [
       {
@@ -173,14 +191,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar className="rounded-xl" collapsible="icon" {...props}>
       {/* Header Simples */}
-      <SidebarHeader className="dark-border border-b p-6">
+      <SidebarHeader className="dark-border flex-row justify-between border-b pt-10 pb-5">
         <Link href="/profile">
-          <div className="flex cursor-pointer items-center gap-3 group-data-[collapsible=icon]:justify-center">
+          <div className="flex cursor-pointer items-center gap-3 overflow-hidden transition-[margin,opacity,width] duration-300 ease-in-out group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:opacity-0">
             <div className="dark-primary-subtle-bg flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full">
-              <User className="dark-primary" size={20} />
+              <Avatar className="h-full w-full">
+                <AvatarImage
+                  src={userAuth?.image ?? ""}
+                  alt={userAuth?.name ?? ""}
+                />
+                <AvatarFallback className="rounded-full">
+                  {getInitials(userAuth?.name ?? "")}
+                </AvatarFallback>
+              </Avatar>
             </div>
-            <div className="flex-1 group-data-[collapsible=icon]:hidden">
-              <h3 className="dark-text-primary text-sm font-semibold">
+            <div className="flex-1">
+              <h3 className="dark-text-primary text-sm font-semibold text-nowrap">
                 {data.user.name}
               </h3>
               <p className="dark-text-tertiary mt-0.5 text-xs">
@@ -189,10 +215,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </div>
           </div>
         </Link>
+        <SidebarTrigger />
       </SidebarHeader>
 
       {/* Navegação Principal */}
-      <SidebarContent className="p-3">
+      <SidebarContent className="">
         {/* Navegação Principal */}
         <SidebarGroup>
           <SidebarGroupContent>
@@ -222,12 +249,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
         {/* Navegação de Aprendizado */}
         <SidebarGroup>
-          <div className="mb-2 flex items-center gap-2">
-            <h3 className="dark-text-secondary text-xs font-semibold tracking-wider uppercase">
-              Aprendizado
-            </h3>
+          <SidebarGroupLabel className="gap-2 px-0 text-xs font-semibold tracking-wider uppercase">
+            Aprendizado
             <Separator className="bg-white opacity-5" />
-          </div>
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
               {data.navLearning.map((item) => (
@@ -255,12 +280,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
         {/* Navegação da Comunidade */}
         <SidebarGroup>
-          <div className="mb-2 flex items-center gap-2">
-            <h3 className="dark-text-secondary text-xs font-semibold tracking-wider uppercase">
-              Comunidade
-            </h3>
+          <SidebarGroupLabel className="gap-2 px-0 text-xs font-semibold tracking-wider uppercase">
+            Comunidade
             <Separator className="bg-white opacity-5" />
-          </div>
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
               {data.navCommunity.map((item) => (
@@ -288,12 +311,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
         {/* Navegação Secundária */}
         <SidebarGroup>
-          <div className="mb-2 flex items-center gap-2">
-            <h3 className="dark-text-secondary text-xs font-semibold tracking-wider uppercase">
-              Sistema
-            </h3>
+          <SidebarGroupLabel className="gap-2 px-0 text-xs font-semibold tracking-wider uppercase">
+            Sistema
             <Separator className="bg-white opacity-5" />
-          </div>
+          </SidebarGroupLabel>
+
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
               {data.navSecondary.map((item) => (

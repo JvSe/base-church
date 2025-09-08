@@ -1,8 +1,15 @@
 "use client";
 
-import { Button } from "@repo/ui/components/button";
+import { getUserProfile } from "@/src/lib/actions";
+import { getInitials } from "@/src/lib/get-initial-by-name";
 import {
-  Award,
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@repo/ui/components/avatar";
+import { Button } from "@repo/ui/components/button";
+import { useQuery } from "@tanstack/react-query";
+import {
   BookOpen,
   Calendar,
   Download,
@@ -18,7 +25,6 @@ import {
   Share,
   Target,
   Trophy,
-  User,
   Zap,
 } from "lucide-react";
 import { useState } from "react";
@@ -26,134 +32,74 @@ import { useState } from "react";
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("overview");
 
-  // Mock data - in real app this would come from server actions
-  const user = {
-    id: "1",
-    name: "Pr. João Vitor Soares",
-    username: "@jvsen",
-    email: "joaovitorsoares12@gmail.com",
-    image: null,
-    role: "Pastor e Líder Ministerial",
-    bio: "Pastor apaixonado por criar bases ministeriais sólidas com princípios bíblicos e liderança eficaz. Formado em Teologia pela Faculdade Batista e especialista em Gestão Ministerial.",
-    location: "São Paulo, SP",
-    phone: "(11) 99999-9999",
-    website: "www.basechurch.com.br",
-    joinDate: new Date("2019-08-22"),
-    profileCompletion: 85,
-    stats: {
-      coursesCompleted: 12,
-      certificatesEarned: 8,
-      studentsImpacted: 324,
-      hoursStudied: 156,
-      currentStreak: 15,
-      totalPoints: 2840,
-    },
+  const { data: userAuth } = useQuery({
+    queryKey: ["user", "30d453b9-88c9-429e-9700-81d2db735f7a"],
+    queryFn: () => getUserProfile("30d453b9-88c9-429e-9700-81d2db735f7a"),
+    select: (data) => data.user,
+  });
+
+  console.log("data", userAuth);
+
+  // Calculate profile completion based on available data
+  const calculateProfileCompletion = (user: any) => {
+    if (!user) return 0;
+
+    const fields = [
+      user.name,
+      user.email,
+      user.image,
+      user.bio,
+      user.location,
+      user.phone,
+      user.website,
+      user.role,
+      user.skills,
+      user.academicBackground,
+    ];
+
+    const filledFields = fields.filter(
+      (field) => field && field.trim() !== "",
+    ).length;
+    return Math.round((filledFields / fields.length) * 100);
   };
 
-  const achievements = [
-    {
-      id: "1",
-      name: "Fundador",
-      description: "Completou o curso de Fundamentos Ministeriais",
-      icon: "🏛️",
-      color: "dark-primary",
-      bgColor: "dark-primary-subtle-bg",
-      earnedAt: new Date("2023-01-15"),
-      rarity: "comum",
-    },
-    {
-      id: "2",
-      name: "Líder de Excelência",
-      description: "Formou mais de 50 líderes",
-      icon: "👑",
-      color: "dark-secondary",
-      bgColor: "dark-secondary-subtle-bg",
-      earnedAt: new Date("2023-06-20"),
-      rarity: "raro",
-    },
-    {
-      id: "3",
-      name: "Mentor Especialista",
-      description: "Mentorou 100+ pessoas",
-      icon: "🎯",
-      color: "dark-warning",
-      bgColor: "dark-warning-bg",
-      earnedAt: new Date("2023-09-10"),
-      rarity: "épico",
-    },
-    {
-      id: "4",
-      name: "Sequência de Ouro",
-      description: "30 dias consecutivos de estudo",
-      icon: "🔥",
-      color: "dark-error",
-      bgColor: "dark-error-bg",
-      earnedAt: new Date("2024-01-05"),
-      rarity: "lendário",
-    },
-  ];
+  // Use real user data with fallbacks
+  const profileCompletion = calculateProfileCompletion(userAuth);
+  const coursesCompleted =
+    userAuth?.enrollments?.filter((e) => e.completedAt)?.length || 0;
+  const certificatesEarned = userAuth?.certificates?.length || 0;
+  const hoursStudied =
+    userAuth?.enrollments?.reduce((total: number, enrollment: any) => {
+      return total + (enrollment.course?.duration || 0);
+    }, 0) || 0;
 
-  const courses = [
-    {
-      id: "1",
-      title: "Fundamentos Ministeriais",
-      progress: 100,
-      completedAt: new Date("2023-01-15"),
-      certificateUrl: "#",
-      instructor: "Pr. Robson",
-    },
-    {
-      id: "2",
-      title: "Cultura da Igreja",
-      progress: 100,
-      completedAt: new Date("2023-03-20"),
-      certificateUrl: "#",
-      instructor: "Pr. João",
-    },
-    {
-      id: "3",
-      title: "Discipulado Avançado",
-      progress: 75,
-      completedAt: null,
-      certificateUrl: null,
-      instructor: "Pr. Maria",
-    },
-    {
-      id: "4",
-      title: "Liderança Ministerial",
-      progress: 45,
-      completedAt: null,
-      certificateUrl: null,
-      instructor: "Pr. Carlos",
-    },
-  ];
-
-  const activities = [
-    {
-      id: "1",
-      type: "course_completed",
-      title: "Concluiu o curso de Liderança Ministerial",
-      description: "Obteve certificado com nota 9.5",
-      timestamp: new Date("2024-01-15T10:30:00"),
-      icon: Trophy,
-    },
-    {
-      id: "2",
-      type: "achievement",
-      title: "Conquistou a conquista 'Mentor Especialista'",
-      description: "Mentorou mais de 100 pessoas",
-      timestamp: new Date("2024-01-14T16:20:00"),
-      icon: Award,
-    },
-    {
-      id: "3",
-      type: "streak",
-      title: "Sequência de 15 dias mantida!",
-      description: "Continue assim para conquistar novos marcos",
-      timestamp: new Date("2024-01-13T08:45:00"),
-      icon: Flame,
-    },
-  ];
+  // Empty state component
+  const EmptyStateCard = ({
+    icon: Icon,
+    title,
+    description,
+    actionText,
+    onAction,
+  }: {
+    icon: any;
+    title: string;
+    description: string;
+    actionText?: string;
+    onAction?: () => void;
+  }) => (
+    <div className="dark-card dark-shadow-sm rounded-xl p-6 text-center">
+      <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+        <Icon className="dark-text-tertiary" size={24} />
+      </div>
+      <h3 className="dark-text-primary mb-2 font-semibold">{title}</h3>
+      <p className="dark-text-tertiary mb-4 text-sm">{description}</p>
+      {actionText && onAction && (
+        <Button onClick={onAction} className="dark-btn-primary">
+          {actionText}
+        </Button>
+      )}
+    </div>
+  );
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString("pt-BR");
@@ -170,15 +116,6 @@ export default function ProfilePage() {
     return "Agora mesmo";
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   return (
     <div className="dark-bg-primary min-h-screen">
       {/* Background Pattern */}
@@ -191,31 +128,54 @@ export default function ProfilePage() {
         <div className="dark-glass dark-shadow-md rounded-2xl p-8">
           <div className="mb-6 flex items-start justify-between">
             <div className="flex items-start space-x-6">
-              <div className="dark-primary-subtle-bg rounded-full p-4">
-                <User className="dark-primary" size={48} />
+              <div className="dark-primary-subtle-bg h-24 min-h-24 w-24 min-w-24 overflow-hidden rounded-full">
+                <Avatar className="h-full w-full">
+                  <AvatarImage
+                    src={userAuth?.image ?? ""}
+                    alt={userAuth?.name ?? ""}
+                    className="h-full w-full"
+                  />
+                  <AvatarFallback className="rounded-full">
+                    {getInitials(userAuth?.name ?? "")}
+                  </AvatarFallback>
+                </Avatar>
+                {/* <User className="dark-primary" size={48} /> */}
               </div>
               <div>
                 <h1 className="dark-text-primary mb-2 text-3xl font-bold">
-                  {user.name}
+                  {userAuth?.name}
                 </h1>
-                <p className="dark-text-secondary mb-2 text-lg">{user.role}</p>
-                <p className="dark-text-tertiary mb-4 max-w-2xl">{user.bio}</p>
+                <p className="dark-text-secondary mb-2 text-lg">
+                  {userAuth?.role || "Membro da Comunidade"}
+                </p>
+                <p className="dark-text-tertiary mb-4 max-w-2xl">
+                  {userAuth?.bio ||
+                    "Perfil em construção. Adicione uma biografia para compartilhar sua jornada ministerial."}
+                </p>
 
-                <div className="flex items-center space-x-4 text-sm">
-                  <div className="flex items-center space-x-1">
-                    <MapPin className="dark-text-tertiary" size={14} />
-                    <span className="dark-text-tertiary">{user.location}</span>
-                  </div>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+                  {userAuth?.location && (
+                    <div className="flex items-center space-x-1">
+                      <MapPin className="dark-text-tertiary" size={14} />
+                      <span className="dark-text-tertiary text-nowrap">
+                        {userAuth.location}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex items-center space-x-1">
                     <Calendar className="dark-text-tertiary" size={14} />
-                    <span className="dark-text-tertiary">
-                      Desde {formatDate(user.joinDate)}
+                    <span className="dark-text-tertiary text-nowrap">
+                      Desde {formatDate(userAuth?.joinDate ?? new Date())}
                     </span>
                   </div>
-                  <div className="flex items-center space-x-1">
-                    <Mail className="dark-text-tertiary" size={14} />
-                    <span className="dark-text-tertiary">{user.email}</span>
-                  </div>
+                  {userAuth?.email && (
+                    <div className="flex items-center space-x-1">
+                      <Mail className="dark-text-tertiary" size={14} />
+                      <span className="dark-text-tertiary text-nowrap">
+                        {userAuth.email}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -236,10 +196,10 @@ export default function ProfilePage() {
           </div>
 
           {/* Stats Overview */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
             <div className="dark-bg-secondary rounded-lg p-4 text-center">
               <div className="dark-text-primary mb-1 text-2xl font-bold">
-                {user.stats.coursesCompleted}
+                {coursesCompleted}
               </div>
               <div className="dark-text-tertiary text-sm">
                 Cursos Concluídos
@@ -248,23 +208,14 @@ export default function ProfilePage() {
 
             <div className="dark-bg-secondary rounded-lg p-4 text-center">
               <div className="dark-text-primary mb-1 text-2xl font-bold">
-                {user.stats.certificatesEarned}
+                {certificatesEarned}
               </div>
               <div className="dark-text-tertiary text-sm">Certificados</div>
             </div>
 
             <div className="dark-bg-secondary rounded-lg p-4 text-center">
               <div className="dark-text-primary mb-1 text-2xl font-bold">
-                {user.stats.studentsImpacted}
-              </div>
-              <div className="dark-text-tertiary text-sm">
-                Pessoas Impactadas
-              </div>
-            </div>
-
-            <div className="dark-bg-secondary rounded-lg p-4 text-center">
-              <div className="dark-text-primary mb-1 text-2xl font-bold">
-                {user.stats.hoursStudied}h
+                {Math.round(hoursStudied / 60)}h
               </div>
               <div className="dark-text-tertiary text-sm">Horas de Estudo</div>
             </div>
@@ -272,16 +223,9 @@ export default function ProfilePage() {
             <div className="dark-bg-secondary rounded-lg p-4 text-center">
               <div className="dark-text-primary mb-1 flex items-center justify-center gap-1 text-2xl font-bold">
                 <Flame className="dark-error" size={20} />
-                {user.stats.currentStreak}
+                {userAuth?.currentStreak ?? 0}
               </div>
               <div className="dark-text-tertiary text-sm">Sequência Atual</div>
-            </div>
-
-            <div className="dark-bg-secondary rounded-lg p-4 text-center">
-              <div className="dark-text-primary mb-1 text-2xl font-bold">
-                {user.stats.totalPoints.toLocaleString()}
-              </div>
-              <div className="dark-text-tertiary text-sm">Pontos Totais</div>
             </div>
           </div>
         </div>
@@ -294,55 +238,17 @@ export default function ProfilePage() {
               <div className="mb-6 flex items-center justify-between">
                 <h2 className="dark-text-primary flex items-center gap-2 text-xl font-bold">
                   <Trophy className="dark-secondary" size={24} />
-                  Conquistas ({achievements.length})
+                  Conquistas (0)
                 </h2>
-                <Button className="dark-glass dark-border hover:dark-border-hover">
-                  Ver Todas
-                </Button>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {achievements.map((achievement) => (
-                  <div
-                    key={achievement.id}
-                    className="dark-card dark-shadow-sm rounded-xl p-4"
-                  >
-                    <div className="flex items-start space-x-4">
-                      <div
-                        className={`${achievement.bgColor} flex-shrink-0 rounded-full p-3`}
-                      >
-                        <span className="text-2xl">{achievement.icon}</span>
-                      </div>
-                      <div className="flex-1">
-                        <div className="mb-1 flex items-center justify-between">
-                          <h3 className="dark-text-primary font-semibold">
-                            {achievement.name}
-                          </h3>
-                          <span
-                            className={`rounded-full px-2 py-1 text-xs font-medium ${
-                              achievement.rarity === "lendário"
-                                ? "dark-error-bg dark-error"
-                                : achievement.rarity === "épico"
-                                  ? "dark-warning-bg dark-warning"
-                                  : achievement.rarity === "raro"
-                                    ? "dark-secondary-bg dark-secondary"
-                                    : "dark-primary-subtle-bg dark-primary"
-                            }`}
-                          >
-                            {achievement.rarity}
-                          </span>
-                        </div>
-                        <p className="dark-text-tertiary mb-2 text-sm">
-                          {achievement.description}
-                        </p>
-                        <p className="dark-text-tertiary text-xs">
-                          Conquistado em {formatDate(achievement.earnedAt)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <EmptyStateCard
+                icon={Trophy}
+                title="Nenhuma conquista ainda"
+                description="Complete cursos e participe de atividades para desbloquear suas primeiras conquistas!"
+                actionText="Explorar Cursos"
+                onAction={() => (window.location.href = "/catalog")}
+              />
             </div>
 
             {/* Courses Progress */}
@@ -350,63 +256,77 @@ export default function ProfilePage() {
               <div className="mb-6 flex items-center justify-between">
                 <h2 className="dark-text-primary flex items-center gap-2 text-xl font-bold">
                   <BookOpen className="dark-primary" size={24} />
-                  Meus Cursos
+                  Meus Cursos ({userAuth?.enrollments?.length || 0})
                 </h2>
-                <Button className="dark-glass dark-border hover:dark-border-hover">
-                  Ver Todos
-                </Button>
+                {userAuth?.enrollments && userAuth.enrollments.length > 0 && (
+                  <Button className="dark-glass dark-border hover:dark-border-hover">
+                    Ver Todos
+                  </Button>
+                )}
               </div>
 
-              <div className="space-y-4">
-                {courses.map((course) => (
-                  <div
-                    key={course.id}
-                    className="dark-bg-secondary rounded-lg p-4"
-                  >
-                    <div className="mb-3 flex items-center justify-between">
-                      <div>
-                        <h3 className="dark-text-primary mb-1 font-semibold">
-                          {course.title}
-                        </h3>
-                        <p className="dark-text-tertiary text-sm">
-                          Instrutor: {course.instructor}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        {course.completedAt ? (
-                          <div className="flex items-center gap-2">
-                            <span className="dark-success text-sm font-medium">
-                              Concluído
+              {userAuth?.enrollments && userAuth.enrollments.length > 0 ? (
+                <div className="space-y-4">
+                  {userAuth.enrollments.slice(0, 4).map((enrollment: any) => (
+                    <div
+                      key={enrollment.id}
+                      className="dark-bg-secondary rounded-lg p-4"
+                    >
+                      <div className="mb-3 flex items-center justify-between">
+                        <div>
+                          <h3 className="dark-text-primary mb-1 font-semibold">
+                            {enrollment.course?.title || "Curso sem título"}
+                          </h3>
+                          <p className="dark-text-tertiary text-sm">
+                            Instrutor:{" "}
+                            {enrollment.course?.instructor?.name ||
+                              "Instrutor não definido"}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          {enrollment.completedAt ? (
+                            <div className="flex items-center gap-2">
+                              <span className="dark-success text-sm font-medium">
+                                Concluído
+                              </span>
+                              <Button
+                                size="sm"
+                                className="dark-glass dark-border hover:dark-border-hover"
+                              >
+                                <Download size={14} className="mr-1" />
+                                Certificado
+                              </Button>
+                            </div>
+                          ) : (
+                            <span className="dark-primary text-sm font-medium">
+                              {Math.round(enrollment.progress || 0)}% completo
                             </span>
-                            <Button
-                              size="sm"
-                              className="dark-glass dark-border hover:dark-border-hover"
-                            >
-                              <Download size={14} className="mr-1" />
-                              Certificado
-                            </Button>
-                          </div>
-                        ) : (
-                          <span className="dark-primary text-sm font-medium">
-                            {course.progress}% completo
-                          </span>
-                        )}
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="dark-bg-tertiary h-2 w-full rounded-full">
+                        <div
+                          className={`h-2 rounded-full transition-all duration-300 ${
+                            enrollment.progress === 100
+                              ? "dark-gradient-secondary"
+                              : "dark-gradient-primary"
+                          }`}
+                          style={{ width: `${enrollment.progress || 0}%` }}
+                        />
                       </div>
                     </div>
-
-                    <div className="dark-bg-tertiary h-2 w-full rounded-full">
-                      <div
-                        className={`h-2 rounded-full transition-all duration-300 ${
-                          course.progress === 100
-                            ? "dark-gradient-secondary"
-                            : "dark-gradient-primary"
-                        }`}
-                        style={{ width: `${course.progress}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <EmptyStateCard
+                  icon={BookOpen}
+                  title="Nenhum curso matriculado"
+                  description="Explore nosso catálogo e comece sua jornada de aprendizado hoje mesmo!"
+                  actionText="Ver Catálogo"
+                  onAction={() => (window.location.href = "/catalog")}
+                />
+              )}
             </div>
 
             {/* Recent Activity */}
@@ -416,26 +336,61 @@ export default function ProfilePage() {
                 Atividade Recente
               </h2>
 
-              <div className="space-y-4">
-                {activities.map((activity) => (
-                  <div key={activity.id} className="flex items-start space-x-4">
-                    <div className="dark-primary-subtle-bg flex-shrink-0 rounded-full p-2">
-                      <activity.icon className="dark-primary" size={16} />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="dark-text-primary mb-1 font-medium">
-                        {activity.title}
-                      </h3>
-                      <p className="dark-text-tertiary mb-1 text-sm">
-                        {activity.description}
-                      </p>
-                      <p className="dark-text-tertiary text-xs">
-                        {formatRelativeTime(activity.timestamp)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {/* Generate recent activities from user data */}
+              {userAuth?.enrollments && userAuth.enrollments.length > 0 ? (
+                <div className="space-y-4">
+                  {userAuth.enrollments
+                    .filter((e: any) => e.lastAccessedAt || e.enrolledAt)
+                    .sort(
+                      (a: any, b: any) =>
+                        new Date(b.lastAccessedAt || b.enrolledAt).getTime() -
+                        new Date(a.lastAccessedAt || a.enrolledAt).getTime(),
+                    )
+                    .slice(0, 5)
+                    .map((enrollment: any) => (
+                      <div
+                        key={enrollment.id}
+                        className="flex items-start space-x-4"
+                      >
+                        <div className="dark-primary-subtle-bg flex-shrink-0 rounded-full p-2">
+                          {enrollment.completedAt ? (
+                            <Trophy className="dark-primary" size={16} />
+                          ) : (
+                            <BookOpen className="dark-primary" size={16} />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="dark-text-primary mb-1 font-medium">
+                            {enrollment.completedAt
+                              ? `Concluiu o curso "${enrollment.course?.title || "Curso"}"`
+                              : `Acessou o curso "${enrollment.course?.title || "Curso"}"`}
+                          </h3>
+                          <p className="dark-text-tertiary mb-1 text-sm">
+                            {enrollment.completedAt
+                              ? `Parabéns pela conclusão! ${enrollment.course?.certificate ? "Certificado disponível." : ""}`
+                              : `Progresso atual: ${Math.round(enrollment.progress || 0)}%`}
+                          </p>
+                          <p className="dark-text-tertiary text-xs">
+                            {formatRelativeTime(
+                              new Date(
+                                enrollment.lastAccessedAt ||
+                                  enrollment.enrolledAt,
+                              ),
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              ) : (
+                <EmptyStateCard
+                  icon={Zap}
+                  title="Nenhuma atividade recente"
+                  description="Comece a estudar para ver suas atividades aparecerem aqui!"
+                  actionText="Explorar Conteúdo"
+                  onAction={() => (window.location.href = "/contents")}
+                />
+              )}
             </div>
           </div>
 
@@ -452,30 +407,48 @@ export default function ProfilePage() {
                 <div className="mb-2 flex justify-between text-sm">
                   <span className="dark-text-secondary">Progresso</span>
                   <span className="dark-primary font-semibold">
-                    {user.profileCompletion}%
+                    {profileCompletion}%
                   </span>
                 </div>
                 <div className="dark-bg-tertiary h-2 rounded-full">
                   <div
                     className="dark-gradient-primary h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${user.profileCompletion}%` }}
+                    style={{ width: `${profileCompletion}%` }}
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Button className="dark-glass dark-border hover:dark-border-hover w-full justify-start text-sm">
-                  <Plus className="mr-2" size={14} />
-                  Adicionar foto de perfil
-                </Button>
-                <Button className="dark-glass dark-border hover:dark-border-hover w-full justify-start text-sm">
-                  <Plus className="mr-2" size={14} />
-                  Adicionar habilidades
-                </Button>
-                <Button className="dark-glass dark-border hover:dark-border-hover w-full justify-start text-sm">
-                  <Plus className="mr-2" size={14} />
-                  Conectar redes sociais
-                </Button>
+                {!userAuth?.image && (
+                  <Button className="dark-glass dark-border hover:dark-border-hover w-full justify-start text-sm">
+                    <Plus className="mr-2" size={14} />
+                    Adicionar foto de perfil
+                  </Button>
+                )}
+                {!userAuth?.bio && (
+                  <Button className="dark-glass dark-border hover:dark-border-hover w-full justify-start text-sm">
+                    <Plus className="mr-2" size={14} />
+                    Adicionar biografia
+                  </Button>
+                )}
+                {!userAuth?.skills && (
+                  <Button className="dark-glass dark-border hover:dark-border-hover w-full justify-start text-sm">
+                    <Plus className="mr-2" size={14} />
+                    Adicionar habilidades
+                  </Button>
+                )}
+                {!userAuth?.phone && (
+                  <Button className="dark-glass dark-border hover:dark-border-hover w-full justify-start text-sm">
+                    <Plus className="mr-2" size={14} />
+                    Adicionar telefone
+                  </Button>
+                )}
+                {!userAuth?.website && (
+                  <Button className="dark-glass dark-border hover:dark-border-hover w-full justify-start text-sm">
+                    <Plus className="mr-2" size={14} />
+                    Adicionar website
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -485,32 +458,57 @@ export default function ProfilePage() {
                 Informações de Contato
               </h3>
 
-              <div className="space-y-3">
-                <div className="flex items-center space-x-3">
-                  <Mail className="dark-text-tertiary" size={16} />
-                  <span className="dark-text-secondary text-sm">
-                    {user.email}
-                  </span>
+              {userAuth?.email ||
+              userAuth?.phone ||
+              userAuth?.website ||
+              userAuth?.location ? (
+                <div className="space-y-3">
+                  {userAuth?.email && (
+                    <div className="flex items-center space-x-3">
+                      <Mail className="dark-text-tertiary" size={16} />
+                      <span className="dark-text-secondary text-sm">
+                        {userAuth.email}
+                      </span>
+                    </div>
+                  )}
+                  {userAuth?.phone && (
+                    <div className="flex items-center space-x-3">
+                      <Phone className="dark-text-tertiary" size={16} />
+                      <span className="dark-text-secondary text-sm">
+                        {userAuth.phone}
+                      </span>
+                    </div>
+                  )}
+                  {userAuth?.website && (
+                    <div className="flex items-center space-x-3">
+                      <Globe className="dark-text-tertiary" size={16} />
+                      <span className="dark-text-secondary text-sm">
+                        {userAuth.website}
+                      </span>
+                    </div>
+                  )}
+                  {userAuth?.location && (
+                    <div className="flex items-center space-x-3">
+                      <MapPin className="dark-text-tertiary" size={16} />
+                      <span className="dark-text-secondary text-sm">
+                        {userAuth.location}
+                      </span>
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center space-x-3">
-                  <Phone className="dark-text-tertiary" size={16} />
-                  <span className="dark-text-secondary text-sm">
-                    {user.phone}
-                  </span>
+              ) : (
+                <div className="py-4 text-center">
+                  <div className="dark-bg-secondary mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full">
+                    <Mail className="dark-text-tertiary" size={20} />
+                  </div>
+                  <p className="dark-text-tertiary text-sm">
+                    Nenhuma informação de contato adicionada
+                  </p>
+                  <Button className="dark-btn-primary mt-3 text-xs" size="sm">
+                    Adicionar Informações
+                  </Button>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <Globe className="dark-text-tertiary" size={16} />
-                  <span className="dark-text-secondary text-sm">
-                    {user.website}
-                  </span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <MapPin className="dark-text-tertiary" size={16} />
-                  <span className="dark-text-secondary text-sm">
-                    {user.location}
-                  </span>
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Quick Actions */}

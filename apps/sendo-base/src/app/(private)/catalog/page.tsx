@@ -2,6 +2,7 @@
 
 import { DashboardCourseCard } from "@/src/components/dashboard-course-card";
 import { DashboardCourseListCard } from "@/src/components/dashboard-course-list-card";
+import { getCourses, getUserEnrollments } from "@/src/lib/actions";
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
 import {
@@ -17,6 +18,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@repo/ui/components/tabs";
+import { useQuery } from "@tanstack/react-query";
 import {
   Code,
   Database,
@@ -40,111 +42,45 @@ export default function CatalogoPage() {
   const [selectedLevel, setSelectedLevel] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  // Mock data - in real app this would come from server actions
-  const courses = [
-    {
-      id: "1",
-      title: "Sendo Base - Fundamentos Ministeriais",
-      description:
-        "Aprenda os fundamentos ministeriais da Base Church, criando uma base sólida para o ministério com princípios bíblicos.",
-      image: "/api/placeholder/300/200",
-      duration: 120,
-      level: "Iniciante",
-      category: "Fundamentos",
-      instructor: "Pr. Robson",
-      price: 0,
-      rating: 4.8,
-      enrolledStudents: 15420,
-      isEnrolled: true,
-      isFeatured: true,
-      tags: ["Sendo Base", "Fundamentos", "Ministério", "Bíblia"],
-    },
-    {
-      id: "2",
-      title: "Cultura da Igreja - Princípios Bíblicos",
-      description:
-        "Construa uma cultura de igreja baseada em princípios bíblicos sólidos e práticos.",
-      image: "/api/placeholder/300/200",
-      duration: 180,
-      level: "Intermediário",
-      category: "Cultura",
-      instructor: "Pr. João",
-      price: 0,
-      rating: 4.9,
-      enrolledStudents: 12350,
-      isEnrolled: false,
-      isFeatured: true,
-      tags: ["Cultura", "Igreja", "Princípios", "Bíblia"],
-    },
-    {
-      id: "3",
-      title: "Discipulado - Do Básico ao Avançado",
-      description:
-        "Domine o discipulado e leve seu ministério ao próximo nível com princípios bíblicos.",
-      image: "/api/placeholder/300/200",
-      duration: 150,
-      level: "Intermediário",
-      category: "Discipulado",
-      instructor: "Pr. Maria",
-      price: 0,
-      rating: 4.7,
-      enrolledStudents: 9870,
-      isEnrolled: false,
-      isFeatured: false,
-      tags: ["Discipulado", "Ministério", "Bíblia"],
-    },
-    {
-      id: "4",
-      title: "Base Vida - Desenvolvimento Pessoal",
-      description:
-        "Crie uma vida baseada em princípios bíblicos com a Base Church.",
-      image: "/api/placeholder/300/200",
-      duration: 240,
-      level: "Iniciante",
-      category: "Vida",
-      instructor: "Pr. Ana",
-      price: 0,
-      rating: 4.6,
-      enrolledStudents: 7560,
-      isEnrolled: false,
-      isFeatured: false,
-      tags: ["Base Vida", "Desenvolvimento", "Pessoal"],
-    },
-    {
-      id: "5",
-      title: "Família - Princípios Bíblicos",
-      description:
-        "Desenvolva uma família baseada em princípios bíblicos sólidos.",
-      image: "/api/placeholder/300/200",
-      duration: 200,
-      level: "Intermediário",
-      category: "Família",
-      instructor: "Pr. Carlos",
-      price: 0,
-      rating: 4.5,
-      enrolledStudents: 6540,
-      isEnrolled: false,
-      isFeatured: false,
-      tags: ["Família", "Princípios", "Bíblia"],
-    },
-    {
-      id: "6",
-      title: "Liderança - Princípios Ministeriais",
-      description:
-        "Aprenda liderança para ministério, pastoreio e desenvolvimento de líderes.",
-      image: "/api/placeholder/300/200",
-      duration: 300,
-      level: "Avançado",
-      category: "Liderança",
-      instructor: "Pr. Pedro",
-      price: 0,
-      rating: 4.8,
-      enrolledStudents: 5430,
-      isEnrolled: false,
-      isFeatured: false,
-      tags: ["Liderança", "Ministério", "Pastoreio"],
-    },
-  ];
+  // Fetch courses from database
+  const {
+    data: coursesData,
+    isLoading: coursesLoading,
+    error: coursesError,
+  } = useQuery({
+    queryKey: ["courses"],
+    queryFn: getCourses,
+    select: (data) => data.courses,
+  });
+
+  // Fetch user enrollments to check which courses user is enrolled in
+  const { data: enrollmentsData } = useQuery({
+    queryKey: ["user-enrollments", "30d453b9-88c9-429e-9700-81d2db735f7a"],
+    queryFn: () => getUserEnrollments("30d453b9-88c9-429e-9700-81d2db735f7a"),
+    select: (data) => data.enrollments,
+  });
+
+  // Transform courses data for compatibility with existing components
+  const courses =
+    coursesData?.map((course: any) => ({
+      id: course.id,
+      title: course.title,
+      description: course.description,
+      image: course.image || "/api/placeholder/300/200",
+      duration: course.duration,
+      level: course.level,
+      category: course.category,
+      instructor: course.instructor?.name || "Instrutor não definido",
+      price: course.price || 0,
+      rating: course.rating || 0,
+      enrolledStudents: course._count?.enrollments || 0,
+      isEnrolled:
+        enrollmentsData?.some(
+          (enrollment: any) => enrollment.courseId === course.id,
+        ) || false,
+      isFeatured: course.isFeatured,
+      tags: course.tags || [],
+    })) || [];
 
   const categories = [
     { id: "all", name: "Todas", icon: Grid },
@@ -188,6 +124,60 @@ export default function CatalogoPage() {
 
   const featuredCourses = courses.filter((course) => course.isFeatured);
   const enrolledCourses = courses.filter((course) => course.isEnrolled);
+
+  // Loading state
+  if (coursesLoading) {
+    return (
+      <div className="dark-bg-primary min-h-screen">
+        <div className="fixed inset-0 opacity-3">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
+        </div>
+        <div className="relative mx-auto max-w-7xl space-y-6 p-6">
+          <div className="dark-glass dark-shadow-md rounded-2xl p-8 text-center">
+            <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+              <Search className="dark-text-tertiary" size={32} />
+            </div>
+            <h1 className="dark-text-primary mb-2 text-2xl font-bold">
+              Carregando catálogo...
+            </h1>
+            <p className="dark-text-secondary">
+              Buscando cursos disponíveis para você
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (coursesError) {
+    return (
+      <div className="dark-bg-primary min-h-screen">
+        <div className="fixed inset-0 opacity-3">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
+        </div>
+        <div className="relative mx-auto max-w-7xl space-y-6 p-6">
+          <div className="dark-glass dark-shadow-md rounded-2xl p-8 text-center">
+            <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+              <Search className="dark-text-tertiary" size={32} />
+            </div>
+            <h1 className="dark-text-primary mb-2 text-2xl font-bold">
+              Erro ao carregar catálogo
+            </h1>
+            <p className="dark-text-secondary mb-4">
+              Não foi possível carregar os cursos. Tente novamente.
+            </p>
+            <Button
+              className="dark-btn-primary"
+              onClick={() => window.location.reload()}
+            >
+              Tentar Novamente
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="dark-bg-primary min-h-screen">
@@ -337,9 +327,53 @@ export default function CatalogoPage() {
             </TabsList>
 
             <TabsContent value="all" className="mt-6">
-              {viewMode === "grid" ? (
+              {filteredCourses.length > 0 ? (
+                viewMode === "grid" ? (
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {filteredCourses.map((course) => (
+                      <DashboardCourseCard
+                        key={course.id}
+                        course={course}
+                        variant="catalog"
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {filteredCourses.map((course) => (
+                      <DashboardCourseListCard
+                        key={course.id}
+                        course={course}
+                      />
+                    ))}
+                  </div>
+                )
+              ) : (
+                <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
+                  <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                    <Search className="dark-text-tertiary" size={24} />
+                  </div>
+                  <h3 className="dark-text-primary mb-2 font-semibold">
+                    {searchQuery
+                      ? "Nenhum curso encontrado"
+                      : "Nenhum curso disponível"}
+                  </h3>
+                  <p className="dark-text-tertiary mb-4 text-sm">
+                    {searchQuery
+                      ? "Tente ajustar sua busca ou filtros"
+                      : "Não há cursos disponíveis no momento"}
+                  </p>
+                  <Button className="dark-btn-primary">
+                    {searchQuery ? "Limpar Busca" : "Explorar Cursos"}
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="featured" className="mt-6">
+              {featuredCourses.length > 0 ? (
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {filteredCourses.map((course) => (
+                  {featuredCourses.map((course) => (
                     <DashboardCourseCard
                       key={course.id}
                       course={course}
@@ -348,48 +382,77 @@ export default function CatalogoPage() {
                   ))}
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {filteredCourses.map((course) => (
-                    <DashboardCourseListCard key={course.id} course={course} />
-                  ))}
+                <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
+                  <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                    <TrendingUp className="dark-text-tertiary" size={24} />
+                  </div>
+                  <h3 className="dark-text-primary mb-2 font-semibold">
+                    Nenhum curso em destaque
+                  </h3>
+                  <p className="dark-text-tertiary mb-4 text-sm">
+                    Não há cursos em destaque no momento
+                  </p>
+                  <Button className="dark-btn-primary">
+                    Ver Todos os Cursos
+                  </Button>
                 </div>
               )}
             </TabsContent>
 
-            <TabsContent value="featured" className="mt-6">
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {featuredCourses.map((course) => (
-                  <DashboardCourseCard
-                    key={course.id}
-                    course={course}
-                    variant="catalog"
-                  />
-                ))}
-              </div>
-            </TabsContent>
-
             <TabsContent value="enrolled" className="mt-6">
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {enrolledCourses.map((course) => (
-                  <DashboardCourseCard
-                    key={course.id}
-                    course={course}
-                    variant="catalog"
-                  />
-                ))}
-              </div>
+              {enrolledCourses.length > 0 ? (
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {enrolledCourses.map((course) => (
+                    <DashboardCourseCard
+                      key={course.id}
+                      course={course}
+                      variant="catalog"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
+                  <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                    <Zap className="dark-text-tertiary" size={24} />
+                  </div>
+                  <h3 className="dark-text-primary mb-2 font-semibold">
+                    Nenhum curso matriculado
+                  </h3>
+                  <p className="dark-text-tertiary mb-4 text-sm">
+                    Você ainda não se matriculou em nenhum curso
+                  </p>
+                  <Button className="dark-btn-primary">Explorar Cursos</Button>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="recommended" className="mt-6">
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {filteredCourses.slice(0, 6).map((course) => (
-                  <DashboardCourseCard
-                    key={course.id}
-                    course={course}
-                    variant="catalog"
-                  />
-                ))}
-              </div>
+              {filteredCourses.length > 0 ? (
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {filteredCourses.slice(0, 6).map((course) => (
+                    <DashboardCourseCard
+                      key={course.id}
+                      course={course}
+                      variant="catalog"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
+                  <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                    <Target className="dark-text-tertiary" size={24} />
+                  </div>
+                  <h3 className="dark-text-primary mb-2 font-semibold">
+                    Nenhuma recomendação
+                  </h3>
+                  <p className="dark-text-tertiary mb-4 text-sm">
+                    Não há cursos recomendados no momento
+                  </p>
+                  <Button className="dark-btn-primary">
+                    Ver Todos os Cursos
+                  </Button>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </div>

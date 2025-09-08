@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 
 import { Providers } from "@/src/components/providers";
 import "../global.css";
+import { AppProviders } from "../lib/providers/app-providers";
 
 const roboto = Roboto({
   weight: "400",
@@ -104,11 +105,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className="scroll-smooth" suppressHydrationWarning>
-      <body
-        className={`${belfast.variable} ${roboto.variable} ${surgena.variable} ${helvetica.variable} antialiased`}
-      >
-        <Providers>{children}</Providers>
-      </body>
+      <AppProviders>
+        <body
+          className={`${belfast.variable} ${roboto.variable} ${surgena.variable} ${helvetica.variable} antialiased`}
+        >
+          <Providers>{children}</Providers>
+        </body>
+      </AppProviders>
     </html>
   );
 }
