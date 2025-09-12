@@ -624,7 +624,7 @@ export default function EventPage() {
                             {speaker.name}
                           </h3>
                           <p className="dark-text-secondary mb-2">
-                            {speaker.role}
+                            {speaker.role === "LIDER" ? "Líder" : "Membro"}
                           </p>
                           <p className="dark-text-tertiary mb-4 text-sm">
                             {speaker.experience}
@@ -693,7 +693,7 @@ export default function EventPage() {
                                 {review.author}
                               </div>
                               <div className="dark-text-tertiary text-xs">
-                                {review.role}
+                                {review.role === "LIDER" ? "Líder" : "Membro"}
                               </div>
                             </div>
                             <div className="flex items-center gap-1">

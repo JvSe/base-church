@@ -524,7 +524,7 @@ export default function DashboardPage() {
                 {userData?.name || "Usuário"}
               </h3>
               <p className="dark-text-secondary mb-4 text-sm">
-                {userData?.role || "Membro da Comunidade"}
+                {userData?.role === "LIDER" ? "Líder" : "Membro"}
               </p>
               <div className="mb-4 flex items-center justify-center gap-4 text-sm">
                 <div className="text-center">

@@ -82,7 +82,7 @@ export default function ComunidadePage() {
       id: post.id,
       author: {
         name: post.user.name || "Usuário",
-        role: post.user.role || "Membro",
+        role: post.user.role === "LIDER" ? "Líder" : "Membro",
         avatar: post.user.image,
       },
       content: post.content,
@@ -99,7 +99,7 @@ export default function ComunidadePage() {
   const activeMembers =
     communityData?.activeUsers?.map((user: any) => ({
       name: user.name || "Usuário",
-      role: user.role || "Membro",
+      role: user.role === "LIDER" ? "Líder" : "Membro",
       online: true, // TODO: Implement online status
     })) || [];
 
@@ -322,7 +322,9 @@ export default function ComunidadePage() {
                           </h3>
                           <div className="flex items-center space-x-2 text-sm">
                             <span className="dark-text-tertiary">
-                              {post.author.role}
+                              {post.author.role === "LIDER"
+                                ? "Líder"
+                                : "Membro"}
                             </span>
                             <span className="dark-text-tertiary">•</span>
                             <span className="dark-text-tertiary">
@@ -446,7 +448,7 @@ export default function ComunidadePage() {
                           {member.name}
                         </p>
                         <p className="dark-text-tertiary text-xs">
-                          {member.role}
+                          {member.role === "LIDER" ? "Líder" : "Membro"}
                         </p>
                       </div>
                     </div>

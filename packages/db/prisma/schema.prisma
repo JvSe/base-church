@@ -12,29 +12,42 @@ datasource db {
   directUrl = "postgresql://postgres.trcliacdqrdvqdewqbaw:1OQxJVigpzZMf3L1@aws-1-sa-east-1.pooler.supabase.com:5432/postgres"
 }
 
+enum UserRole {
+  MEMBROS
+  LIDER
+}
+
 model User {
-  id                 String    @id @default(uuid())
-  name               String?
-  email              String?   @unique
-  emailVerified      DateTime?
-  image              String?
-  username           String?   @unique
-  role               String?   @default("student") // student, leader, pastor, admin
-  bio                String?
-  location           String?
-  phone              String?
-  website            String?
-  skills             String?
-  academicBackground String?
-  highlights         String?
-  joinDate           DateTime  @default(now())
-  profileCompletion  Int?      @default(0) // 0-100
-  currentStreak      Int?      @default(0)
-  totalPoints        Int?      @default(0)
-  level              Int?      @default(1)
-  experience         Int?      @default(0)
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  id                   String    @id @default(uuid())
+  name                 String?
+  email                String?   @unique
+  emailVerified        DateTime?
+  image                String?
+  username             String?   @unique
+  role                 UserRole  @default(MEMBROS)
+  bio                  String?
+  phone                String?
+  cpf                  String?   @unique
+  birthDate            DateTime?
+  joinDate             DateTime  @default(now())
+  profileCompletion    Int?      @default(0) // 0-100
+  currentStreak        Int?      @default(0)
+  totalPoints          Int?      @default(0)
+  level                Int?      @default(1)
+  experience           Int?      @default(0)
+  notificationSettings Json? // JSON object for notification preferences
+
+  // Address fields
+  cep          String? // CEP (postal code)
+  street       String? // Logradouro (street name)
+  number       String? // Número (house number)
+  complement   String? // Complemento (complement)
+  neighborhood String? // Bairro (neighborhood)
+  city         String? // Cidade (city)
+  state        String? // Estado (state)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
   enrollments       Enrollment[]

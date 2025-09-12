@@ -1,7 +1,6 @@
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
 import Image from "next/image";
-import { FaGoogle } from "react-icons/fa";
 
 export default function SigInPage() {
   return (
@@ -23,15 +22,8 @@ export default function SigInPage() {
               Entre na sua conta
             </h2>
           </div>
-          <Button variant="outline" className="gap-2 font-semibold">
-            <FaGoogle /> Login com Google
-          </Button>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="h-0 flex-1 border border-neutral-600" />
-          <p>ou</p>
-          <div className="h-0 flex-1 border border-neutral-600" />
-        </div>
+
         <div className="flex flex-col gap-4">
           <Input placeholder="you@example.com" />
           <Input type="password" placeholder="••••••••" />

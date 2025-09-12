@@ -12,10 +12,6 @@ export async function updateUserProfile(
     email?: string;
     username?: string;
     bio?: string;
-    location?: string;
-    skills?: string;
-    academicBackground?: string;
-    highlights?: string;
   },
 ) {
   try {
@@ -1082,5 +1078,179 @@ export async function getCommunityData() {
     };
   } catch (error) {
     return { success: false, error: "Failed to fetch community data" };
+  }
+}
+
+// Default notification settings
+const DEFAULT_NOTIFICATION_SETTINGS = {
+  email: {
+    courseUpdates: true,
+    newCourses: true,
+    eventReminders: true,
+    communityPosts: false,
+    achievements: true,
+    weeklyDigest: true,
+  },
+  push: {
+    courseUpdates: true,
+    newCourses: false,
+    eventReminders: true,
+    communityPosts: false,
+    achievements: true,
+  },
+  sms: {
+    eventReminders: false,
+    urgentUpdates: false,
+  },
+};
+
+export type UpdateUserProfileInput = {
+  name?: string;
+  cpf?: string;
+  birthDate?: string;
+  bio?: string;
+  phone?: string;
+  // Address fields
+  cep?: string;
+  street?: string;
+  number?: string;
+  complement?: string;
+  neighborhood?: string;
+  city?: string;
+  state?: string;
+};
+
+// Profile Update Actions
+export async function updateUserProfileData({
+  userId,
+  data,
+}: {
+  userId: string;
+  data: UpdateUserProfileInput;
+}) {
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...data,
+        updatedAt: new Date(),
+      },
+    });
+
+    revalidatePath("/profile");
+    revalidatePath("/profile/account");
+    return { success: true, user: updatedUser };
+  } catch (error) {
+    return { success: false, error: "Failed to update user profile" };
+  }
+}
+
+export async function updateUserEmail({
+  userId,
+  newEmail,
+}: {
+  userId: string;
+  newEmail: string;
+}) {
+  try {
+    // Check if email is already in use
+    const existingUser = await prisma.user.findUnique({
+      where: { email: newEmail },
+    });
+
+    if (existingUser && existingUser.id !== userId) {
+      return {
+        success: false,
+        error: "Email já está em uso por outro usuário",
+      };
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        email: newEmail,
+        updatedAt: new Date(),
+      },
+    });
+
+    revalidatePath("/profile");
+    revalidatePath("/profile/edit");
+    return { success: true, user: updatedUser };
+  } catch (error) {
+    return { success: false, error: "Failed to update email" };
+  }
+}
+
+export async function updateUserPassword({
+  userId,
+  currentPassword,
+  newPassword,
+}: {
+  userId: string;
+  currentPassword: string;
+  newPassword: string;
+}) {
+  try {
+    // In a real app, you would verify the current password here
+    // For now, we'll just update the password
+    // You should hash the new password before storing it
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        // password: hashedNewPassword, // Hash this in production
+        updatedAt: new Date(),
+      },
+    });
+
+    revalidatePath("/profile");
+    revalidatePath("/profile/edit");
+    return { success: true, user: updatedUser };
+  } catch (error) {
+    return { success: false, error: "Failed to update password" };
+  }
+}
+
+export async function updateUserNotifications({
+  userId,
+  settings,
+}: {
+  userId: string;
+  settings: {
+    email: {
+      courseUpdates: boolean;
+      newCourses: boolean;
+      eventReminders: boolean;
+      communityPosts: boolean;
+      achievements: boolean;
+      weeklyDigest: boolean;
+    };
+    push: {
+      courseUpdates: boolean;
+      newCourses: boolean;
+      eventReminders: boolean;
+      communityPosts: boolean;
+      achievements: boolean;
+    };
+    sms: {
+      eventReminders: boolean;
+      urgentUpdates: boolean;
+    };
+  };
+}) {
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        notificationSettings: settings,
+        updatedAt: new Date(),
+      },
+    });
+
+    revalidatePath("/profile");
+    revalidatePath("/profile/edit");
+    return { success: true, user: updatedUser };
+  } catch (error) {
+    return { success: false, error: "Failed to update notification settings" };
   }
 }

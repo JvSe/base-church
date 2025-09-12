@@ -15,18 +15,16 @@ import {
   Download,
   Edit,
   Flame,
-  Globe,
   Mail,
-  MapPin,
   MessageCircle,
   Phone,
   Plus,
-  Settings,
   Share,
   Target,
   Trophy,
   Zap,
 } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 export default function ProfilePage() {
@@ -49,12 +47,9 @@ export default function ProfilePage() {
       user.email,
       user.image,
       user.bio,
-      user.location,
       user.phone,
-      user.website,
-      user.role,
-      user.skills,
-      user.academicBackground,
+      user.cpf,
+      user.birthDate,
     ];
 
     const filledFields = fields.filter(
@@ -146,7 +141,7 @@ export default function ProfilePage() {
                   {userAuth?.name}
                 </h1>
                 <p className="dark-text-secondary mb-2 text-lg">
-                  {userAuth?.role || "Membro da Comunidade"}
+                  {userAuth?.role === "LIDER" ? "Líder" : "Membro"}
                 </p>
                 <p className="dark-text-tertiary mb-4 max-w-2xl">
                   {userAuth?.bio ||
@@ -154,14 +149,6 @@ export default function ProfilePage() {
                 </p>
 
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-                  {userAuth?.location && (
-                    <div className="flex items-center space-x-1">
-                      <MapPin className="dark-text-tertiary" size={14} />
-                      <span className="dark-text-tertiary text-nowrap">
-                        {userAuth.location}
-                      </span>
-                    </div>
-                  )}
                   <div className="flex items-center space-x-1">
                     <Calendar className="dark-text-tertiary" size={14} />
                     <span className="dark-text-tertiary text-nowrap">
@@ -181,17 +168,22 @@ export default function ProfilePage() {
             </div>
 
             <div className="flex items-center space-x-3">
-              <Button className="dark-glass dark-border hover:dark-border-hover gap-2">
-                <Edit size={16} />
-                Editar Perfil
+              <Button
+                asChild
+                className="dark-glass dark-border hover:dark-border-hover gap-2"
+              >
+                <Link href="/profile/account">
+                  <Edit size={16} />
+                  Editar Perfil
+                </Link>
               </Button>
-              <Button className="dark-glass dark-border hover:dark-border-hover gap-2">
+              {/* <Button className="dark-glass dark-border hover:dark-border-hover gap-2">
                 <Share size={16} />
                 Compartilhar
               </Button>
               <Button className="dark-glass dark-border hover:dark-border-hover">
                 <Settings size={16} />
-              </Button>
+              </Button> */}
             </div>
           </div>
 
@@ -431,22 +423,10 @@ export default function ProfilePage() {
                     Adicionar biografia
                   </Button>
                 )}
-                {!userAuth?.skills && (
-                  <Button className="dark-glass dark-border hover:dark-border-hover w-full justify-start text-sm">
-                    <Plus className="mr-2" size={14} />
-                    Adicionar habilidades
-                  </Button>
-                )}
                 {!userAuth?.phone && (
                   <Button className="dark-glass dark-border hover:dark-border-hover w-full justify-start text-sm">
                     <Plus className="mr-2" size={14} />
                     Adicionar telefone
-                  </Button>
-                )}
-                {!userAuth?.website && (
-                  <Button className="dark-glass dark-border hover:dark-border-hover w-full justify-start text-sm">
-                    <Plus className="mr-2" size={14} />
-                    Adicionar website
                   </Button>
                 )}
               </div>
@@ -458,10 +438,7 @@ export default function ProfilePage() {
                 Informações de Contato
               </h3>
 
-              {userAuth?.email ||
-              userAuth?.phone ||
-              userAuth?.website ||
-              userAuth?.location ? (
+              {userAuth?.email || userAuth?.phone ? (
                 <div className="space-y-3">
                   {userAuth?.email && (
                     <div className="flex items-center space-x-3">
@@ -476,22 +453,6 @@ export default function ProfilePage() {
                       <Phone className="dark-text-tertiary" size={16} />
                       <span className="dark-text-secondary text-sm">
                         {userAuth.phone}
-                      </span>
-                    </div>
-                  )}
-                  {userAuth?.website && (
-                    <div className="flex items-center space-x-3">
-                      <Globe className="dark-text-tertiary" size={16} />
-                      <span className="dark-text-secondary text-sm">
-                        {userAuth.website}
-                      </span>
-                    </div>
-                  )}
-                  {userAuth?.location && (
-                    <div className="flex items-center space-x-3">
-                      <MapPin className="dark-text-tertiary" size={16} />
-                      <span className="dark-text-secondary text-sm">
-                        {userAuth.location}
                       </span>
                     </div>
                   )}

@@ -306,7 +306,7 @@ export default function CoursePage() {
                       {course.instructor.name}
                     </div>
                     <div className="dark-text-tertiary text-xs">
-                      {course.instructor.role}
+                      {course.instructor.role === "LIDER" ? "Líder" : "Membro"}
                     </div>
                   </div>
                 </div>
@@ -593,7 +593,7 @@ export default function CoursePage() {
                       {course.instructor.name}
                     </h3>
                     <p className="dark-text-secondary mb-2">
-                      {course.instructor.role}
+                      {course.instructor.role === "LIDER" ? "Líder" : "Membro"}
                     </p>
                     <p className="dark-text-tertiary mb-4 text-sm">
                       {course.instructor.experience}
@@ -637,7 +637,7 @@ export default function CoursePage() {
                                 {review.author}
                               </div>
                               <div className="dark-text-tertiary text-xs">
-                                {review.role}
+                                {review.role === "LIDER" ? "Líder" : "Membro"}
                               </div>
                             </div>
                             <div className="flex items-center gap-1">
