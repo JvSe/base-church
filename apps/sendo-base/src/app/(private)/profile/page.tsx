@@ -38,7 +38,6 @@ export default function ProfilePage() {
 
   console.log("data", userAuth);
 
-  // Calculate profile completion based on available data
   const calculateProfileCompletion = (user: any) => {
     if (!user) return 0;
 
@@ -53,7 +52,7 @@ export default function ProfilePage() {
     ];
 
     const filledFields = fields.filter(
-      (field) => field && field.trim() !== "",
+      (field) => field && typeof field === "string" && field.trim() !== "",
     ).length;
     return Math.round((filledFields / fields.length) * 100);
   };

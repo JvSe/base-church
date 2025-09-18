@@ -84,13 +84,13 @@ export default function CatalogoPage() {
 
   const categories = [
     { id: "all", name: "Todas", icon: Grid },
-    { id: "fundamentos", name: "Fundamentos", icon: Code },
-    { id: "cultura", name: "Cultura", icon: Server },
-    { id: "discipulado", name: "Discipulado", icon: Smartphone },
-    { id: "vida", name: "Vida", icon: Target },
-    { id: "familia", name: "Família", icon: Database },
-    { id: "lideranca", name: "Liderança", icon: Palette },
-    { id: "pastoral", name: "Pastoral", icon: Globe },
+    { id: "doutrina", name: "Doutrina", icon: Code },
+    { id: "lideranca", name: "Liderança", icon: Server },
+    { id: "evangelismo", name: "Evangelismo", icon: Smartphone },
+    { id: "estudo-biblico", name: "Estudo Bíblico", icon: Target },
+    { id: "aconselhamento", name: "Aconselhamento", icon: Database },
+    { id: "historia", name: "História", icon: Palette },
+    { id: "ministerio", name: "Ministério", icon: Globe },
   ];
 
   const levels = [
@@ -244,7 +244,7 @@ export default function CatalogoPage() {
                 size={20}
               />
               <Input
-                placeholder="Buscar por cursos, instrutores ou tecnologias..."
+                placeholder="Buscar por cursos, instrutores ou temas ministeriais..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="dark-input h-12 pl-12 text-base"

@@ -1,8 +1,60 @@
-import { Button } from "@repo/ui/components/button";
-import { Input } from "@repo/ui/components/input";
-import Image from "next/image";
+"use client";
 
-export default function SigInPage() {
+import { signIn } from "@/src/lib/actions";
+import { signInSchema, SignInScheme } from "@/src/lib/forms/auth/signin.scheme";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@repo/ui/components/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@repo/ui/components/form";
+import { Input } from "@repo/ui/components/input";
+import { formatDocument } from "@repo/ui/helpers/format-document.helper";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+
+export default function SignInPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+
+  const form = useForm<SignInScheme>({
+    resolver: zodResolver(signInSchema),
+    defaultValues: {
+      cpf: "",
+      password: "",
+    },
+  });
+
+  const onSubmit = async (data: SignInScheme) => {
+    setIsLoading(true);
+    try {
+      const result = await signIn(data);
+
+      if (result.success) {
+        // Definir cookie de sessão
+        if (result.sessionCookie) {
+          document.cookie = result.sessionCookie;
+        }
+
+        toast.success("Login realizado com sucesso!");
+        router.push("/home");
+      } else {
+        toast.error(result.error || "Erro ao fazer login");
+      }
+    } catch (error) {
+      toast.error("Erro interno do servidor");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="flex w-[330px] flex-1 flex-col justify-center sm:w-[384px]">
       <div className="mt-auto mb-auto flex flex-col gap-5">
@@ -24,18 +76,84 @@ export default function SigInPage() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-4">
-          <Input placeholder="you@example.com" />
-          <Input type="password" placeholder="••••••••" />
-          <Button className="bg-primary-2 mt-4 font-semibold" size="lg">
-            Login
-          </Button>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="flex flex-col gap-4"
+          >
+            <FormField
+              control={form.control}
+              name="cpf"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-foreground text-sm font-medium">
+                    CPF
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      value={formatDocument(field.value)}
+                      onChange={(e) => {
+                        const cleanValue = e.target.value.replace(/\D/g, "");
+                        field.onChange(cleanValue);
+                      }}
+                      placeholder="000.000.000-00"
+                      className="dark-input"
+                      maxLength={14}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <p className="text-foreground-light mt-8 text-center text-sm">
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-foreground text-sm font-medium">
+                    Senha
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="password"
+                      placeholder="••••••••"
+                      className="dark-input"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <Button
+              type="submit"
+              className="bg-primary-2 mt-4 font-semibold"
+              size="lg"
+              disabled={isLoading}
+            >
+              {isLoading ? "Entrando..." : "Entrar"}
+            </Button>
+          </form>
+        </Form>
+
+        <div className="space-y-3">
+          <p className="text-foreground-light text-center text-sm">
+            <a
+              className="text-foreground hover:text-foreground-light underline transition"
+              href="/forgot-password"
+            >
+              Esqueceu sua senha?
+            </a>
+          </p>
+
+          <p className="text-foreground-light text-center text-sm">
             Não tem uma conta?{" "}
             <a
               className="text-foreground hover:text-foreground-light underline transition"
-              href="signup"
+              href="/signup"
             >
               Cadastre agora
             </a>

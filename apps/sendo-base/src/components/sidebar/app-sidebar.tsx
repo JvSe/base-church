@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  Award,
+  BarChart3,
   BookOpen,
   FileText,
   HelpCircle,
@@ -8,6 +10,7 @@ import {
   Map,
   MessageCircle,
   User,
+  Users,
 } from "lucide-react";
 
 import Link from "next/link";
@@ -65,6 +68,31 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         icon: User,
       },
     ],
+    navAdmin:
+      userAuth?.role === "LIDER"
+        ? [
+            {
+              title: "Dashboard",
+              url: "/dashboard",
+              icon: BarChart3,
+            },
+            {
+              title: "Gestão de Alunos",
+              url: "/dashboard/students",
+              icon: Users,
+            },
+            {
+              title: "Gestão de Cursos",
+              url: "/dashboard/courses",
+              icon: BookOpen,
+            },
+            {
+              title: "Certificados",
+              url: "/dashboard/certificates",
+              icon: Award,
+            },
+          ]
+        : [],
     navLearning: [
       {
         title: "Minha Jornada",
@@ -246,6 +274,39 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Navegação Administrativa - Apenas para Líderes */}
+        {data.navAdmin.length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="gap-2 px-0 text-xs font-semibold tracking-wider uppercase">
+              Administração
+              <Separator className="bg-white opacity-5" />
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu className="space-y-1">
+                {data.navAdmin.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      tooltip={item.title}
+                      isActive={pathname === item.url}
+                      asChild
+                      className={`h-10 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:!p-2 [&>span]:group-data-[collapsible=icon]:hidden [&>svg]:!size-5 ${
+                        pathname === item.url
+                          ? "dark-primary-subtle-bg dark-primary"
+                          : "dark-text-secondary hover:dark-text-primary hover:dark-bg-secondary"
+                      }`}
+                    >
+                      <Link href={item.url} className="flex items-center gap-3">
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
         {/* Navegação de Aprendizado */}
         <SidebarGroup>

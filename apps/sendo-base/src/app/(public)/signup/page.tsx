@@ -1,14 +1,9 @@
 "use client";
-import { Button } from "@repo/ui/components/button";
-import { Input } from "@repo/ui/components/input";
-import { useForm } from "react-hook-form";
-import { FaGoogle } from "react-icons/fa";
 
-import {
-  SignUpForms,
-  signupScheme,
-} from "@/src/lib/forms/authentication/signup.scheme";
+import { signUp } from "@/src/lib/actions";
+import { signUpSchema, SignUpScheme } from "@/src/lib/forms/auth/signup.scheme";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@repo/ui/components/button";
 import {
   Form,
   FormControl,
@@ -17,74 +12,227 @@ import {
   FormLabel,
   FormMessage,
 } from "@repo/ui/components/form";
+import { Input } from "@repo/ui/components/input";
+import { formatDocument } from "@repo/ui/helpers/format-document.helper";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+
 export default function SignUpPage() {
-  const form = useForm<SignUpForms>({
-    resolver: zodResolver(signupScheme),
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+
+  const form = useForm<SignUpScheme>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      name: "",
+      cpf: "",
+      email: "",
+      phone: "",
+      password: "",
+      confirmPassword: "",
+    },
   });
+
+  const onSubmit = async (data: SignUpScheme) => {
+    setIsLoading(true);
+    try {
+      const result = await signUp({
+        name: data.name,
+        cpf: data.cpf,
+        password: data.password,
+        email: data.email || undefined,
+        phone: data.phone || undefined,
+      });
+
+      if (result.success) {
+        toast.success("Conta criada com sucesso!");
+        router.push("/signin");
+      } else {
+        toast.error(result.error || "Erro ao criar conta");
+      }
+    } catch (error) {
+      toast.error("Erro interno do servidor");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="flex w-[330px] flex-1 flex-col justify-center sm:w-[384px]">
       <div className="mt-auto mb-auto flex flex-col gap-5">
+        <Image
+          src="/assets/svg/sendo-base.svg"
+          alt="Sendo Base Logo"
+          width={100}
+          height={100}
+          className="w-[90px] md:w-[220px]"
+        />
         <div className="flex flex-col gap-4">
           <div className="mb-10">
-            <h1 className="mt-8 mb-2 text-2xl lg:text-3xl">Vamos Começar</h1>
+            <h1 className="mt-8 mb-2 text-2xl lg:text-3xl">Criar conta</h1>
             <h2 className="text-foreground-light text-sm">
-              Crie uma nova conta
+              Junte-se à nossa comunidade
             </h2>
           </div>
-          <Button variant="outline" className="gap-2 font-semibold">
-            <FaGoogle /> Cadastro com Google
-          </Button>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="h-0 flex-1 border border-neutral-600" />
-          <p>ou</p>
-          <div className="h-0 flex-1 border border-neutral-600" />
-        </div>
+
         <Form {...form}>
-          <form className="flex flex-col gap-4">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="flex flex-col gap-4"
+          >
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-foreground text-sm font-medium">
+                    Nome completo
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="Seu nome completo"
+                      className="dark-input"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="cpf"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-foreground text-sm font-medium">
+                    CPF
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      value={formatDocument(field.value)}
+                      onChange={(e) => {
+                        const cleanValue = e.target.value.replace(/\D/g, "");
+                        field.onChange(cleanValue);
+                      }}
+                      placeholder="000.000.000-00"
+                      className="dark-input"
+                      maxLength={14}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel className="text-foreground text-sm font-medium">
+                    Email (opcional)
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder="you@example.com" {...field} />
+                    <Input
+                      {...field}
+                      type="email"
+                      placeholder="seu@email.com"
+                      className="dark-input"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-foreground text-sm font-medium">
+                    Telefone (opcional)
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="(11) 99999-9999"
+                      className="dark-input"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Senha</FormLabel>
+                  <FormLabel className="text-foreground text-sm font-medium">
+                    Senha
+                  </FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} />
+                    <Input
+                      {...field}
+                      type="password"
+                      placeholder="••••••••"
+                      className="dark-input"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <Button className="mt-4 font-semibold" size="lg">
-              Cadastrar
-            </Button>
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-foreground text-sm font-medium">
+                    Confirmar senha
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="password"
+                      placeholder="••••••••"
+                      className="dark-input"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-            <p className="text-foreground-light mt-8 text-center text-sm">
-              Tem uma conta?{" "}
-              <a
-                className="text-foreground hover:text-foreground-light underline transition"
-                href="signin"
-              >
-                Faça seu login
-              </a>
-            </p>
+            <Button
+              type="submit"
+              className="bg-primary-2 mt-4 font-semibold"
+              size="lg"
+              disabled={isLoading}
+            >
+              {isLoading ? "Criando conta..." : "Criar conta"}
+            </Button>
           </form>
         </Form>
+
+        <p className="text-foreground-light mt-8 text-center text-sm">
+          Já tem uma conta?{" "}
+          <a
+            className="text-foreground hover:text-foreground-light underline transition"
+            href="/signin"
+          >
+            Entre aqui
+          </a>
+        </p>
       </div>
       <p className="text-foreground-lighter mt-auto text-center text-xs sm:mx-auto sm:max-w-sm">
         By continuing, you agree to Sendo Base{" "}

@@ -28,6 +28,7 @@ model User {
   bio                  String?
   phone                String?
   cpf                  String?   @unique
+  password             String? // Senha hasheada
   birthDate            DateTime?
   joinDate             DateTime  @default(now())
   profileCompletion    Int?      @default(0) // 0-100
