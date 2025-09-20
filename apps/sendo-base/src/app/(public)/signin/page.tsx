@@ -1,5 +1,6 @@
 "use client";
 
+import { useUserStore } from "@/src/hooks";
 import { signIn } from "@/src/lib/actions";
 import { signInSchema, SignInScheme } from "@/src/lib/forms/auth/signin.scheme";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,6 +24,7 @@ import { toast } from "sonner";
 export default function SignInPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { setUser } = useUserStore();
 
   const form = useForm<SignInScheme>({
     resolver: zodResolver(signInSchema),
@@ -41,6 +43,11 @@ export default function SignInPage() {
         // Definir cookie de sessão
         if (result.sessionCookie) {
           document.cookie = result.sessionCookie;
+        }
+
+        // Atualizar dados do usuário no store
+        if (result.user) {
+          setUser(result.user);
         }
 
         toast.success("Login realizado com sucesso!");

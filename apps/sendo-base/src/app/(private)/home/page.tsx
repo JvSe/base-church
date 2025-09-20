@@ -1,6 +1,7 @@
 "use client";
 
-import { getCourses, getEvents, getUserProfile } from "@/src/lib/actions";
+import { useUser } from "@/src/hooks";
+import { getEvents, getUserProfile } from "@/src/lib/actions";
 import { Button } from "@repo/ui/components/button";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -26,11 +27,18 @@ import { useState } from "react";
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("TODOS OS LEMBRETES");
 
-  // Fetch user data
+  // Hook de usuário
+  const { user, isAuthenticated, isLoading: userLoading } = useUser();
+
+  // Fetch user data - usar ID do usuário logado se disponível
   const { data: userData } = useQuery({
-    queryKey: ["user", "30d453b9-88c9-429e-9700-81d2db735f7a"],
-    queryFn: () => getUserProfile("30d453b9-88c9-429e-9700-81d2db735f7a"),
-    select: (data) => data.user,
+    queryKey: ["user", user?.id],
+    queryFn: () =>
+      user?.id
+        ? getUserProfile(user.id)
+        : Promise.resolve({ success: true, user: null }),
+    select: (data: any) => data?.user,
+    enabled: !!user?.id, // Só executar se tiver user.id
   });
 
   // Fetch events
@@ -38,13 +46,6 @@ export default function DashboardPage() {
     queryKey: ["events"],
     queryFn: getEvents,
     select: (data) => data.events,
-  });
-
-  // Fetch courses
-  const { data: coursesData } = useQuery({
-    queryKey: ["courses"],
-    queryFn: getCourses,
-    select: (data) => data.courses,
   });
 
   // Helper functions
@@ -73,15 +74,17 @@ export default function DashboardPage() {
 
   // Calculate user stats
   const activeCourses =
-    userData?.enrollments?.filter((e) => e.isActive && !e.completedAt)
-      ?.length || 0;
+    (userData as any)?.enrollments?.filter(
+      (e: any) => e.isActive && !e.completedAt,
+    )?.length || 0;
   const completedCourses =
-    userData?.enrollments?.filter((e) => e.completedAt)?.length || 0;
-  const certificates = userData?.certificates?.length || 0;
-  const currentStreak = userData?.currentStreak || 0;
-  const totalPoints = userData?.totalPoints || 0;
-  const level = userData?.level || 1;
-  const experience = userData?.experience || 0;
+    (userData as any)?.enrollments?.filter((e: any) => e.completedAt)?.length ||
+    0;
+  const certificates = (userData as any)?.certificates?.length || 0;
+  const currentStreak = (userData as any)?.currentStreak || 0;
+  const totalPoints = (userData as any)?.totalPoints || 0;
+  const level = (userData as any)?.level || 1;
+  const experience = (userData as any)?.experience || 0;
 
   // Get upcoming events (next 7 days)
   const upcomingEvents =
@@ -97,14 +100,16 @@ export default function DashboardPage() {
 
   // Get active enrollments for continue learning
   const activeEnrollments =
-    userData?.enrollments
-      ?.filter((e) => e.isActive && !e.completedAt && (e.progress || 0) > 0)
+    (userData as any)?.enrollments
+      ?.filter(
+        (e: any) => e.isActive && !e.completedAt && (e.progress || 0) > 0,
+      )
       .slice(0, 2) || [];
 
   return (
     <div className="dark-bg-primary min-h-screen">
       {/* Background Pattern */}
-      <div className="fixed inset-0 opacity-3">
+      <div className="opacity-3 fixed inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
       </div>
 
@@ -114,8 +119,11 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="dark-text-primary mb-2 text-3xl font-bold">
-                {getGreeting()}, {userData?.name?.split(" ")[0] || "Usuário"}!
-                👋
+                {getGreeting()},{" "}
+                {user?.name?.split(" ")[0] ||
+                  userData?.name?.split(" ")[0] ||
+                  "Usuário"}
+                ! 👋
               </h1>
               <p className="dark-text-secondary">
                 Continue sua jornada de aprendizado
@@ -166,7 +174,7 @@ export default function DashboardPage() {
                   Horas Estudadas
                 </p>
                 <p className="dark-text-primary text-2xl font-bold">
-                  {userData?.stats?.hoursStudied || 0}h
+                  {(userData as any)?.stats?.hoursStudied || 0}h
                 </p>
               </div>
               <div className="dark-secondary-subtle-bg rounded-xl p-3">
@@ -176,7 +184,7 @@ export default function DashboardPage() {
             <div className="mt-4 flex items-center text-sm">
               <Activity className="dark-secondary mr-1" size={16} />
               <span className="dark-secondary font-medium">
-                {userData?.stats?.lastActivityAt
+                {(userData as any)?.stats?.lastActivityAt
                   ? "Atividade recente"
                   : "Sem atividade"}
               </span>
@@ -437,8 +445,9 @@ export default function DashboardPage() {
               </h2>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {userData?.enrollments && userData.enrollments.length > 0 ? (
-                  userData.enrollments
+                {(userData as any)?.enrollments &&
+                (userData as any).enrollments.length > 0 ? (
+                  (userData as any).enrollments
                     .filter((e: any) => e.lastAccessedAt || e.enrolledAt)
                     .sort(
                       (a: any, b: any) =>
@@ -521,10 +530,14 @@ export default function DashboardPage() {
                 <User className="dark-primary" size={28} />
               </div>
               <h3 className="dark-text-primary mb-1 font-semibold">
-                {userData?.name || "Usuário"}
+                {user?.name || (userData as any)?.name || "Usuário"}
               </h3>
               <p className="dark-text-secondary mb-4 text-sm">
-                {userData?.role === "LIDER" ? "Líder" : "Membro"}
+                {user?.role === "LIDER"
+                  ? "Líder"
+                  : (userData as any)?.role === "LIDER"
+                    ? "Líder"
+                    : "Membro"}
               </p>
               <div className="mb-4 flex items-center justify-center gap-4 text-sm">
                 <div className="text-center">
@@ -581,24 +594,24 @@ export default function DashboardPage() {
                       Estudar 5h/semana
                     </span>
                     <span className="dark-primary text-sm font-semibold">
-                      {userData?.stats?.hoursStudied || 0}/5h
+                      {(userData as any)?.stats?.hoursStudied || 0}/5h
                     </span>
                   </div>
                   <div className="dark-bg-tertiary h-2 w-full rounded-full">
                     <div
                       className="dark-gradient-secondary h-2 rounded-full transition-all duration-300"
                       style={{
-                        width: `${Math.min(((userData?.stats?.hoursStudied || 0) / 5) * 100, 100)}%`,
+                        width: `${Math.min((((userData as any)?.stats?.hoursStudied || 0) / 5) * 100, 100)}%`,
                       }}
                     />
                   </div>
                   <div className="flex items-center gap-1">
                     <Activity className="dark-success" size={12} />
                     <span className="dark-success text-xs font-medium">
-                      {userData?.stats?.hoursStudied &&
-                      userData.stats.hoursStudied >= 5
+                      {(userData as any)?.stats?.hoursStudied &&
+                      (userData as any).stats.hoursStudied >= 5
                         ? "Meta atingida! 🎉"
-                        : `Faltam ${5 - (userData?.stats?.hoursStudied || 0)}h`}
+                        : `Faltam ${5 - ((userData as any)?.stats?.hoursStudied || 0)}h`}
                     </span>
                   </div>
                 </div>
@@ -645,8 +658,9 @@ export default function DashboardPage() {
               </h3>
 
               <div className="space-y-3">
-                {userData?.achievements && userData.achievements.length > 0 ? (
-                  userData.achievements
+                {(userData as any)?.achievements &&
+                (userData as any).achievements.length > 0 ? (
+                  (userData as any).achievements
                     .slice(0, 3)
                     .map((userAchievement: any, index: number) => (
                       <div key={index} className="flex items-center space-x-3">

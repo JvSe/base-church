@@ -1,17 +1,16 @@
 "use client";
 
-import { deleteCourse, duplicateCourse, getCourses } from "@/src/lib/actions";
+import { deleteCourse, getCourses } from "@/src/lib/actions";
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
 import { useQuery } from "@tanstack/react-query";
 import {
   Award,
   BookOpen,
+  CheckCircle,
   Clock,
-  Copy,
   Edit,
-  Eye,
-  Layers,
+  FileText,
   Plus,
   Search,
   Star,
@@ -47,19 +46,17 @@ export default function CoursesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const router = useRouter();
 
-  // Buscar cursos do banco
+  // Buscar cursos do banco (todos os cursos para o dashboard)
   const {
     data: coursesData,
     isLoading: coursesLoading,
     error: coursesError,
     refetch: refetchCourses,
   } = useQuery({
-    queryKey: ["courses"],
-    queryFn: getCourses,
+    queryKey: ["courses", "all"],
+    queryFn: () => getCourses({ filter: "all" }),
     select: (data) => data.courses,
   });
-
-  console.log(coursesData);
 
   const courses: Course[] = useMemo(() => {
     return (
@@ -70,7 +67,7 @@ export default function CoursesPage() {
         instructor: course.instructor?.name || "Instrutor não definido",
         duration: course.duration,
         level: course.level,
-        status: course.status,
+        status: course.isPublished ? "published" : "draft",
         studentsEnrolled: course._count?.enrollments || 0,
         studentsCompleted: 0, // TODO: Implementar contagem de completados
         averageRating: course.rating || 0,
@@ -103,13 +100,13 @@ export default function CoursesPage() {
   const getStatusColor = (status: Course["status"]) => {
     switch (status) {
       case "published":
-        return "text-green-400 bg-green-400/20";
+        return "text-green-400 bg-green-400/20 border border-green-400/30";
       case "draft":
-        return "text-yellow-400 bg-yellow-400/20";
+        return "text-yellow-400 bg-yellow-400/20 border border-yellow-400/30";
       case "archived":
-        return "text-gray-400 bg-gray-400/20";
+        return "text-gray-400 bg-gray-400/20 border border-gray-400/30";
       default:
-        return "text-gray-400 bg-gray-400/20";
+        return "text-gray-400 bg-gray-400/20 border border-gray-400/30";
     }
   };
 
@@ -123,6 +120,19 @@ export default function CoursesPage() {
         return "Arquivado";
       default:
         return "Desconhecido";
+    }
+  };
+
+  const getStatusIcon = (status: Course["status"]) => {
+    switch (status) {
+      case "published":
+        return CheckCircle;
+      case "draft":
+        return FileText;
+      case "archived":
+        return FileText;
+      default:
+        return FileText;
     }
   };
 
@@ -278,10 +288,10 @@ export default function CoursesPage() {
                 Gerencie seus cursos e acompanhe o desempenho
               </p>
             </div>
-            <Link href="/dashboard/courses/new">
+            <Link href="/dashboard/courses/create">
               <Button className="dark-btn-primary">
                 <Plus className="mr-2 h-4 w-4" />
-                Novo Curso
+                Criar Curso Completo
               </Button>
             </Link>
           </div>
@@ -408,7 +418,13 @@ export default function CoursesPage() {
               filteredCourses.map((course) => (
                 <div
                   key={course.id}
-                  className="dark-card dark-shadow-sm rounded-xl p-4"
+                  className={`dark-card dark-shadow-sm rounded-xl p-4 ${
+                    course.status === "draft"
+                      ? "border-l-4 border-l-yellow-400"
+                      : course.status === "published"
+                        ? "border-l-4 border-l-green-400"
+                        : ""
+                  }`}
                 >
                   <div className="flex items-start gap-4">
                     <div className="dark-primary-subtle-bg flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg">
@@ -443,8 +459,12 @@ export default function CoursesPage() {
 
                         <div className="flex items-center gap-2">
                           <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(course.status)}`}
+                            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(course.status)}`}
                           >
+                            {(() => {
+                              const StatusIcon = getStatusIcon(course.status);
+                              return <StatusIcon size={12} />;
+                            })()}
                             {getStatusText(course.status)}
                           </span>
                           <span
@@ -457,16 +477,6 @@ export default function CoursesPage() {
                               size="sm"
                               className="dark-glass dark-border hover:dark-border-hover"
                               onClick={() =>
-                                router.push(`/courses/${course.id}`)
-                              }
-                              title="Visualizar curso"
-                            >
-                              <Eye className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              className="dark-glass dark-border hover:dark-border-hover"
-                              onClick={() =>
                                 router.push(
                                   `/dashboard/courses/${course.id}/edit`,
                                 )
@@ -475,40 +485,7 @@ export default function CoursesPage() {
                             >
                               <Edit className="h-3 w-3" />
                             </Button>
-                            <Button
-                              size="sm"
-                              className="dark-glass dark-border hover:dark-border-hover"
-                              onClick={() =>
-                                router.push(
-                                  `/dashboard/courses/${course.id}/modules`,
-                                )
-                              }
-                              title="Gerenciar módulos e lições"
-                            >
-                              <Layers className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              className="dark-glass dark-border hover:dark-border-hover"
-                              onClick={async () => {
-                                try {
-                                  const result = await duplicateCourse(
-                                    course.id,
-                                  );
-                                  if (result.success) {
-                                    toast.success(result.message);
-                                    refetchCourses(); // Recarregar dados do banco
-                                  } else {
-                                    toast.error(result.error);
-                                  }
-                                } catch (error) {
-                                  toast.error("Erro ao duplicar curso");
-                                }
-                              }}
-                              title="Duplicar curso"
-                            >
-                              <Copy className="h-3 w-3" />
-                            </Button>
+
                             <Button
                               size="sm"
                               className="dark-glass dark-border hover:dark-border-hover"
@@ -615,7 +592,7 @@ export default function CoursesPage() {
                   if (searchTerm) {
                     setSearchTerm("");
                   } else {
-                    router.push("/dashboard/courses/new");
+                    router.push("/dashboard/courses/create");
                   }
                 }}
               />

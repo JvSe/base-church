@@ -1,11 +1,38 @@
 "use client";
 
+import {
+  approveEnrollment,
+  deleteStudent,
+  getAllStudents,
+  getStudentEnrollments,
+  getStudentStats,
+  rejectEnrollment,
+  updateStudentStatus,
+  updateUserPastorStatus,
+  updateUserRole,
+} from "@/src/lib/actions";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@repo/ui/components/accordion";
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@repo/ui/components/select";
+import { Textarea } from "@repo/ui/components/textarea";
+import { useQuery } from "@tanstack/react-query";
 import {
   Award,
   BookOpen,
   Calendar,
+  CheckCircle,
   Download,
   Eye,
   Filter,
@@ -14,17 +41,20 @@ import {
   Search,
   TrendingUp,
   Users,
+  XCircle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface Student {
   id: string;
   name: string;
   email: string;
-  phone?: string;
+  phone?: string | null;
   cpf: string;
   joinDate: Date;
   role: "MEMBROS" | "LIDER";
+  isPastor: boolean;
   profileCompletion: number;
   coursesEnrolled: number;
   coursesCompleted: number;
@@ -33,107 +63,80 @@ interface Student {
   status: "active" | "inactive" | "suspended";
 }
 
+interface Enrollment {
+  id: string;
+  status: string;
+  enrolledAt: Date;
+  approvedAt?: Date | null;
+  rejectionReason?: string | null;
+  course: {
+    id: string;
+    title: string;
+    instructor?: {
+      name: string | null;
+    } | null;
+  };
+  approver?: {
+    name: string | null;
+  } | null;
+}
+
 export default function StudentsPage() {
-  const [students, setStudents] = useState<Student[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [currentEnrollment, setCurrentEnrollment] = useState<Enrollment | null>(
+    null,
+  );
+
+  // Buscar dados dos alunos
+  const {
+    data: studentsData,
+    isLoading: studentsLoading,
+    error: studentsError,
+    refetch: refetchStudents,
+  } = useQuery({
+    queryKey: ["students"],
+    queryFn: getAllStudents,
+    select: (data) => data.students,
+  });
+
+  // Buscar estatísticas dos alunos
+  const {
+    data: statsData,
+    isLoading: statsLoading,
+    error: statsError,
+  } = useQuery({
+    queryKey: ["student-stats"],
+    queryFn: getStudentStats,
+    select: (data) => data.stats,
+  });
+
+  // Buscar matrículas do aluno selecionado
+  const {
+    data: enrollmentsData,
+    isLoading: enrollmentsLoading,
+    refetch: refetchEnrollments,
+  } = useQuery({
+    queryKey: ["student-enrollments", selectedStudent?.id],
+    queryFn: () => getStudentEnrollments(selectedStudent!.id),
+    select: (data) => data.enrollments,
+    enabled: !!selectedStudent,
+  });
 
   useEffect(() => {
-    // Simular carregamento de dados dos alunos
-    // TODO: Implementar busca real dos dados
-    setTimeout(() => {
-      const mockStudents: Student[] = [
-        {
-          id: "1",
-          name: "Maria Silva",
-          email: "maria.silva@basechurch.com",
-          phone: "(11) 99999-9999",
-          cpf: "123.456.789-00",
-          joinDate: new Date("2024-01-15"),
-          role: "MEMBROS",
-          profileCompletion: 95,
-          coursesEnrolled: 6,
-          coursesCompleted: 4,
-          certificatesEarned: 4,
-          lastActivity: new Date(Date.now() - 1000 * 60 * 30),
-          status: "active",
-        },
-        {
-          id: "2",
-          name: "João Santos",
-          email: "joao.santos@basechurch.com",
-          phone: "(11) 88888-8888",
-          cpf: "987.654.321-00",
-          joinDate: new Date("2024-02-20"),
-          role: "MEMBROS",
-          profileCompletion: 88,
-          coursesEnrolled: 8,
-          coursesCompleted: 6,
-          certificatesEarned: 6,
-          lastActivity: new Date(Date.now() - 1000 * 60 * 60 * 2),
-          status: "active",
-        },
-        {
-          id: "3",
-          name: "Ana Costa",
-          email: "ana.costa@basechurch.com",
-          cpf: "456.789.123-00",
-          joinDate: new Date("2024-03-10"),
-          role: "MEMBROS",
-          profileCompletion: 65,
-          coursesEnrolled: 3,
-          coursesCompleted: 1,
-          certificatesEarned: 1,
-          lastActivity: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3),
-          status: "active",
-        },
-        {
-          id: "4",
-          name: "Carlos Oliveira",
-          email: "carlos.oliveira@basechurch.com",
-          phone: "(11) 77777-7777",
-          cpf: "789.123.456-00",
-          joinDate: new Date("2024-01-05"),
-          role: "MEMBROS",
-          profileCompletion: 100,
-          coursesEnrolled: 12,
-          coursesCompleted: 10,
-          certificatesEarned: 10,
-          lastActivity: new Date(Date.now() - 1000 * 60 * 60 * 6),
-          status: "active",
-        },
-        {
-          id: "5",
-          name: "Fernanda Lima",
-          email: "fernanda.lima@basechurch.com",
-          cpf: "321.654.987-00",
-          joinDate: new Date("2024-04-12"),
-          role: "MEMBROS",
-          profileCompletion: 40,
-          coursesEnrolled: 2,
-          coursesCompleted: 0,
-          certificatesEarned: 0,
-          lastActivity: new Date(Date.now() - 1000 * 60 * 60 * 24 * 15),
-          status: "inactive",
-        },
-      ];
-
-      setStudents(mockStudents);
-      setFilteredStudents(mockStudents);
-      setIsLoading(false);
-    }, 1000);
-  }, []);
-
-  useEffect(() => {
-    const filtered = students.filter(
-      (student) =>
-        student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.cpf.includes(searchTerm),
-    );
-    setFilteredStudents(filtered);
-  }, [searchTerm, students]);
+    if (studentsData) {
+      const filtered = studentsData.filter(
+        (student) =>
+          student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          student.cpf.includes(searchTerm),
+      );
+      setFilteredStudents(filtered);
+    }
+  }, [searchTerm, studentsData]);
 
   const getStatusColor = (status: Student["status"]) => {
     switch (status) {
@@ -182,7 +185,162 @@ export default function StudentsPage() {
     return "Agora";
   };
 
-  if (isLoading) {
+  // Funções para gerenciar alunos
+  const handleUpdateStudentStatus = async (
+    studentId: string,
+    status: "active" | "inactive" | "suspended",
+  ) => {
+    try {
+      const result = await updateStudentStatus(studentId, status);
+      if (result.success) {
+        toast.success(result.message);
+        refetchStudents();
+      } else {
+        toast.error(result.error);
+      }
+    } catch (error) {
+      toast.error("Erro ao atualizar status do aluno");
+    }
+  };
+
+  const handleDeleteStudent = async (
+    studentId: string,
+    studentName: string,
+  ) => {
+    if (
+      !confirm(
+        `Tem certeza que deseja excluir o aluno ${studentName}? Esta ação não pode ser desfeita.`,
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const result = await deleteStudent(studentId);
+      if (result.success) {
+        toast.success(result.message);
+        refetchStudents();
+      } else {
+        toast.error(result.error);
+      }
+    } catch (error) {
+      toast.error("Erro ao excluir aluno");
+    }
+  };
+
+  // Funções para gerenciar matrículas
+  const handleApproveEnrollment = async (enrollmentId: string) => {
+    try {
+      // TODO: Obter ID do usuário atual (líder/pastor que está aprovando)
+      const approverId = "current-user-id"; // Substituir por ID real do usuário logado
+
+      const result = await approveEnrollment(enrollmentId, approverId);
+      if (result.success) {
+        toast.success(result.message);
+        refetchEnrollments();
+      } else {
+        toast.error(result.error);
+      }
+    } catch (error) {
+      toast.error("Erro ao aprovar matrícula");
+    }
+  };
+
+  const handleRejectEnrollment = async (enrollmentId: string) => {
+    if (!rejectReason.trim()) {
+      toast.error("Por favor, informe o motivo da rejeição");
+      return;
+    }
+
+    try {
+      // TODO: Obter ID do usuário atual (líder/pastor que está rejeitando)
+      const approverId = "current-user-id"; // Substituir por ID real do usuário logado
+
+      const result = await rejectEnrollment(
+        enrollmentId,
+        approverId,
+        rejectReason,
+      );
+      if (result.success) {
+        toast.success(result.message);
+        setShowRejectModal(false);
+        setRejectReason("");
+        setCurrentEnrollment(null);
+        refetchEnrollments();
+      } else {
+        toast.error(result.error);
+      }
+    } catch (error) {
+      toast.error("Erro ao rejeitar matrícula");
+    }
+  };
+
+  const handleUpdateUserRole = async (
+    userId: string,
+    role: "MEMBROS" | "LIDER",
+  ) => {
+    try {
+      const result = await updateUserRole(userId, role);
+      if (result.success) {
+        toast.success(result.message);
+        refetchStudents();
+      } else {
+        toast.error(result.error);
+      }
+    } catch (error) {
+      toast.error("Erro ao atualizar função do usuário");
+    }
+  };
+
+  const handleUpdateUserPastorStatus = async (
+    userId: string,
+    isPastor: boolean,
+  ) => {
+    try {
+      const result = await updateUserPastorStatus(userId, isPastor);
+      if (result.success) {
+        toast.success(result.message);
+        refetchStudents();
+      } else {
+        toast.error(result.error);
+      }
+    } catch (error) {
+      toast.error("Erro ao atualizar status de pastor");
+    }
+  };
+
+  const getEnrollmentStatusColor = (status: string) => {
+    switch (status) {
+      case "pending":
+        return "text-yellow-400 bg-yellow-400/20";
+      case "approved":
+        return "text-green-400 bg-green-400/20";
+      case "rejected":
+        return "text-red-400 bg-red-400/20";
+      default:
+        return "text-gray-400 bg-gray-400/20";
+    }
+  };
+
+  const getEnrollmentStatusText = (status: string) => {
+    switch (status) {
+      case "pending":
+        return "Pendente";
+      case "approved":
+        return "Aprovada";
+      case "rejected":
+        return "Rejeitada";
+      default:
+        return "Desconhecido";
+    }
+  };
+
+  const getRoleText = (role: string, isPastor: boolean) => {
+    const baseRole = role === "MEMBROS" ? "Membro" : "Líder";
+    return isPastor ? `${baseRole} (Pastor)` : baseRole;
+  };
+
+  if (studentsLoading || statsLoading) {
     return (
       <div className="dark-bg-primary min-h-screen">
         <div className="flex min-h-screen items-center justify-center">
@@ -199,16 +357,35 @@ export default function StudentsPage() {
     );
   }
 
-  const totalStudents = students.length;
-  const activeStudents = students.filter((s) => s.status === "active").length;
-  const totalCoursesEnrolled = students.reduce(
-    (sum, s) => sum + s.coursesEnrolled,
-    0,
-  );
-  const totalCertificates = students.reduce(
-    (sum, s) => sum + s.certificatesEarned,
-    0,
-  );
+  if (studentsError || statsError) {
+    return (
+      <div className="dark-bg-primary min-h-screen">
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="text-center">
+            <div className="dark-text-primary mb-4 text-xl font-semibold">
+              Erro ao carregar dados
+            </div>
+            <div className="dark-text-secondary mb-4">
+              Não foi possível carregar os dados dos alunos.
+            </div>
+            <Button
+              onClick={() => {
+                refetchStudents();
+              }}
+              className="dark-btn-primary"
+            >
+              Tentar Novamente
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const totalStudents = statsData?.totalStudents || 0;
+  const activeStudents = statsData?.activeStudents || 0;
+  const totalCoursesEnrolled = statsData?.totalEnrollments || 0;
+  const totalCertificates = statsData?.totalCertificates || 0;
 
   return (
     <div className="dark-bg-primary min-h-screen">
@@ -360,115 +537,354 @@ export default function StudentsPage() {
 
           <div className="space-y-4">
             {filteredStudents.length > 0 ? (
-              filteredStudents.map((student) => (
-                <div
-                  key={student.id}
-                  className="dark-card dark-shadow-sm rounded-xl p-4"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="dark-primary-subtle-bg flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg">
-                      <Users className="dark-primary" size={20} />
-                    </div>
-
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="dark-text-primary font-semibold">
-                            {student.name}
-                          </h3>
-                          <div className="mt-1 space-y-1">
-                            <div className="flex items-center text-sm">
-                              <Mail className="dark-text-tertiary mr-2 h-3 w-3" />
-                              <span className="dark-text-secondary">
-                                {student.email}
+              <Accordion type="multiple" className="space-y-4">
+                {filteredStudents.map((student) => (
+                  <AccordionItem
+                    key={student.id}
+                    value={`student-${student.id}`}
+                    className="dark-glass dark-shadow-sm rounded-xl"
+                  >
+                    <AccordionTrigger className="dark-card hover:dark-bg-secondary p-4 transition-all">
+                      <div className="flex w-full items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="dark-primary-subtle-bg rounded-xl p-2">
+                            <Users className="dark-primary" size={20} />
+                          </div>
+                          <div className="text-left">
+                            <h3 className="dark-text-primary font-semibold">
+                              {student.name}
+                            </h3>
+                            <p className="dark-text-secondary text-sm">
+                              {student.email}
+                            </p>
+                            <div className="mt-1 flex items-center gap-4">
+                              <span className="dark-text-tertiary text-xs">
+                                Função:{" "}
+                                {getRoleText(student.role, student.isPastor)}
                               </span>
-                            </div>
-                            {student.phone && (
-                              <div className="flex items-center text-sm">
-                                <Phone className="dark-text-tertiary mr-2 h-3 w-3" />
-                                <span className="dark-text-secondary">
-                                  {student.phone}
-                                </span>
-                              </div>
-                            )}
-                            <div className="flex items-center text-sm">
-                              <Calendar className="dark-text-tertiary mr-2 h-3 w-3" />
-                              <span className="dark-text-secondary">
+                              <span className="dark-text-tertiary text-xs">
+                                Status: {getStatusText(student.status)}
+                              </span>
+                              <span className="dark-text-tertiary text-xs">
                                 Membro desde {formatDate(student.joinDate)}
                               </span>
                             </div>
                           </div>
                         </div>
-
-                        <div className="flex items-center gap-2">
+                        <div className="flex gap-2">
                           <span
                             className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(student.status)}`}
                           >
                             {getStatusText(student.status)}
                           </span>
-                          <div className="flex space-x-2">
-                            <Button
-                              size="sm"
-                              className="dark-glass dark-border hover:dark-border-hover"
-                            >
-                              <Eye className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              className="dark-glass dark-border hover:dark-border-hover"
-                            >
-                              <Mail className="h-3 w-3" />
-                            </Button>
-                          </div>
                         </div>
                       </div>
-
-                      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="dark-text-secondary font-medium">
-                              Progresso do Perfil
-                            </span>
-                            <span className="dark-text-primary font-semibold">
-                              {student.profileCompletion}%
-                            </span>
+                    </AccordionTrigger>
+                    <AccordionContent className="dark-border">
+                      <div className="space-y-6 p-6">
+                        {/* Informações Básicas */}
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                          <div className="space-y-3">
+                            <h4 className="dark-text-primary font-semibold">
+                              Informações Pessoais
+                            </h4>
+                            <div className="space-y-2">
+                              <div className="flex items-center text-sm">
+                                <Mail className="dark-text-tertiary mr-2 h-3 w-3" />
+                                <span className="dark-text-secondary">
+                                  {student.email}
+                                </span>
+                              </div>
+                              {student.phone && (
+                                <div className="flex items-center text-sm">
+                                  <Phone className="dark-text-tertiary mr-2 h-3 w-3" />
+                                  <span className="dark-text-secondary">
+                                    {student.phone}
+                                  </span>
+                                </div>
+                              )}
+                              <div className="flex items-center text-sm">
+                                <Calendar className="dark-text-tertiary mr-2 h-3 w-3" />
+                                <span className="dark-text-secondary">
+                                  CPF: {student.cpf}
+                                </span>
+                              </div>
+                            </div>
                           </div>
-                          <div className="dark-bg-tertiary h-2 w-full rounded-full">
-                            <div
-                              className="dark-gradient-primary h-2 rounded-full transition-all duration-300"
-                              style={{ width: `${student.profileCompletion}%` }}
-                            />
+
+                          <div className="space-y-3">
+                            <h4 className="dark-text-primary font-semibold">
+                              Estatísticas
+                            </h4>
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="dark-text-secondary">
+                                  Progresso do Perfil
+                                </span>
+                                <span className="dark-text-primary font-semibold">
+                                  {student.profileCompletion}%
+                                </span>
+                              </div>
+                              <div className="dark-bg-tertiary h-2 w-full rounded-full">
+                                <div
+                                  className="dark-gradient-primary h-2 rounded-full transition-all duration-300"
+                                  style={{
+                                    width: `${student.profileCompletion}%`,
+                                  }}
+                                />
+                              </div>
+                              <div className="dark-text-secondary text-sm">
+                                <BookOpen className="mr-1 inline h-3 w-3" />
+                                Cursos Inscritos: {student.coursesEnrolled}
+                              </div>
+                              <div className="dark-text-secondary text-sm">
+                                <Award className="mr-1 inline h-3 w-3" />
+                                Cursos Completados: {student.coursesCompleted}
+                              </div>
+                              <div className="dark-text-secondary text-sm">
+                                <Award className="mr-1 inline h-3 w-3" />
+                                Certificados: {student.certificatesEarned}
+                              </div>
+                              <div className="dark-text-secondary text-sm">
+                                Última atividade:{" "}
+                                {getTimeAgo(student.lastActivity)}
+                              </div>
+                            </div>
                           </div>
                         </div>
 
-                        <div className="space-y-1">
-                          <div className="dark-text-secondary text-sm">
-                            <BookOpen className="mr-1 inline h-3 w-3" />
-                            Inscritos: {student.coursesEnrolled}
-                          </div>
-                          <div className="dark-text-secondary text-sm">
-                            <Award className="mr-1 inline h-3 w-3" />
-                            Completados: {student.coursesCompleted}
-                          </div>
-                          <div className="dark-text-secondary text-sm">
-                            <Award className="mr-1 inline h-3 w-3" />
-                            Certificados: {student.certificatesEarned}
+                        {/* Gerenciamento de Função */}
+                        <div className="space-y-3">
+                          <h4 className="dark-text-primary font-semibold">
+                            Gerenciar Função
+                          </h4>
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-4">
+                              <span className="dark-text-secondary text-sm">
+                                Função atual:
+                              </span>
+                              <span
+                                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                  student.role === "LIDER"
+                                    ? "bg-blue-400/20 text-blue-400"
+                                    : "bg-gray-400/20 text-gray-400"
+                                }`}
+                              >
+                                {getRoleText(student.role, student.isPastor)}
+                              </span>
+                              <Select
+                                value={student.role}
+                                onValueChange={(value: "MEMBROS" | "LIDER") =>
+                                  handleUpdateUserRole(student.id, value)
+                                }
+                              >
+                                <SelectTrigger className="dark-input w-40">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="MEMBROS">
+                                    Membro
+                                  </SelectItem>
+                                  <SelectItem value="LIDER">Líder</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div className="flex items-center gap-4">
+                              <span className="dark-text-secondary text-sm">
+                                Status de Pastor:
+                              </span>
+                              <span
+                                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                  student.isPastor
+                                    ? "bg-purple-400/20 text-purple-400"
+                                    : "bg-gray-400/20 text-gray-400"
+                                }`}
+                              >
+                                {student.isPastor ? "Pastor" : "Não é Pastor"}
+                              </span>
+                              <Button
+                                size="sm"
+                                className={
+                                  student.isPastor
+                                    ? "dark-glass dark-border hover:dark-border-hover"
+                                    : "dark-btn-primary"
+                                }
+                                onClick={() =>
+                                  handleUpdateUserPastorStatus(
+                                    student.id,
+                                    !student.isPastor,
+                                  )
+                                }
+                              >
+                                {student.isPastor
+                                  ? "Remover Pastor"
+                                  : "Tornar Pastor"}
+                              </Button>
+                            </div>
                           </div>
                         </div>
 
-                        <div className="space-y-1">
-                          <div className="dark-text-secondary text-sm">
-                            Última atividade: {getTimeAgo(student.lastActivity)}
+                        {/* Matrículas Pendentes */}
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h4 className="dark-text-primary font-semibold">
+                              Matrículas em Cursos
+                            </h4>
+                            <Button
+                              size="sm"
+                              className="dark-btn-primary"
+                              onClick={() => {
+                                setSelectedStudent(student);
+                                refetchEnrollments();
+                              }}
+                            >
+                              <Eye className="mr-2 h-3 w-3" />
+                              Ver Matrículas
+                            </Button>
                           </div>
-                          <div className="dark-text-secondary text-sm">
-                            CPF: {student.cpf}
-                          </div>
+
+                          {selectedStudent?.id === student.id && (
+                            <div className="space-y-3">
+                              {enrollmentsLoading ? (
+                                <div className="dark-card dark-shadow-sm rounded-lg p-4 text-center">
+                                  <div className="dark-text-secondary">
+                                    Carregando matrículas...
+                                  </div>
+                                </div>
+                              ) : enrollmentsData &&
+                                enrollmentsData.length > 0 ? (
+                                <div className="space-y-3">
+                                  {enrollmentsData.map((enrollment) => (
+                                    <div
+                                      key={enrollment.id}
+                                      className="dark-card dark-shadow-sm rounded-lg p-4"
+                                    >
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex-1">
+                                          <h5 className="dark-text-primary font-medium">
+                                            {enrollment.course.title}
+                                          </h5>
+                                          <p className="dark-text-secondary text-sm">
+                                            Instrutor:{" "}
+                                            {enrollment.course.instructor
+                                              ?.name || "Não informado"}
+                                          </p>
+                                          <p className="dark-text-tertiary text-xs">
+                                            Solicitado em:{" "}
+                                            {formatDate(enrollment.enrolledAt)}
+                                          </p>
+                                          {enrollment.approvedAt && (
+                                            <p className="dark-text-tertiary text-xs">
+                                              Aprovado em:{" "}
+                                              {formatDate(
+                                                enrollment.approvedAt,
+                                              )}
+                                              {enrollment.approver &&
+                                                ` por ${enrollment.approver.name}`}
+                                            </p>
+                                          )}
+                                          {enrollment.rejectionReason && (
+                                            <p className="dark-text-tertiary text-xs">
+                                              Motivo da rejeição:{" "}
+                                              {enrollment.rejectionReason}
+                                            </p>
+                                          )}
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <span
+                                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getEnrollmentStatusColor(enrollment.status)}`}
+                                          >
+                                            {getEnrollmentStatusText(
+                                              enrollment.status,
+                                            )}
+                                          </span>
+                                          {enrollment.status === "pending" && (
+                                            <div className="flex gap-1">
+                                              <Button
+                                                size="sm"
+                                                className="dark-success-bg dark-success hover:dark-success-bg"
+                                                onClick={() =>
+                                                  handleApproveEnrollment(
+                                                    enrollment.id,
+                                                  )
+                                                }
+                                              >
+                                                <CheckCircle className="h-3 w-3" />
+                                              </Button>
+                                              <Button
+                                                size="sm"
+                                                className="dark-error-bg dark-error hover:dark-error-bg"
+                                                onClick={() => {
+                                                  setCurrentEnrollment(
+                                                    enrollment,
+                                                  );
+                                                  setShowRejectModal(true);
+                                                }}
+                                              >
+                                                <XCircle className="h-3 w-3" />
+                                              </Button>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="dark-card dark-shadow-sm rounded-lg p-4 text-center">
+                                  <div className="dark-text-secondary">
+                                    Nenhuma matrícula encontrada
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Ações */}
+                        <div className="dark-border flex justify-end gap-2 border-t pt-4">
+                          <Button
+                            size="sm"
+                            className="dark-glass dark-border hover:dark-border-hover"
+                            onClick={() => {
+                              // TODO: Implementar envio de email
+                              toast.info("Funcionalidade em desenvolvimento");
+                            }}
+                          >
+                            <Mail className="mr-2 h-3 w-3" />
+                            Enviar Email
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="dark-glass dark-border hover:dark-border-hover"
+                            onClick={() => {
+                              const newStatus =
+                                student.status === "active"
+                                  ? "inactive"
+                                  : "active";
+                              handleUpdateStudentStatus(student.id, newStatus);
+                            }}
+                          >
+                            {student.status === "active"
+                              ? "Desativar"
+                              : "Ativar"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="dark-error-bg dark-error hover:dark-error-bg"
+                            onClick={() =>
+                              handleDeleteStudent(student.id, student.name)
+                            }
+                          >
+                            Excluir
+                          </Button>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                </div>
-              ))
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
             ) : (
               <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
                 <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
@@ -485,6 +901,45 @@ export default function StudentsPage() {
           </div>
         </div>
       </div>
+
+      {/* Modal de Rejeição de Matrícula */}
+      {showRejectModal && currentEnrollment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="dark-glass dark-shadow-md mx-4 w-full max-w-md rounded-xl p-6">
+            <h3 className="dark-text-primary mb-4 text-lg font-semibold">
+              Rejeitar Matrícula
+            </h3>
+            <p className="dark-text-secondary mb-4 text-sm">
+              Informe o motivo da rejeição da matrícula no curso "
+              {currentEnrollment.course.title}":
+            </p>
+            <Textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Digite o motivo da rejeição..."
+              className="dark-input mb-4 min-h-[100px]"
+            />
+            <div className="flex justify-end gap-2">
+              <Button
+                className="dark-glass dark-border hover:dark-border-hover"
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setRejectReason("");
+                  setCurrentEnrollment(null);
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button
+                className="dark-error-bg dark-error hover:dark-error-bg"
+                onClick={() => handleRejectEnrollment(currentEnrollment.id)}
+              >
+                Rejeitar Matrícula
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

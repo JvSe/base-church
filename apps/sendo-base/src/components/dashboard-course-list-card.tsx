@@ -25,17 +25,27 @@ interface Course {
   enrolledStudents?: number;
   isEnrolled?: boolean;
   isFeatured?: boolean;
+  progress?: number;
+  status?: string;
 }
 
 interface DashboardCourseListCardProps {
   course: Course;
+  disabled?: boolean;
 }
 
 export function DashboardCourseListCard({
   course,
+  disabled = false,
 }: DashboardCourseListCardProps) {
   return (
-    <div className="dark-card dark-shadow-sm group cursor-pointer overflow-hidden rounded-xl transition-all duration-300">
+    <div
+      className={`dark-card dark-shadow-sm overflow-hidden rounded-xl ${
+        disabled
+          ? "cursor-not-allowed opacity-60"
+          : "group cursor-pointer transition-all duration-300"
+      }`}
+    >
       <div className="p-6">
         <div className="flex items-center space-x-4">
           <div className="relative">
@@ -55,20 +65,28 @@ export function DashboardCourseListCard({
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="mb-2 flex items-start justify-between">
-                  <h3 className="dark-text-primary group-hover:dark-primary line-clamp-1 font-semibold transition-colors">
+                  <h3
+                    className={`dark-text-primary line-clamp-1 font-semibold ${
+                      disabled
+                        ? ""
+                        : "group-hover:dark-primary transition-colors"
+                    }`}
+                  >
                     {course.title}
                   </h3>
                   <div className="ml-2 flex items-center space-x-2">
                     <span className="dark-primary-subtle-bg dark-primary rounded-full px-2 py-1 text-xs font-medium">
                       {course.level}
                     </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="dark-glass dark-border hover:dark-border-hover h-8 w-8 p-0 backdrop-blur-sm"
-                    >
-                      <Heart className="dark-text-primary" size={14} />
-                    </Button>
+                    {!disabled && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="dark-glass dark-border hover:dark-border-hover h-8 w-8 p-0 backdrop-blur-sm"
+                      >
+                        <Heart className="dark-text-primary" size={14} />
+                      </Button>
+                    )}
                   </div>
                 </div>
 
@@ -100,26 +118,33 @@ export function DashboardCourseListCard({
                 <div className="dark-text-primary mb-3 text-lg font-bold">
                   {course.price === 0 ? "Gratuito" : `R$ ${course.price}`}
                 </div>
-                <Button
-                  asChild
-                  size="sm"
-                  className={
-                    course.isEnrolled
-                      ? "dark-gradient-secondary"
-                      : "dark-btn-primary"
-                  }
-                >
-                  <Link
-                    href={
+                {!disabled ? (
+                  <Button
+                    asChild
+                    size="sm"
+                    className={
                       course.isEnrolled
-                        ? `/courses/${course.id}`
-                        : `/catalog/${course.id}`
+                        ? "dark-gradient-secondary"
+                        : "dark-btn-primary"
                     }
                   >
+                    <Link
+                      href={
+                        course.isEnrolled
+                          ? `/courses/${course.id}`
+                          : `/catalog/${course.id}`
+                      }
+                    >
+                      <Play size={16} className="mr-2" />
+                      {course.isEnrolled ? "Continuar" : "Matricular"}
+                    </Link>
+                  </Button>
+                ) : (
+                  <div className="dark-bg-tertiary dark-text-tertiary flex h-8 items-center justify-center rounded-lg px-3 text-sm font-medium">
                     <Play size={16} className="mr-2" />
-                    {course.isEnrolled ? "Continuar" : "Matricular"}
-                  </Link>
-                </Button>
+                    Aguardando Aprovação
+                  </div>
+                )}
               </div>
             </div>
           </div>

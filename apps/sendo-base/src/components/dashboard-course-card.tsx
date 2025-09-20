@@ -36,11 +36,13 @@ interface Course {
 interface DashboardCourseCardProps {
   course: Course;
   variant?: "catalog" | "contents";
+  disabled?: boolean;
 }
 
 export function DashboardCourseCard({
   course,
   variant = "catalog",
+  disabled = false,
 }: DashboardCourseCardProps) {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("pt-BR", {
@@ -51,7 +53,11 @@ export function DashboardCourseCard({
   };
 
   return (
-    <div className="dark-card dark-shadow-sm group cursor-pointer overflow-hidden rounded-xl">
+    <div
+      className={`dark-card dark-shadow-sm overflow-hidden rounded-xl ${
+        disabled ? "cursor-not-allowed opacity-60" : "group cursor-pointer"
+      }`}
+    >
       <div className="relative">
         <div className="dark-bg-tertiary flex h-48 w-full items-center justify-center">
           <BookOpen className="dark-text-tertiary" size={48} />
@@ -103,7 +109,7 @@ export function DashboardCourseCard({
           </div>
         )}
 
-        {variant === "contents" &&
+        {/* {variant === "contents" &&
           course.progress &&
           course.progress > 0 &&
           course.progress < 100 && (
@@ -112,17 +118,27 @@ export function DashboardCourseCard({
                 Em Andamento
               </span>
             </div>
-          )}
+          )} */}
       </div>
 
       <div className="p-6">
         <div className="mb-3 flex items-start justify-between">
-          <h3 className="dark-text-primary group-hover:dark-primary line-clamp-2 font-semibold transition-colors">
+          <h3
+            className={`dark-text-primary line-clamp-2 font-semibold ${
+              disabled ? "" : "group-hover:dark-primary transition-colors"
+            }`}
+          >
             {course.title}
           </h3>
-          <Button variant="ghost" size="sm" className="hover:dark-bg-tertiary">
-            <ArrowRight className="dark-text-secondary" size={16} />
-          </Button>
+          {!disabled && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="hover:dark-bg-tertiary"
+            >
+              <ArrowRight className="dark-text-secondary" size={16} />
+            </Button>
+          )}
         </div>
 
         <p className="dark-text-secondary mb-4 line-clamp-2 text-sm">
@@ -140,7 +156,7 @@ export function DashboardCourseCard({
             <span>{formatDuration(course.duration)}</span>
           </div>
 
-          {variant === "catalog" ? (
+          {variant === "catalog" && (
             <>
               <div className="flex items-center">
                 <Star size={14} className="dark-secondary mr-1" />
@@ -151,13 +167,6 @@ export function DashboardCourseCard({
                 <span>{course.enrolledStudents?.toLocaleString()}</span>
               </div>
             </>
-          ) : (
-            <div className="flex items-center">
-              <BookOpen size={14} className="mr-1" />
-              <span>
-                {course.completedLessons}/{course.totalLessons} aulas
-              </span>
-            </div>
           )}
         </div>
 
@@ -184,7 +193,9 @@ export function DashboardCourseCard({
             </div>
             <div className="dark-bg-tertiary h-2 w-full rounded-full">
               <div
-                className={`h-2 rounded-full transition-all duration-300 ${
+                className={`h-2 rounded-full ${
+                  disabled ? "" : "transition-all duration-300"
+                } ${
                   course.progress === 100
                     ? "dark-gradient-secondary"
                     : "dark-gradient-primary"
@@ -206,41 +217,50 @@ export function DashboardCourseCard({
             </div>
           )}
 
-          <Button
-            asChild
-            className={`${variant === "contents" ? "w-full" : ""}${
-              variant === "catalog"
-                ? course.isEnrolled
-                  ? "dark-gradient-secondary"
-                  : "dark-btn-primary"
-                : course.progress === 0
-                  ? "dark-btn-primary"
-                  : course.progress === 100
-                    ? "dark-gradient-secondary"
-                    : "dark-gradient-primary"
-            }`}
-          >
-            <Link
-              href={
+          {!disabled ? (
+            <Button
+              asChild
+              className={`${variant === "contents" ? "ml-auto w-full" : ""}${
                 variant === "catalog"
                   ? course.isEnrolled
-                    ? `/courses/${course.id}`
-                    : `/catalog/${course.id}`
-                  : `/courses/${course.id}`
-              }
+                    ? "dark-gradient-secondary"
+                    : "dark-btn-primary"
+                  : course.progress === 0
+                    ? "dark-btn-primary"
+                    : course.progress === 100
+                      ? "dark-gradient-secondary"
+                      : "dark-gradient-primary"
+              }`}
+            >
+              <Link
+                href={
+                  variant === "catalog"
+                    ? course.isEnrolled
+                      ? `/contents/courses/${course.id}`
+                      : `/catalog/courses/${course.id}`
+                    : `/contents/courses/${course.id}`
+                }
+              >
+                <Play size={16} className="mr-2" />
+                {variant === "catalog"
+                  ? course.isEnrolled
+                    ? "Continuar"
+                    : "Matricular"
+                  : course.progress === 0
+                    ? "Começar"
+                    : course.progress === 100
+                      ? "Revisar"
+                      : "Continuar"}
+              </Link>
+            </Button>
+          ) : (
+            <div
+              className={`${variant === "contents" ? "ml-auto w-full" : ""} dark-bg-tertiary dark-text-tertiary flex h-10 items-center justify-center rounded-lg px-4 text-sm font-medium`}
             >
               <Play size={16} className="mr-2" />
-              {variant === "catalog"
-                ? course.isEnrolled
-                  ? "Continuar"
-                  : "Matricular"
-                : course.progress === 0
-                  ? "Começar"
-                  : course.progress === 100
-                    ? "Revisar"
-                    : "Continuar"}
-            </Link>
-          </Button>
+              Aguardando Aprovação
+            </div>
+          )}
         </div>
 
         {variant === "contents" && course.lastAccessed && (

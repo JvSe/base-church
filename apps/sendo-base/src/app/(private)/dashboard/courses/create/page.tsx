@@ -1,17 +1,11 @@
 "use client";
 
 import {
+  createCourse,
   createLesson,
   createModule,
-  deleteCourse,
-  deleteLesson,
-  deleteModule,
-  getCourseById,
-  getCourseModules,
   getLeaders,
-  updateCourse,
   updateCourseStatus,
-  updateLesson,
 } from "@/src/lib/actions";
 import { COURSE_CATEGORIES, CourseCategory } from "@/src/lib/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -49,13 +43,12 @@ import {
   Layers,
   Play,
   Plus,
-  Save,
   Trash2,
   Upload,
   Video,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Usable, use, useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -103,7 +96,7 @@ type ModuleFormData = z.infer<typeof moduleSchema>;
 type LessonFormData = z.infer<typeof lessonSchema>;
 
 interface Module {
-  id: string;
+  id?: string;
   title: string;
   description: string;
   order: number;
@@ -111,7 +104,7 @@ interface Module {
 }
 
 interface Lesson {
-  id: string;
+  id?: string;
   title: string;
   description: string;
   content?: string;
@@ -121,16 +114,10 @@ interface Lesson {
   type: "video" | "text" | "quiz";
 }
 
-interface EditCoursePageProps {
-  params: {
-    courseId: string;
-  };
-}
-
-export default function EditCoursePage(props: EditCoursePageProps) {
+export default function CreateCoursePage() {
   const [isLoading, setIsLoading] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [modulesState, setModulesState] = useState<Module[]>([]);
+  const [courseId, setCourseId] = useState<string | null>(null);
+  const [modules, setModules] = useState<Module[]>([]);
   const [showModuleForm, setShowModuleForm] = useState(false);
   const [showLessonForm, setShowLessonForm] = useState<number | null>(null);
   const [editingLesson, setEditingLesson] = useState<{
@@ -139,59 +126,12 @@ export default function EditCoursePage(props: EditCoursePageProps) {
   } | null>(null);
   const router = useRouter();
 
-  const { courseId } = use(
-    props.params as unknown as Usable<{ courseId: string }>,
-  );
-
-  // Buscar dados do curso do banco
-  const {
-    data: courseData,
-    isLoading: courseLoading,
-    error: courseError,
-  } = useQuery({
-    queryKey: ["course", courseId],
-    queryFn: () => getCourseById(courseId),
-    select: (data) => data.course,
-  });
-
-  // Buscar módulos do curso
-  const {
-    data: modulesData,
-    isLoading: modulesLoading,
-    error: modulesError,
-    refetch: refetchModules,
-  } = useQuery({
-    queryKey: ["course-modules", courseId],
-    queryFn: () => getCourseModules(courseId),
-    select: (data) => data.modules,
-  });
-
   // Buscar líderes para o campo de instrutor
   const { data: leadersData, isLoading: leadersLoading } = useQuery({
     queryKey: ["leaders"],
     queryFn: getLeaders,
     select: (data) => data.leaders,
   });
-
-  // Transformar dados do banco para o formato da interface
-  const modules: Module[] =
-    modulesData?.map((module: any) => ({
-      id: module.id,
-      title: module.title,
-      description: module.description,
-      order: module.order,
-      lessons:
-        module.lessons?.map((lesson: any) => ({
-          id: lesson.id,
-          title: lesson.title,
-          description: lesson.description,
-          content: lesson.content,
-          videoUrl: lesson.videoUrl,
-          duration: lesson.duration,
-          order: lesson.order,
-          type: lesson.type,
-        })) || [],
-    })) || [];
 
   // Formulário do curso
   const courseForm = useForm<CourseFormData>({
@@ -233,105 +173,40 @@ export default function EditCoursePage(props: EditCoursePageProps) {
   // Watch lesson type for conditional fields
   const selectedLessonType = lessonForm.watch("type");
 
-  // Atualizar formulário quando os dados chegarem
-  useEffect(() => {
-    if (courseData) {
-      courseForm.reset({
-        title: courseData.title,
-        description: courseData.description || "",
-        instructorId: courseData.instructorId || "",
-        duration: courseData.duration || 120,
-        level:
-          (courseData.level as "beginner" | "intermediate" | "advanced") ||
-          "beginner",
-        category:
-          (courseData.category as CourseCategory) || CourseCategory.CREATIVITY,
-        tags: courseData.tags?.join(", ") || "",
-        price: courseData.price || 0,
-      });
-    }
-  }, [courseData, courseForm]);
-
-  // Atualizar módulos quando os dados chegarem
-  useEffect(() => {
-    if (modulesData) {
-      const transformedModules = modulesData.map((module: any) => ({
-        id: module.id,
-        title: module.title,
-        description: module.description,
-        order: module.order,
-        lessons:
-          module.lessons?.map((lesson: any) => ({
-            id: lesson.id,
-            title: lesson.title,
-            description: lesson.description,
-            content: lesson.content,
-            videoUrl: lesson.videoUrl,
-            duration: lesson.duration,
-            order: lesson.order,
-            type: lesson.type,
-          })) || [],
-      }));
-      setModulesState(transformedModules);
-    }
-  }, [modulesData]);
-
-  // Atualizar curso
-  const handleUpdateCourse = async (data: CourseFormData) => {
+  // Criar curso
+  const handleCreateCourse = async (data: CourseFormData) => {
     setIsLoading(true);
     try {
-      const result = await updateCourse(courseId, {
+      const result = await createCourse({
         ...data,
         tags: data.tags || "",
-        status: "draft", // Sempre manter como draft na edição
+        status: "draft", // Sempre começar como rascunho
       });
 
-      if (result.success) {
-        toast.success(result.message);
+      if (result.success && result.course) {
+        setCourseId(result.course.id);
+        toast.success(
+          "Curso criado com sucesso! Agora você pode adicionar módulos.",
+        );
       } else {
-        toast.error(result.error);
+        toast.error(result.error || "Erro ao criar curso");
       }
     } catch (error) {
-      toast.error("Erro ao atualizar curso");
+      toast.error("Erro ao criar curso");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Deletar curso
-  const handleDeleteCourse = async () => {
-    if (
-      !confirm(
-        "Tem certeza que deseja excluir este curso? Esta ação não pode ser desfeita.",
-      )
-    ) {
-      return;
-    }
-
-    setIsDeleting(true);
-    try {
-      const result = await deleteCourse(courseId);
-
-      if (result.success) {
-        toast.success(result.message);
-        router.push("/dashboard/courses");
-      } else {
-        toast.error(result.error);
-      }
-    } catch (error) {
-      toast.error("Erro ao excluir curso");
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
   // Adicionar módulo
   const handleAddModule = async (data: ModuleFormData) => {
+    if (!courseId) return;
+
     setIsLoading(true);
     try {
       const result = await createModule(courseId, {
         ...data,
-        order: modulesState.length + 1,
+        order: modules.length + 1,
       });
 
       if (result.success && result.module) {
@@ -339,14 +214,13 @@ export default function EditCoursePage(props: EditCoursePageProps) {
           id: result.module.id,
           title: data.title,
           description: data.description,
-          order: modulesState.length + 1,
+          order: modules.length + 1,
           lessons: [],
         };
-        setModulesState([...modulesState, newModule]);
+        setModules([...modules, newModule]);
         moduleForm.reset();
         setShowModuleForm(false);
         toast.success("Módulo adicionado com sucesso!");
-        refetchModules();
       } else {
         toast.error(result.error || "Erro ao criar módulo");
       }
@@ -357,28 +231,9 @@ export default function EditCoursePage(props: EditCoursePageProps) {
     }
   };
 
-  // Deletar módulo
-  const handleDeleteModule = async (moduleId: string) => {
-    if (confirm("Tem certeza que deseja excluir este módulo?")) {
-      try {
-        const result = await deleteModule(moduleId);
-        if (result.success) {
-          const updatedModules = modulesState.filter((m) => m.id !== moduleId);
-          setModulesState(updatedModules);
-          toast.success(result.message);
-          refetchModules();
-        } else {
-          toast.error(result.error);
-        }
-      } catch (error) {
-        toast.error("Erro ao excluir módulo");
-      }
-    }
-  };
-
   // Editar lição
   const handleEditLesson = (moduleIndex: number, lessonIndex: number) => {
-    const lesson = modulesState[moduleIndex]?.lessons[lessonIndex];
+    const lesson = modules[moduleIndex]?.lessons[lessonIndex];
     if (lesson) {
       lessonForm.reset({
         title: lesson.title,
@@ -398,34 +253,27 @@ export default function EditCoursePage(props: EditCoursePageProps) {
     moduleIndex: number,
     lessonIndex: number,
   ) => {
-    const lesson = modulesState[moduleIndex]?.lessons[lessonIndex];
-    if (!lesson) return;
+    const module = modules[moduleIndex];
+    if (!module || !module.id) return;
 
     setIsLoading(true);
     try {
-      const result = await updateLesson(lesson.id, {
-        ...data,
-        order: lesson.order,
-      });
-      if (result.success) {
-        const updatedModules = [...modulesState];
-        if (updatedModules[moduleIndex]?.lessons[lessonIndex]) {
-          updatedModules[moduleIndex].lessons[lessonIndex] = {
-            ...updatedModules[moduleIndex].lessons[lessonIndex],
-            title: data.title,
-            description: data.description,
-            content: data.content,
-            videoUrl: data.videoUrl,
-            duration: data.duration,
-            type: data.type,
-          };
-          setModulesState(updatedModules);
-        }
+      // Aqui você pode implementar a função de atualizar lição
+      // Por enquanto, vamos apenas atualizar o estado local
+      const updatedModules = [...modules];
+      if (updatedModules[moduleIndex]?.lessons[lessonIndex]) {
+        updatedModules[moduleIndex].lessons[lessonIndex] = {
+          ...updatedModules[moduleIndex].lessons[lessonIndex],
+          title: data.title,
+          description: data.description,
+          content: data.content,
+          videoUrl: data.videoUrl,
+          duration: data.duration,
+          type: data.type,
+        };
+        setModules(updatedModules);
         setEditingLesson(null);
         toast.success("Lição atualizada com sucesso!");
-        refetchModules();
-      } else {
-        toast.error(result.error || "Erro ao atualizar lição");
       }
     } catch (error) {
       toast.error("Erro ao atualizar lição");
@@ -434,38 +282,12 @@ export default function EditCoursePage(props: EditCoursePageProps) {
     }
   };
 
-  // Deletar lição
-  const handleDeleteLesson = async (
-    lessonId: string,
-    moduleIndex: number,
-    lessonIndex: number,
-  ) => {
-    if (confirm("Tem certeza que deseja excluir esta lição?")) {
-      try {
-        const result = await deleteLesson(lessonId);
-        if (result.success) {
-          const updatedModules = [...modulesState];
-          if (updatedModules[moduleIndex]) {
-            updatedModules[moduleIndex].lessons = updatedModules[
-              moduleIndex
-            ].lessons.filter((_, i) => i !== lessonIndex);
-            setModulesState(updatedModules);
-          }
-          toast.success(result.message);
-          refetchModules();
-        } else {
-          toast.error(result.error);
-        }
-      } catch (error) {
-        toast.error("Erro ao excluir lição");
-      }
-    }
-  };
-
   // Adicionar lição
   const handleAddLesson = async (data: LessonFormData, moduleIndex: number) => {
-    const module = modulesState[moduleIndex];
-    if (!module) return;
+    if (!courseId) return;
+
+    const module = modules[moduleIndex];
+    if (!module || !module.id) return;
 
     setIsLoading(true);
     try {
@@ -486,15 +308,14 @@ export default function EditCoursePage(props: EditCoursePageProps) {
           type: data.type,
         };
 
-        const updatedModules = [...modulesState];
+        const updatedModules = [...modules];
         if (updatedModules[moduleIndex]) {
           updatedModules[moduleIndex].lessons.push(newLesson);
-          setModulesState(updatedModules);
+          setModules(updatedModules);
         }
         lessonForm.reset();
         setShowLessonForm(null);
         toast.success("Lição adicionada com sucesso!");
-        refetchModules();
       } else {
         toast.error(result.error || "Erro ao criar lição");
       }
@@ -502,6 +323,18 @@ export default function EditCoursePage(props: EditCoursePageProps) {
       toast.error("Erro ao criar lição");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Salvar como rascunho
+  const handleSaveDraft = async () => {
+    if (!courseId) {
+      // Se ainda não criou o curso, criar como rascunho
+      const courseData = courseForm.getValues();
+      await handleCreateCourse(courseData);
+    } else {
+      toast.success("Curso salvo como rascunho!");
+      router.push("/dashboard/courses");
     }
   };
 
@@ -551,61 +384,6 @@ export default function EditCoursePage(props: EditCoursePageProps) {
     }
   };
 
-  // Loading state
-  if (courseLoading || modulesLoading) {
-    return (
-      <div className="dark-bg-primary min-h-screen pb-20">
-        <div className="fixed inset-0 opacity-3">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
-        </div>
-        <div className="relative mx-auto max-w-6xl space-y-8 p-6">
-          <div className="dark-glass dark-shadow-md rounded-2xl p-8 text-center">
-            <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-              <BookOpen className="dark-text-tertiary" size={32} />
-            </div>
-            <h1 className="dark-text-primary mb-2 text-2xl font-bold">
-              Carregando curso...
-            </h1>
-            <p className="dark-text-secondary">
-              Buscando informações do curso e módulos
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Error state
-  if (courseError || modulesError || !courseData) {
-    return (
-      <div className="dark-bg-primary min-h-screen pb-20">
-        <div className="fixed inset-0 opacity-3">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
-        </div>
-        <div className="relative mx-auto max-w-6xl space-y-8 p-6">
-          <div className="dark-glass dark-shadow-md rounded-2xl p-8 text-center">
-            <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-              <BookOpen className="dark-text-tertiary" size={32} />
-            </div>
-            <h1 className="dark-text-primary mb-2 text-2xl font-bold">
-              Erro ao carregar curso
-            </h1>
-            <p className="dark-text-secondary mb-4">
-              Não foi possível carregar as informações do curso. Tente
-              novamente.
-            </p>
-            <Button
-              className="dark-btn-primary"
-              onClick={() => window.location.reload()}
-            >
-              Tentar Novamente
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="dark-bg-primary min-h-screen pb-20">
       {/* Background Pattern */}
@@ -626,13 +404,22 @@ export default function EditCoursePage(props: EditCoursePageProps) {
             </Button>
             <div className="flex-1">
               <h1 className="dark-text-primary text-3xl font-bold">
-                Editar Curso 📚
+                Criar Curso Completo 📚
               </h1>
               <p className="dark-text-secondary mt-2">
-                Edite seu curso com módulos e lições em uma única tela
+                Crie seu curso com módulos e lições em uma única tela
               </p>
             </div>
             <div className="flex gap-2">
+              <Button
+                type="button"
+                className="dark-glass dark-border hover:dark-border-hover"
+                onClick={handleSaveDraft}
+                disabled={isLoading}
+              >
+                <FileText className="mr-2 h-4 w-4" />
+                Salvar Rascunho
+              </Button>
               {courseId && modules.length > 0 && (
                 <Button
                   type="button"
@@ -644,17 +431,10 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                   Finalizar Curso
                 </Button>
               )}
-              <Button
-                onClick={handleDeleteCourse}
-                className="dark-error-bg dark-error hover:dark-error-bg"
-                disabled={isDeleting}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                {isDeleting ? "Excluindo..." : "Excluir Curso"}
-              </Button>
             </div>
           </div>
         </div>
+
         {/* Course Form */}
         <div className="dark-glass dark-shadow-sm rounded-xl p-6">
           <h2 className="dark-text-primary mb-6 text-xl font-bold">
@@ -662,7 +442,7 @@ export default function EditCoursePage(props: EditCoursePageProps) {
           </h2>
           <Form {...courseForm}>
             <form
-              onSubmit={courseForm.handleSubmit(handleUpdateCourse)}
+              onSubmit={courseForm.handleSubmit(handleCreateCourse)}
               className="space-y-6"
             >
               <div className="space-y-4">
@@ -896,28 +676,31 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-4 pt-6">
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="dark-btn-primary"
-                >
-                  <Save className="mr-2 h-4 w-4" />
-                  {isLoading ? "Salvando..." : "Salvar Alterações"}
-                </Button>
-              </div>
+              {!courseId && (
+                <div className="flex justify-end space-x-4 pt-6">
+                  <Button
+                    type="submit"
+                    disabled={isLoading}
+                    className="dark-btn-primary"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    {isLoading ? "Criando..." : "Criar Curso"}
+                  </Button>
+                </div>
+              )}
             </form>
           </Form>
         </div>
-        {/* Modules Section */}
-        {
+
+        {/* Modules Section - Only show after course is created */}
+        {courseId && (
           <div className="space-y-6">
             {/* Add Module Button */}
             <div className="dark-glass dark-shadow-sm rounded-xl p-6">
               <div className="flex items-center justify-between">
                 <h2 className="dark-text-primary flex items-center gap-2 text-xl font-bold">
                   <Layers className="dark-primary" size={24} />
-                  Módulos do Curso ({modulesState.length})
+                  Módulos do Curso ({modules.length})
                 </h2>
                 <Button
                   className="dark-btn-primary"
@@ -1009,9 +792,9 @@ export default function EditCoursePage(props: EditCoursePageProps) {
             </div>
 
             {/* Modules List */}
-            {modulesState.length > 0 && (
+            {modules.length > 0 && (
               <Accordion type="multiple" className="space-y-4">
-                {modulesState.map((module, moduleIndex) => (
+                {modules.map((module, moduleIndex) => (
                   <AccordionItem
                     key={moduleIndex}
                     value={`module-${moduleIndex}`}
@@ -1051,7 +834,10 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                             className="dark-glass dark-border hover:dark-border-hover"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleDeleteModule(module.id);
+                              const updatedModules = modules.filter(
+                                (_, i) => i !== moduleIndex,
+                              );
+                              setModules(updatedModules);
                             }}
                           >
                             <Trash2 className="h-3 w-3" />
@@ -1364,11 +1150,17 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                                         className="dark-glass dark-border hover:dark-border-hover"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          handleDeleteLesson(
-                                            lesson.id,
-                                            moduleIndex,
-                                            lessonIndex,
-                                          );
+                                          const updatedModules = [...modules];
+                                          if (updatedModules[moduleIndex]) {
+                                            updatedModules[
+                                              moduleIndex
+                                            ].lessons = updatedModules[
+                                              moduleIndex
+                                            ].lessons.filter(
+                                              (_, i) => i !== lessonIndex,
+                                            );
+                                            setModules(updatedModules);
+                                          }
                                         }}
                                       >
                                         <Trash2 className="h-3 w-3" />
@@ -1715,7 +1507,7 @@ export default function EditCoursePage(props: EditCoursePageProps) {
               </Accordion>
             )}
           </div>
-        }
+        )}
       </div>
     </div>
   );

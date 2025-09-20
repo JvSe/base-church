@@ -94,9 +94,24 @@ export async function getUserProfile(userId: string) {
   }
 }
 
-export async function getCourses() {
+export async function getCourses({
+  filter = "published",
+}: {
+  filter?: "all" | "published" | "draft";
+} = {}) {
   try {
+    // Construir o filtro baseado no parâmetro
+    let whereClause: any = {};
+
+    if (filter === "published") {
+      whereClause.isPublished = true;
+    } else if (filter === "draft") {
+      whereClause.isPublished = false;
+    }
+    // Se filter === "all", não aplicamos nenhum filtro de isPublished
+
     const courses = await prisma.course.findMany({
+      where: whereClause,
       include: {
         instructor: {
           select: {
@@ -148,10 +163,37 @@ export async function getCourses() {
   }
 }
 
+export async function getLeaders() {
+  try {
+    const leaders = await prisma.user.findMany({
+      where: {
+        role: "LIDER",
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        isPastor: true,
+      },
+      orderBy: {
+        name: "asc",
+      },
+    });
+
+    return { success: true, leaders };
+  } catch (error) {
+    console.error("Error getting leaders:", error);
+    return { success: false, error: "Erro ao buscar líderes" };
+  }
+}
+
 export async function getCourseBySlug(slug: string) {
   try {
     const course = await prisma.course.findUnique({
-      where: { slug },
+      where: {
+        slug,
+        isPublished: true, // Apenas cursos publicados
+      },
       include: {
         instructor: {
           select: {
@@ -950,7 +992,10 @@ export async function unlockAchievement(userId: string, achievementId: string) {
 export async function getUserEnrollments(userId: string) {
   try {
     const enrollments = await prisma.enrollment.findMany({
-      where: { userId },
+      where: {
+        userId,
+        status: "approved", // Apenas matrículas aprovadas pelos líderes
+      },
       include: {
         course: {
           include: {
@@ -1006,6 +1051,75 @@ export async function getUserEnrollments(userId: string) {
     return { success: true, enrollments: enrollmentsWithRating };
   } catch (error) {
     return { success: false, error: "Failed to fetch user enrollments" };
+  }
+}
+
+// Função para buscar todas as matrículas do usuário (incluindo pendentes)
+export async function getAllUserEnrollments(userId: string) {
+  try {
+    const enrollments = await prisma.enrollment.findMany({
+      where: { userId },
+      include: {
+        course: {
+          include: {
+            instructor: {
+              select: {
+                id: true,
+                name: true,
+                image: true,
+              },
+            },
+            modules: {
+              include: {
+                lessons: {
+                  orderBy: { order: "asc" },
+                },
+              },
+              orderBy: { order: "asc" },
+            },
+            _count: {
+              select: {
+                enrollments: true,
+              },
+            },
+            reviews: {
+              select: {
+                rating: true,
+              },
+            },
+          },
+        },
+        approver: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: { enrolledAt: "desc" },
+    });
+
+    // Calculate average rating for each course
+    const enrollmentsWithRating = enrollments.map((enrollment) => {
+      const ratings = enrollment.course.reviews.map((r) => r.rating);
+      const averageRating =
+        ratings.length > 0
+          ? ratings.reduce((a, b) => a + b, 0) / ratings.length
+          : 0;
+
+      return {
+        ...enrollment,
+        course: {
+          ...enrollment.course,
+          rating: Math.round(averageRating * 10) / 10,
+          reviewsCount: ratings.length,
+        },
+      };
+    });
+
+    return { success: true, enrollments: enrollmentsWithRating };
+  } catch (error) {
+    return { success: false, error: "Failed to fetch all user enrollments" };
   }
 }
 
@@ -1273,7 +1387,6 @@ export type SignUpInput = {
   cpf: string;
   password: string;
   email?: string;
-  phone?: string;
 };
 
 export type SignInInput = {
@@ -1318,19 +1431,33 @@ export async function signUp(data: SignUpInput) {
       data: {
         name: data.name,
         cpf: cleanCpfValue,
-        password: hashedPassword,
         email: data.email,
-        phone: data.phone,
+        password: hashedPassword,
         role: "MEMBROS", // Default role
       },
     });
 
-    // Remover senha da resposta
-    const { password, ...userWithoutPassword } = user;
+    // Criar sessão
+    const sessionCookie = createSession({
+      userId: user.id,
+      cpf: user.cpf!,
+      name: user.name!,
+      role: user.role,
+      email: user.email || undefined,
+    });
 
-    return { success: true, user: userWithoutPassword };
+    // Dados do usuário formatados para o frontend
+    const userData = {
+      id: user.id,
+      name: user.name!,
+      cpf: user.cpf!,
+      email: user.email || undefined,
+      role: user.role as "MEMBROS" | "LIDER",
+      isPastor: user.isPastor || false,
+    };
+
+    return { success: true, user: userData, sessionCookie };
   } catch (error) {
-    console.error("Sign up error:", error);
     return { success: false, error: "Erro interno do servidor" };
   }
 }
@@ -1344,7 +1471,7 @@ export async function signIn(data: SignInInput) {
 
     const cleanCpfValue = cleanCpf(data.cpf);
 
-    // Buscar usuário
+    // Buscar usuário por CPF
     const user = await prisma.user.findUnique({
       where: { cpf: cleanCpfValue },
     });
@@ -1373,16 +1500,65 @@ export async function signIn(data: SignInInput) {
       email: user.email || undefined,
     });
 
-    // Remover senha da resposta
-    const { password, ...userWithoutPassword } = user;
+    const userData = {
+      id: user.id,
+      name: user.name!,
+      cpf: user.cpf!,
+      email: user.email || undefined,
+      role: user.role as "MEMBROS" | "LIDER",
+      isPastor: user.isPastor || false,
+    };
 
     return {
       success: true,
-      user: userWithoutPassword,
+      user: userData,
       sessionCookie,
     };
   } catch (error) {
-    console.error("Sign in error:", error);
+    return { success: false, error: "Erro interno do servidor" };
+  }
+}
+
+// Função para obter dados completos do usuário atual
+export async function getCurrentUser({ userID }: { userID: string }): Promise<{
+  success: boolean;
+  user?: any;
+  error?: string;
+}> {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userID },
+      select: {
+        id: true,
+        name: true,
+        cpf: true,
+        email: true,
+        role: true,
+        isPastor: true,
+        phone: true,
+        createdAt: true,
+      },
+    });
+
+    if (!user) {
+      return { success: false, error: "Usuário não encontrado" };
+    }
+
+    // Dados do usuário formatados para o frontend
+    const userData = {
+      id: user.id,
+      name: user.name!,
+      cpf: user.cpf!,
+      email: user.email || undefined,
+      role: user.role as "MEMBROS" | "LIDER",
+      isPastor: user.isPastor || false,
+      phone: user.phone || undefined,
+      createdAt: user.createdAt,
+    };
+
+    return { success: true, user: userData };
+  } catch (error) {
+    console.error("Erro ao buscar usuário atual:", error);
     return { success: false, error: "Erro interno do servidor" };
   }
 }
@@ -1522,12 +1698,12 @@ export async function resetPassword(token: string, newPassword: string) {
 export async function createCourse(courseData: {
   title: string;
   description: string;
-  instructor: string;
+  instructorId: string;
   duration: number;
   level: string;
   status: string;
   price: number;
-  category: string;
+  category: any;
   tags: string;
 }) {
   try {
@@ -1535,7 +1711,7 @@ export async function createCourse(courseData: {
     if (
       !courseData.title ||
       !courseData.description ||
-      !courseData.instructor
+      !courseData.instructorId
     ) {
       return {
         success: false,
@@ -1563,7 +1739,7 @@ export async function createCourse(courseData: {
         title: courseData.title,
         description: courseData.description,
         slug: slug,
-        instructorId: "30d453b9-88c9-429e-9700-81d2db735f7a", // TODO: Pegar do usuário logado
+        instructorId: courseData.instructorId,
         duration: courseData.duration,
         level: courseData.level as any,
         price: courseData.price,
@@ -1585,17 +1761,39 @@ export async function createCourse(courseData: {
   }
 }
 
+export async function updateCourseStatus(
+  courseId: string,
+  status: "draft" | "published" | "archived",
+) {
+  try {
+    const course = await db.course.update({
+      where: { id: courseId },
+      data: { isPublished: status === "published" },
+    });
+
+    revalidatePath("/dashboard/courses");
+    return {
+      success: true,
+      course,
+      message: `Curso ${status === "published" ? "publicado" : "atualizado"} com sucesso`,
+    };
+  } catch (error) {
+    console.error("Update course status error:", error);
+    return { success: false, error: "Erro interno do servidor" };
+  }
+}
+
 export async function updateCourse(
   courseId: string,
   courseData: {
     title: string;
     description: string;
-    instructor: string;
+    instructorId: string;
     duration: number;
     level: string;
     status: string;
     price: number;
-    category: string;
+    category: any;
     tags: string;
   },
 ) {
@@ -1623,7 +1821,7 @@ export async function updateCourse(
       data: {
         title: courseData.title,
         description: courseData.description,
-        instructorId: "30d453b9-88c9-429e-9700-81d2db735f7a", // TODO: Pegar do usuário logado
+        instructorId: courseData.instructorId,
         duration: courseData.duration,
         level: courseData.level as any,
         price: courseData.price,
@@ -1758,39 +1956,6 @@ export async function duplicateCourse(courseId: string) {
     };
   } catch (error) {
     console.error("Duplicate course error:", error);
-    return { success: false, error: "Erro interno do servidor" };
-  }
-}
-
-export async function getCourseById(courseId: string) {
-  try {
-    const course = await db.course.findUnique({
-      where: { id: courseId },
-      include: {
-        modules: {
-          include: {
-            lessons: {
-              orderBy: { order: "asc" },
-            },
-          },
-          orderBy: { order: "asc" },
-        },
-        _count: {
-          select: {
-            enrollments: true,
-            reviews: true,
-          },
-        },
-      },
-    });
-
-    if (!course) {
-      return { success: false, error: "Curso não encontrado" };
-    }
-
-    return { success: true, course };
-  } catch (error) {
-    console.error("Get course by id error:", error);
     return { success: false, error: "Erro interno do servidor" };
   }
 }
@@ -2075,6 +2240,8 @@ export async function getLessonById(lessonId: string) {
 
 export async function getDashboardStats() {
   try {
+    console.log("🔍 Iniciando busca de estatísticas do dashboard...");
+
     // Buscar estatísticas básicas em paralelo com cache
     const [
       totalStudents,
@@ -2271,6 +2438,16 @@ export async function getDashboardStats() {
       recentActivity,
     };
 
+    console.log("📊 Estatísticas calculadas:", {
+      totalStudents,
+      totalCourses,
+      totalCertificates,
+      activeStudents,
+      completedCourses: completedEnrollments,
+      averageRating: averageRating._avg.rating,
+      monthlyGrowth,
+    });
+
     return { success: true, stats };
   } catch (error) {
     console.error("Get dashboard stats error:", error);
@@ -2414,4 +2591,792 @@ export const getCachedDashboardAnalytics = unstable_cache(
 export async function revalidateDashboard() {
   revalidatePath("/dashboard");
   return { success: true };
+}
+
+// ===== CERTIFICADOS ACTIONS =====
+
+export async function getAllCertificates() {
+  try {
+    console.log("🏆 Buscando certificados...");
+
+    const certificates = await db.certificate.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        course: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+      orderBy: {
+        issuedAt: "desc",
+      },
+    });
+
+    console.log("📊 Certificados encontrados:", certificates.length);
+
+    return {
+      success: true,
+      certificates,
+    };
+  } catch (error) {
+    console.error("Erro ao buscar certificados:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Erro ao buscar certificados",
+    };
+  }
+}
+
+export async function getCertificateStats() {
+  try {
+    console.log("📈 Buscando estatísticas de certificados...");
+
+    const [totalCertificates, issuedCertificates, pendingCertificates] =
+      await Promise.all([
+        // Total de certificados
+        db.certificate.count(),
+
+        // Certificados emitidos (com issuedAt)
+        db.certificate.count({
+          where: {
+            issuedAt: {
+              not: null as any,
+            },
+          },
+        }),
+
+        // Certificados pendentes (sem issuedAt)
+        db.certificate.count({
+          where: {
+            issuedAt: null as any,
+          },
+        }),
+      ]);
+
+    // Para agora, vamos usar um valor padrão para a nota média
+    // Em uma implementação real, você adicionaria um campo grade ao modelo Certificate
+    const defaultAverageGrade = 92.5; // Valor padrão baseado nos dados mock
+
+    console.log("📊 Estatísticas de certificados:", {
+      totalCertificates,
+      issuedCertificates,
+      pendingCertificates,
+      averageGrade: defaultAverageGrade,
+    });
+
+    return {
+      success: true,
+      stats: {
+        totalCertificates,
+        issuedCertificates,
+        pendingCertificates,
+        averageGrade: defaultAverageGrade,
+      },
+    };
+  } catch (error) {
+    console.error("Erro ao buscar estatísticas de certificados:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Erro ao buscar estatísticas",
+    };
+  }
+}
+
+export async function getCertificateById(certificateId: string) {
+  try {
+    const certificate = await db.certificate.findUnique({
+      where: { id: certificateId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        course: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+    });
+
+    if (!certificate) {
+      return { success: false, error: "Certificado não encontrado" };
+    }
+
+    return { success: true, certificate };
+  } catch (error) {
+    console.error("Erro ao buscar certificado:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Erro ao buscar certificado",
+    };
+  }
+}
+
+export async function revokeCertificate(certificateId: string) {
+  try {
+    const certificate = await db.certificate.update({
+      where: { id: certificateId },
+      data: {
+        // Em uma implementação real, você adicionaria um campo status ou revokedAt
+        // Por enquanto, vamos apenas deletar o certificado
+      },
+    });
+
+    // Na verdade, vamos deletar o certificado para simular a revogação
+    await db.certificate.delete({
+      where: { id: certificateId },
+    });
+
+    revalidatePath("/dashboard/certificates");
+    return {
+      success: true,
+      message: "Certificado revogado com sucesso",
+    };
+  } catch (error) {
+    console.error("Erro ao revogar certificado:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Erro ao revogar certificado",
+    };
+  }
+}
+
+// Função de teste para verificar dados do banco
+export async function testDashboardData() {
+  try {
+    console.log("🧪 Testando dados do dashboard...");
+
+    // Verificar usuários
+    const totalUsers = await db.user.count();
+    const usersWithRoleMEMBROS = await db.user.count({
+      where: { role: "MEMBROS" },
+    });
+
+    // Verificar cursos
+    const totalCourses = await db.course.count();
+    const publishedCourses = await db.course.count({
+      where: { isPublished: true },
+    });
+
+    // Verificar matrículas
+    const totalEnrollments = await db.enrollment.count();
+
+    console.log("📊 Dados encontrados:", {
+      totalUsers,
+      usersWithRoleMEMBROS,
+      totalCourses,
+      publishedCourses,
+      totalEnrollments,
+    });
+
+    return {
+      success: true,
+      data: {
+        totalUsers,
+        usersWithRoleMEMBROS,
+        totalCourses,
+        publishedCourses,
+        totalEnrollments,
+      },
+    };
+  } catch (error) {
+    console.error("Erro ao testar dados:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Erro desconhecido",
+    };
+  }
+}
+
+// Student Management Actions
+
+export async function getAllStudents() {
+  try {
+    const students = await prisma.user.findMany({
+      include: {
+        enrollments: {
+          include: {
+            course: true,
+          },
+        },
+        certificates: true,
+        stats: true,
+        progress: {
+          include: {
+            lesson: true,
+          },
+        },
+      },
+      orderBy: {
+        joinDate: "desc",
+      },
+    });
+
+    // Transformar dados para o formato esperado pela interface
+    const transformedStudents = students.map((student) => ({
+      id: student.id,
+      name: student.name || "Nome não informado",
+      email: student.email || "Email não informado",
+      phone: student.phone,
+      cpf: student.cpf || "CPF não informado",
+      joinDate: student.joinDate,
+      role: student.role as "MEMBROS" | "LIDER",
+      isPastor: student.isPastor || false,
+      profileCompletion: student.profileCompletion || 0,
+      coursesEnrolled: student.enrollments?.length || 0,
+      coursesCompleted:
+        student.enrollments?.filter((e) => e.completedAt).length || 0,
+      certificatesEarned: student.certificates?.length || 0,
+      lastActivity: student.stats?.lastActivityAt || student.updatedAt,
+      status: student.stats?.lastActivityAt
+        ? new Date().getTime() -
+            new Date(student.stats.lastActivityAt).getTime() <
+          7 * 24 * 60 * 60 * 1000
+          ? "active"
+          : "inactive"
+        : ("inactive" as "active" | "inactive" | "suspended"),
+    }));
+
+    return { success: true, students: transformedStudents };
+  } catch (error) {
+    console.error("Error getting all students:", error);
+    return { success: false, error: "Erro ao buscar alunos" };
+  }
+}
+
+export async function getStudentById(studentId: string) {
+  try {
+    const student = await prisma.user.findUnique({
+      where: { id: studentId },
+      include: {
+        enrollments: {
+          include: {
+            course: {
+              include: {
+                modules: {
+                  include: {
+                    lessons: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        certificates: {
+          include: {
+            course: true,
+          },
+        },
+        stats: true,
+        progress: {
+          include: {
+            lesson: {
+              include: {
+                module: {
+                  include: {
+                    course: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        notifications: {
+          orderBy: {
+            createdAt: "desc",
+          },
+          take: 10,
+        },
+      },
+    });
+
+    if (!student) {
+      return { success: false, error: "Aluno não encontrado" };
+    }
+
+    return { success: true, student };
+  } catch (error) {
+    console.error("Error getting student by ID:", error);
+    return { success: false, error: "Erro ao buscar aluno" };
+  }
+}
+
+export async function updateStudentStatus(
+  studentId: string,
+  status: "active" | "inactive" | "suspended",
+) {
+  try {
+    // Como não temos um campo status direto, vamos usar a última atividade
+    const now = new Date();
+    let lastActivityAt = now;
+
+    if (status === "inactive") {
+      // Definir como inativo há mais de 7 dias
+      lastActivityAt = new Date(now.getTime() - 8 * 24 * 60 * 60 * 1000);
+    } else if (status === "suspended") {
+      // Para suspenso, vamos usar uma data muito antiga
+      lastActivityAt = new Date(0);
+    }
+
+    // Atualizar ou criar stats do usuário
+    await prisma.userStats.upsert({
+      where: { userId: studentId },
+      update: { lastActivityAt },
+      create: {
+        userId: studentId,
+        lastActivityAt,
+      },
+    });
+
+    revalidatePath("/dashboard/students");
+    return { success: true, message: "Status do aluno atualizado com sucesso" };
+  } catch (error) {
+    console.error("Error updating student status:", error);
+    return { success: false, error: "Erro ao atualizar status do aluno" };
+  }
+}
+
+export async function deleteStudent(studentId: string) {
+  try {
+    // Verificar se o usuário existe
+    const student = await prisma.user.findUnique({
+      where: { id: studentId },
+    });
+
+    if (!student) {
+      return { success: false, error: "Aluno não encontrado" };
+    }
+
+    // Deletar o usuário (cascade vai deletar relacionamentos)
+    await prisma.user.delete({
+      where: { id: studentId },
+    });
+
+    revalidatePath("/dashboard/students");
+    return { success: true, message: "Aluno excluído com sucesso" };
+  } catch (error) {
+    console.error("Error deleting student:", error);
+    return { success: false, error: "Erro ao excluir aluno" };
+  }
+}
+
+export async function getStudentStats() {
+  try {
+    const totalStudents = await prisma.user.count();
+
+    const activeStudents = await prisma.userStats.count({
+      where: {
+        lastActivityAt: {
+          gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Últimos 7 dias
+        },
+      },
+    });
+
+    const totalEnrollments = await prisma.enrollment.count();
+
+    const totalCertificates = await prisma.certificate.count();
+
+    return {
+      success: true,
+      stats: {
+        totalStudents,
+        activeStudents,
+        totalEnrollments,
+        totalCertificates,
+      },
+    };
+  } catch (error) {
+    console.error("Error getting student stats:", error);
+    return { success: false, error: "Erro ao buscar estatísticas" };
+  }
+}
+
+// Enrollment Management Actions
+
+export async function getStudentEnrollments(studentId: string) {
+  try {
+    const enrollments = await prisma.enrollment.findMany({
+      where: { userId: studentId },
+      include: {
+        course: {
+          include: {
+            instructor: true,
+          },
+        },
+        approver: true,
+      },
+      orderBy: {
+        enrolledAt: "desc",
+      },
+    });
+
+    return { success: true, enrollments };
+  } catch (error) {
+    console.error("Error getting student enrollments:", error);
+    return { success: false, error: "Erro ao buscar matrículas do aluno" };
+  }
+}
+
+export async function approveEnrollment(
+  enrollmentId: string,
+  approverId: string,
+) {
+  try {
+    const enrollment = await prisma.enrollment.update({
+      where: { id: enrollmentId },
+      data: {
+        status: "approved",
+        approvedAt: new Date(),
+        approvedBy: approverId,
+      },
+      include: {
+        user: true,
+        course: true,
+      },
+    });
+
+    // Criar notificação para o aluno
+    await prisma.notification.create({
+      data: {
+        userId: enrollment.userId,
+        title: "Matrícula Aprovada",
+        message: `Sua matrícula no curso "${enrollment.course.title}" foi aprovada!`,
+        type: "success",
+      },
+    });
+
+    revalidatePath("/dashboard/students");
+    return {
+      success: true,
+      message: "Matrícula aprovada com sucesso",
+      enrollment,
+    };
+  } catch (error) {
+    console.error("Error approving enrollment:", error);
+    return { success: false, error: "Erro ao aprovar matrícula" };
+  }
+}
+
+export async function rejectEnrollment(
+  enrollmentId: string,
+  approverId: string,
+  reason: string,
+) {
+  try {
+    const enrollment = await prisma.enrollment.update({
+      where: { id: enrollmentId },
+      data: {
+        status: "rejected",
+        approvedAt: new Date(),
+        approvedBy: approverId,
+        rejectionReason: reason,
+      },
+      include: {
+        user: true,
+        course: true,
+      },
+    });
+
+    // Criar notificação para o aluno
+    await prisma.notification.create({
+      data: {
+        userId: enrollment.userId,
+        title: "Matrícula Rejeitada",
+        message: `Sua matrícula no curso "${enrollment.course.title}" foi rejeitada. Motivo: ${reason}`,
+        type: "warning",
+      },
+    });
+
+    revalidatePath("/dashboard/students");
+    return {
+      success: true,
+      message: "Matrícula rejeitada com sucesso",
+      enrollment,
+    };
+  } catch (error) {
+    console.error("Error rejecting enrollment:", error);
+    return { success: false, error: "Erro ao rejeitar matrícula" };
+  }
+}
+
+export async function updateUserRole(
+  userId: string,
+  role: "MEMBROS" | "LIDER",
+) {
+  try {
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { role },
+    });
+
+    // Criar notificação para o usuário
+    await prisma.notification.create({
+      data: {
+        userId: userId,
+        title: "Função Atualizada",
+        message: `Sua função foi alterada para ${role === "MEMBROS" ? "Membro" : "Líder"}`,
+        type: "info",
+      },
+    });
+
+    revalidatePath("/dashboard/students");
+    return {
+      success: true,
+      message: "Função do usuário atualizada com sucesso",
+      user,
+    };
+  } catch (error) {
+    console.error("Error updating user role:", error);
+    return { success: false, error: "Erro ao atualizar função do usuário" };
+  }
+}
+
+export async function updateUserPastorStatus(
+  userId: string,
+  isPastor: boolean,
+) {
+  try {
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { isPastor },
+    });
+
+    // Criar notificação para o usuário
+    await prisma.notification.create({
+      data: {
+        userId: userId,
+        title: "Status de Pastor Atualizado",
+        message: `Seu status de pastor foi ${isPastor ? "ativado" : "desativado"}`,
+        type: "info",
+      },
+    });
+
+    revalidatePath("/dashboard/students");
+    return {
+      success: true,
+      message: `Status de pastor ${isPastor ? "ativado" : "desativado"} com sucesso`,
+      user,
+    };
+  } catch (error) {
+    console.error("Error updating user pastor status:", error);
+    return { success: false, error: "Erro ao atualizar status de pastor" };
+  }
+}
+
+// Actions para página de curso
+export async function getCourseById(courseId: string) {
+  try {
+    const course = await db.course.findUnique({
+      where: { id: courseId },
+      include: {
+        instructor: {
+          select: {
+            id: true,
+            name: true,
+            role: true,
+            isPastor: true,
+            bio: true,
+            image: true,
+          },
+        },
+        modules: {
+          include: {
+            lessons: {
+              select: {
+                id: true,
+                title: true,
+                duration: true,
+                type: true,
+                order: true,
+              },
+              orderBy: {
+                order: "asc",
+              },
+            },
+          },
+          orderBy: {
+            order: "asc",
+          },
+        },
+        enrollments: {
+          select: {
+            id: true,
+            userId: true,
+            status: true,
+          },
+        },
+        reviews: {
+          include: {
+            user: {
+              select: {
+                name: true,
+                role: true,
+                isPastor: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        },
+        _count: {
+          select: {
+            enrollments: true,
+            reviews: true,
+          },
+        },
+      },
+    });
+
+    if (!course) {
+      return { success: false, error: "Curso não encontrado" };
+    }
+
+    // Calcular estatísticas
+    const totalLessons = course.modules.reduce(
+      (acc, module) => acc + module.lessons.length,
+      0,
+    );
+    const totalDuration = course.modules.reduce(
+      (acc, module) =>
+        acc +
+        module.lessons.reduce(
+          (lessonAcc, lesson) => lessonAcc + (lesson.duration || 0),
+          0,
+        ),
+      0,
+    );
+    const averageRating =
+      course.reviews.length > 0
+        ? course.reviews.reduce((acc, review) => acc + review.rating, 0) /
+          course.reviews.length
+        : 0;
+
+    return {
+      success: true,
+      course: {
+        ...course,
+        totalLessons,
+        totalDuration,
+        averageRating: Math.round(averageRating * 10) / 10,
+        studentsCount: course.enrollments.filter((e) => e.status === "approved")
+          .length,
+        reviews: course.reviews,
+        instructor: course.instructor,
+      },
+    };
+  } catch (error) {
+    console.error("Error getting course by id:", error);
+    return { success: false, error: "Erro ao buscar curso" };
+  }
+}
+
+export async function createEnrollmentRequest(
+  courseId: string,
+  userId: string,
+) {
+  try {
+    // Verificar se já existe uma matrícula para este usuário e curso
+    const existingEnrollment = await prisma.enrollment.findFirst({
+      where: {
+        courseId,
+        userId,
+      },
+    });
+
+    if (existingEnrollment) {
+      return {
+        success: false,
+        error: "Você já possui uma solicitação de matrícula para este curso",
+      };
+    }
+
+    // Criar nova solicitação de matrícula
+    const enrollment = await prisma.enrollment.create({
+      data: {
+        courseId,
+        userId,
+        status: "pending",
+        enrolledAt: new Date(),
+      },
+      include: {
+        course: {
+          select: {
+            title: true,
+          },
+        },
+      },
+    });
+
+    // Criar notificação para o usuário
+    await prisma.notification.create({
+      data: {
+        userId: userId,
+        title: "Solicitação de Matrícula Enviada",
+        message: `Sua solicitação de matrícula no curso "${enrollment.course.title}" foi enviada com sucesso. Aguarde aprovação dos líderes.`,
+        type: "info",
+      },
+    });
+
+    revalidatePath(`/catalog/courses/${courseId}`);
+    return {
+      success: true,
+      message: "Solicitação de matrícula enviada com sucesso",
+      enrollment,
+    };
+  } catch (error) {
+    console.error("Error creating enrollment request:", error);
+    throw new Error(
+      JSON.stringify({
+        success: false,
+        error: "Erro ao enviar solicitação de matrícula",
+      }),
+    );
+  }
+}
+
+export async function getUserEnrollmentStatus(
+  courseId: string,
+  userId: string,
+) {
+  try {
+    const enrollment = await prisma.enrollment.findFirst({
+      where: {
+        courseId,
+        userId,
+      },
+      select: {
+        id: true,
+        status: true,
+        enrolledAt: true,
+        approvedAt: true,
+        rejectionReason: true,
+      },
+    });
+
+    return {
+      success: true,
+      enrollment: enrollment || null,
+    };
+  } catch (error) {
+    console.error("Error getting user enrollment status:", error);
+    return { success: false, error: "Erro ao verificar status da matrícula" };
+  }
 }

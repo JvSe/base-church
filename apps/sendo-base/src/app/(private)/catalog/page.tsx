@@ -20,38 +20,36 @@ import {
 } from "@repo/ui/components/tabs";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Code,
   Database,
   Filter,
-  Globe,
   Grid,
   List,
   Palette,
   Search,
-  Server,
-  Smartphone,
   Target,
   TrendingUp,
   Zap,
 } from "lucide-react";
 import { useState } from "react";
 
-export default function CatalogoPage() {
+export default function CatalogPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedLevel, setSelectedLevel] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  // Fetch courses from database
+  // Fetch courses from database (apenas publicados para o catálogo)
   const {
     data: coursesData,
     isLoading: coursesLoading,
     error: coursesError,
   } = useQuery({
-    queryKey: ["courses"],
-    queryFn: getCourses,
+    queryKey: ["courses", "published"],
+    queryFn: () => getCourses({ filter: "published" }),
     select: (data) => data.courses,
   });
+
+  console.log(coursesData);
 
   // Fetch user enrollments to check which courses user is enrolled in
   const { data: enrollmentsData } = useQuery({
@@ -73,24 +71,24 @@ export default function CatalogoPage() {
       instructor: course.instructor?.name || "Instrutor não definido",
       price: course.price || 0,
       rating: course.rating || 0,
-      enrolledStudents: course._count?.enrollments || 0,
+      enrolledStudents: course.studentsCount || course._count?.enrollments || 0,
       isEnrolled:
         enrollmentsData?.some(
           (enrollment: any) => enrollment.courseId === course.id,
         ) || false,
       isFeatured: course.isFeatured,
+      isPublished: course.isPublished,
       tags: course.tags || [],
+      totalLessons: course.totalLessons || 0,
+      reviewsCount: course.reviewsCount || 0,
+      certificate: course.certificate || false,
     })) || [];
 
   const categories = [
     { id: "all", name: "Todas", icon: Grid },
-    { id: "doutrina", name: "Doutrina", icon: Code },
-    { id: "lideranca", name: "Liderança", icon: Server },
-    { id: "evangelismo", name: "Evangelismo", icon: Smartphone },
-    { id: "estudo-biblico", name: "Estudo Bíblico", icon: Target },
-    { id: "aconselhamento", name: "Aconselhamento", icon: Database },
-    { id: "historia", name: "História", icon: Palette },
-    { id: "ministerio", name: "Ministério", icon: Globe },
+    { id: "CREATIVITY", name: "Criatividade", icon: Palette },
+    { id: "PROVISION", name: "Provisão", icon: Database },
+    { id: "MULTIPLICATION", name: "Multiplicação", icon: TrendingUp },
   ];
 
   const levels = [
@@ -100,29 +98,25 @@ export default function CatalogoPage() {
     { id: "avancado", name: "Avançado" },
   ];
 
-  const formatDuration = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return hours > 0 ? `${hours}h ${mins}min` : `${mins}min`;
-  };
-
   const filteredCourses = courses.filter((course) => {
     const matchesSearch =
       course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       course.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      course.tags.some((tag) =>
+      course.instructor.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      course.tags.some((tag: string) =>
         tag.toLowerCase().includes(searchQuery.toLowerCase()),
       );
     const matchesCategory =
-      selectedCategory === "all" ||
-      course.category.toLowerCase() === selectedCategory;
+      selectedCategory === "all" || course.category === selectedCategory;
     const matchesLevel =
-      selectedLevel === "all" || course.level.toLowerCase() === selectedLevel;
+      selectedLevel === "all" || course.level?.toLowerCase() === selectedLevel;
 
     return matchesSearch && matchesCategory && matchesLevel;
   });
 
-  const featuredCourses = courses.filter((course) => course.isFeatured);
+  const featuredCourses = courses.filter(
+    (course) => course.isFeatured && course.isPublished,
+  );
   const enrolledCourses = courses.filter((course) => course.isEnrolled);
 
   // Loading state

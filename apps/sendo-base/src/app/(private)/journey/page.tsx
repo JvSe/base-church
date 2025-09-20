@@ -29,10 +29,10 @@ export default function JornadaPage() {
     select: (data) => data.user,
   });
 
-  // Fetch courses
+  // Fetch courses (apenas publicados para a jornada)
   const { data: coursesData } = useQuery({
-    queryKey: ["courses"],
-    queryFn: getCourses,
+    queryKey: ["courses", "published"],
+    queryFn: () => getCourses({ filter: "published" }),
     select: (data) => data.courses,
   });
 

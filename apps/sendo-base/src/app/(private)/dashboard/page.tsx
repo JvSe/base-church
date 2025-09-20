@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import {
   Award,
   BarChart3,
@@ -10,10 +11,10 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
-import { useEffect, useState } from "react";
 import {
-  getCachedDashboardAnalytics,
-  getCachedDashboardStats,
+  getDashboardAnalytics,
+  getDashboardStats,
+  testDashboardData,
 } from "../../../lib/actions";
 
 interface DashboardStats {
@@ -41,43 +42,51 @@ interface DashboardAnalytics {
 }
 
 export default function DashboardPage() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [analytics, setAnalytics] = useState<DashboardAnalytics | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Fetch dashboard stats
+  const {
+    data: statsData,
+    isLoading: statsLoading,
+    error: statsError,
+  } = useQuery({
+    queryKey: ["dashboard-stats"],
+    queryFn: getDashboardStats,
+    select: (data) => data.stats,
+  });
 
-  useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
+  // Fetch dashboard analytics
+  const {
+    data: analyticsData,
+    isLoading: analyticsLoading,
+    error: analyticsError,
+  } = useQuery({
+    queryKey: ["dashboard-analytics"],
+    queryFn: getDashboardAnalytics,
+    select: (data) => data.analytics,
+  });
 
-        // Buscar dados em paralelo com cache
-        const [statsResult, analyticsResult] = await Promise.all([
-          getCachedDashboardStats(),
-          getCachedDashboardAnalytics(),
-        ]);
+  // Test dashboard data
+  const {
+    data: testData,
+    isLoading: testLoading,
+    error: testError,
+  } = useQuery({
+    queryKey: ["test-dashboard-data"],
+    queryFn: testDashboardData,
+    select: (data) => data.data,
+  });
 
-        if (statsResult.success && analyticsResult.success) {
-          setStats(statsResult.stats || null);
-          setAnalytics(analyticsResult.analytics || null);
-        } else {
-          setError(
-            statsResult.error ||
-              analyticsResult.error ||
-              "Erro ao carregar dados",
-          );
-        }
-      } catch (err) {
-        console.error("Erro ao carregar dados do dashboard:", err);
-        setError("Erro interno do servidor");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const isLoading = statsLoading || analyticsLoading;
+  const error = statsError || analyticsError;
 
-    loadDashboardData();
-  }, []);
+  // Log para debug
+  console.log("🔍 Dashboard Debug:", {
+    statsData,
+    analyticsData,
+    testData,
+    statsError,
+    analyticsError,
+    testError,
+  });
 
   if (isLoading) {
     return (
@@ -96,7 +105,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (error || !stats) {
+  if (error || !statsData) {
     return (
       <div className="dark-bg-primary min-h-screen">
         <div className="flex min-h-screen items-center justify-center">
@@ -105,7 +114,7 @@ export default function DashboardPage() {
               Erro ao carregar dashboard
             </div>
             <div className="dark-text-secondary mb-4">
-              {error || "Tente novamente mais tarde."}
+              {error?.message || "Tente novamente mais tarde."}
             </div>
             <button
               onClick={() => window.location.reload()}
@@ -212,7 +221,7 @@ export default function DashboardPage() {
                   Total de Alunos
                 </p>
                 <p className="dark-text-primary text-2xl font-bold">
-                  {stats.totalStudents.toLocaleString()}
+                  {(statsData?.totalStudents || 0).toLocaleString()}
                 </p>
               </div>
               <div className="dark-primary-subtle-bg rounded-xl p-3">
@@ -222,8 +231,8 @@ export default function DashboardPage() {
             <div className="mt-4 flex items-center text-sm">
               <TrendingUp className="dark-success mr-1" size={16} />
               <span className="dark-success font-medium">
-                {stats.monthlyGrowth > 0 ? "+" : ""}
-                {stats.monthlyGrowth}% este mês
+                {(statsData?.monthlyGrowth || 0) > 0 ? "+" : ""}
+                {statsData?.monthlyGrowth || 0}% este mês
               </span>
             </div>
           </div>
@@ -235,7 +244,7 @@ export default function DashboardPage() {
                   Cursos Ativos
                 </p>
                 <p className="dark-text-primary text-2xl font-bold">
-                  {stats.totalCourses}
+                  {statsData?.totalCourses || 0}
                 </p>
               </div>
               <div className="dark-secondary-subtle-bg rounded-xl p-3">
@@ -245,8 +254,8 @@ export default function DashboardPage() {
             <div className="mt-4 flex items-center text-sm">
               <TrendingUp className="dark-success mr-1" size={16} />
               <span className="dark-success font-medium">
-                {stats.totalCourses > 0
-                  ? `${stats.totalCourses} cursos ativos`
+                {(statsData?.totalCourses || 0) > 0
+                  ? `${statsData?.totalCourses} cursos ativos`
                   : "Nenhum curso ativo"}
               </span>
             </div>
@@ -259,7 +268,7 @@ export default function DashboardPage() {
                   Certificados Emitidos
                 </p>
                 <p className="dark-text-primary text-2xl font-bold">
-                  {stats.totalCertificates.toLocaleString()}
+                  {(statsData?.totalCertificates || 0).toLocaleString()}
                 </p>
               </div>
               <div className="dark-warning-bg rounded-xl p-3">
@@ -269,8 +278,8 @@ export default function DashboardPage() {
             <div className="mt-4 flex items-center text-sm">
               <TrendingUp className="dark-success mr-1" size={16} />
               <span className="dark-success font-medium">
-                {stats.totalCertificates > 0
-                  ? `${stats.totalCertificates} certificados emitidos`
+                {(statsData?.totalCertificates || 0) > 0
+                  ? `${statsData?.totalCertificates} certificados emitidos`
                   : "Nenhum certificado emitido"}
               </span>
             </div>
@@ -283,7 +292,7 @@ export default function DashboardPage() {
                   Avaliação Média
                 </p>
                 <p className="dark-text-primary text-2xl font-bold">
-                  {stats.averageRating}/5
+                  {statsData?.averageRating}/5
                 </p>
               </div>
               <div className="dark-info-bg rounded-xl p-3">
@@ -293,8 +302,8 @@ export default function DashboardPage() {
             <div className="mt-4 flex items-center text-sm">
               <TrendingUp className="dark-success mr-1" size={16} />
               <span className="dark-success font-medium">
-                {stats.averageRating > 0
-                  ? `${stats.averageRating}/5 avaliação média`
+                {(statsData?.averageRating || 0) > 0
+                  ? `${statsData?.averageRating}/5 avaliação média`
                   : "Sem avaliações"}
               </span>
             </div>
@@ -310,7 +319,7 @@ export default function DashboardPage() {
                   Alunos Ativos
                 </p>
                 <p className="dark-text-primary text-2xl font-bold">
-                  {stats.activeStudents.toLocaleString()}
+                  {(statsData?.activeStudents || 0).toLocaleString()}
                 </p>
               </div>
               <div className="dark-success-bg rounded-xl p-3">
@@ -320,8 +329,8 @@ export default function DashboardPage() {
             <div className="mt-4 flex items-center text-sm">
               <TrendingUp className="dark-success mr-1" size={16} />
               <span className="dark-success font-medium">
-                {stats.activeStudents > 0
-                  ? `${stats.activeStudents} alunos ativos`
+                {(statsData?.activeStudents || 0) > 0
+                  ? `${statsData?.activeStudents} alunos ativos`
                   : "Nenhum aluno ativo"}
               </span>
             </div>
@@ -334,7 +343,7 @@ export default function DashboardPage() {
                   Cursos Completados
                 </p>
                 <p className="dark-text-primary text-2xl font-bold">
-                  {stats.completedCourses.toLocaleString()}
+                  {(statsData?.completedCourses || 0).toLocaleString()}
                 </p>
               </div>
               <div className="dark-primary-subtle-bg rounded-xl p-3">
@@ -344,8 +353,8 @@ export default function DashboardPage() {
             <div className="mt-4 flex items-center text-sm">
               <TrendingUp className="dark-success mr-1" size={16} />
               <span className="dark-success font-medium">
-                {stats.completedCourses > 0
-                  ? `${stats.completedCourses} cursos completados`
+                {(statsData?.completedCourses || 0) > 0
+                  ? `${statsData?.completedCourses} cursos completados`
                   : "Nenhum curso completado"}
               </span>
             </div>
@@ -358,7 +367,7 @@ export default function DashboardPage() {
                   Crescimento Mensal
                 </p>
                 <p className="dark-text-primary text-2xl font-bold">
-                  {stats.monthlyGrowth}%
+                  {statsData?.monthlyGrowth || 0}%
                 </p>
               </div>
               <div className="dark-secondary-subtle-bg rounded-xl p-3">
@@ -368,8 +377,8 @@ export default function DashboardPage() {
             <div className="mt-4 flex items-center text-sm">
               <TrendingUp className="dark-success mr-1" size={16} />
               <span className="dark-success font-medium">
-                {stats.monthlyGrowth > 0 ? "+" : ""}
-                {stats.monthlyGrowth}% vs mês anterior
+                {(statsData?.monthlyGrowth || 0) > 0 ? "+" : ""}
+                {statsData?.monthlyGrowth || 0}% vs mês anterior
               </span>
             </div>
           </div>
@@ -383,8 +392,8 @@ export default function DashboardPage() {
               Atividade Recente
             </h2>
             <div className="space-y-4">
-              {stats.recentActivity.length > 0 ? (
-                stats.recentActivity.map((activity) => (
+              {(statsData?.recentActivity?.length || 0) > 0 ? (
+                statsData?.recentActivity?.map((activity) => (
                   <ActivityItem key={activity.id} activity={activity} />
                 ))
               ) : (
@@ -420,13 +429,13 @@ export default function DashboardPage() {
                     Taxa de Conclusão
                   </span>
                   <span className="dark-text-primary font-semibold">
-                    {analytics?.completionRate || 0}%
+                    {analyticsData?.completionRate || 0}%
                   </span>
                 </div>
                 <div className="dark-bg-tertiary h-2 w-full rounded-full">
                   <div
                     className="dark-gradient-primary h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${analytics?.completionRate || 0}%` }}
+                    style={{ width: `${analyticsData?.completionRate || 0}%` }}
                   />
                 </div>
               </div>
@@ -437,14 +446,14 @@ export default function DashboardPage() {
                     Tempo Médio de Curso
                   </span>
                   <span className="dark-text-primary font-semibold">
-                    {analytics?.averageCourseDuration || 0}h
+                    {analyticsData?.averageCourseDuration || 0}h
                   </span>
                 </div>
                 <div className="dark-bg-tertiary h-2 w-full rounded-full">
                   <div
                     className="dark-gradient-secondary h-2 rounded-full transition-all duration-300"
                     style={{
-                      width: `${Math.min((analytics?.averageCourseDuration || 0) * 20, 100)}%`,
+                      width: `${Math.min((analyticsData?.averageCourseDuration || 0) * 20, 100)}%`,
                     }}
                   />
                 </div>
@@ -456,13 +465,15 @@ export default function DashboardPage() {
                     Satisfação dos Alunos
                   </span>
                   <span className="dark-text-primary font-semibold">
-                    {analytics?.studentSatisfaction || 0}%
+                    {analyticsData?.studentSatisfaction || 0}%
                   </span>
                 </div>
                 <div className="dark-bg-tertiary h-2 w-full rounded-full">
                   <div
                     className="dark-gradient-primary h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${analytics?.studentSatisfaction || 0}%` }}
+                    style={{
+                      width: `${analyticsData?.studentSatisfaction || 0}%`,
+                    }}
                   />
                 </div>
               </div>
@@ -473,13 +484,15 @@ export default function DashboardPage() {
                     Retenção Mensal
                   </span>
                   <span className="dark-text-primary font-semibold">
-                    {analytics?.monthlyRetention || 0}%
+                    {analyticsData?.monthlyRetention || 0}%
                   </span>
                 </div>
                 <div className="dark-bg-tertiary h-2 w-full rounded-full">
                   <div
                     className="dark-gradient-secondary h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${analytics?.monthlyRetention || 0}%` }}
+                    style={{
+                      width: `${analyticsData?.monthlyRetention || 0}%`,
+                    }}
                   />
                 </div>
               </div>

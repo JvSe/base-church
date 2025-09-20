@@ -12,12 +12,6 @@ const signUpSchema = z
       .regex(/^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/, {
         message: "CPF deve ter o formato 000.000.000-00",
       }),
-    email: z
-      .string()
-      .email({ message: "Email inválido" })
-      .optional()
-      .or(z.literal("")),
-    phone: z.string().optional().or(z.literal("")),
     password: z
       .string()
       .min(1, { message: "Senha é obrigatória" })

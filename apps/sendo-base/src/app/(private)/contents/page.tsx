@@ -2,7 +2,7 @@
 
 import { DashboardCourseCard } from "@/src/components/dashboard-course-card";
 import { DashboardCourseListCard } from "@/src/components/dashboard-course-list-card";
-import { getUserEnrollments } from "@/src/lib/actions";
+import { getAllUserEnrollments, getUserEnrollments } from "@/src/lib/actions";
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
 import {
@@ -15,11 +15,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Filter, Grid, List, Search } from "lucide-react";
 import { useState } from "react";
 
-export default function ConteudosPage() {
+export default function ContentsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  // Fetch user enrollments from database
+  // Fetch approved user enrollments from database
   const {
     data: enrollmentsData,
     isLoading,
@@ -29,6 +29,18 @@ export default function ConteudosPage() {
     queryFn: () => getUserEnrollments("30d453b9-88c9-429e-9700-81d2db735f7a"),
     select: (data) => data.enrollments,
   });
+
+  // Fetch all user enrollments (including pending) for pending tab
+  const { data: allEnrollmentsData, isLoading: allEnrollmentsLoading } =
+    useQuery({
+      queryKey: [
+        "all-user-enrollments",
+        "30d453b9-88c9-429e-9700-81d2db735f7a",
+      ],
+      queryFn: () =>
+        getAllUserEnrollments("30d453b9-88c9-429e-9700-81d2db735f7a"),
+      select: (data) => data.enrollments,
+    });
 
   // Transform enrollments to course format for compatibility with existing components
   const courses =
@@ -56,6 +68,49 @@ export default function ConteudosPage() {
     })) || [];
 
   const filteredEnrollments = courses.filter((course) => {
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      course.title.toLowerCase().includes(searchLower) ||
+      course.description?.toLowerCase().includes(searchLower) ||
+      course.instructor.toLowerCase().includes(searchLower) ||
+      course.category?.toLowerCase().includes(searchLower) ||
+      course.tags.some((tag: string) => tag.toLowerCase().includes(searchLower))
+    );
+  });
+
+  // Separar matrículas pendentes para a aba específica
+  const pendingEnrollments =
+    allEnrollmentsData?.filter(
+      (enrollment: any) => enrollment.status === "pending",
+    ) || [];
+
+  // Transformar matrículas pendentes para o formato de curso
+  const pendingCourses =
+    pendingEnrollments.map((enrollment: any) => ({
+      id: enrollment.course.id,
+      title: enrollment.course.title,
+      description: enrollment.course.description,
+      image: enrollment.course.image || "/api/placeholder/300/200",
+      duration: enrollment.course.duration,
+      level: enrollment.course.level,
+      category: enrollment.course.category,
+      instructor:
+        enrollment.course.instructor?.name || "Instrutor não definido",
+      price: enrollment.course.price || 0,
+      rating: enrollment.course.rating || 0,
+      enrolledStudents: enrollment.course._count?.enrollments || 0,
+      isEnrolled: true,
+      isFeatured: enrollment.course.isFeatured,
+      tags: enrollment.course.tags || [],
+      progress: 0, // Sempre 0 para cursos pendentes
+      enrollmentId: enrollment.id,
+      enrolledAt: enrollment.enrolledAt,
+      completedAt: null,
+      lastAccessedAt: null,
+      status: "pending", // Adicionar status para identificar
+    })) || [];
+
+  const filteredPendingCourses = pendingCourses.filter((course) => {
     const searchLower = searchQuery.toLowerCase();
     return (
       course.title.toLowerCase().includes(searchLower) ||
@@ -262,10 +317,10 @@ export default function ConteudosPage() {
                 Concluídos ({courses.filter((c) => c.progress === 100).length})
               </TabsTrigger>
               <TabsTrigger
-                value="not-started"
+                value="pending-approval"
                 className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
               >
-                Não Iniciados ({courses.filter((c) => c.progress === 0).length})
+                Aguardando Autorização ({pendingCourses.length})
               </TabsTrigger>
             </TabsList>
 
@@ -381,38 +436,44 @@ export default function ConteudosPage() {
               })()}
             </TabsContent>
 
-            <TabsContent value="not-started" className="mt-6">
-              {(() => {
-                const notStartedCourses = filteredEnrollments.filter(
-                  (c) => c.progress === 0,
-                );
-                return notStartedCourses.length > 0 ? (
+            <TabsContent value="pending-approval" className="mt-6">
+              {filteredPendingCourses.length > 0 ? (
+                viewMode === "grid" ? (
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {notStartedCourses.map((course) => (
+                    {filteredPendingCourses.map((course) => (
                       <DashboardCourseCard
                         key={course.id}
                         course={course}
                         variant="contents"
+                        disabled={course.status === "pending"}
                       />
                     ))}
                   </div>
                 ) : (
-                  <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
-                    <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-                      <Search className="dark-text-tertiary" size={24} />
-                    </div>
-                    <h3 className="dark-text-primary mb-2 font-semibold">
-                      Todos os cursos iniciados
-                    </h3>
-                    <p className="dark-text-tertiary mb-4 text-sm">
-                      Parabéns! Você já começou todos os seus cursos
-                    </p>
-                    <Button className="dark-btn-primary">
-                      Continuar Aprendendo
-                    </Button>
+                  <div className="space-y-4">
+                    {filteredPendingCourses.map((course) => (
+                      <DashboardCourseListCard
+                        key={course.id}
+                        course={course}
+                        disabled={course.status === "pending"}
+                      />
+                    ))}
                   </div>
-                );
-              })()}
+                )
+              ) : (
+                <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
+                  <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                    <Search className="dark-text-tertiary" size={24} />
+                  </div>
+                  <h3 className="dark-text-primary mb-2 font-semibold">
+                    Nenhuma solicitação pendente
+                  </h3>
+                  <p className="dark-text-tertiary mb-4 text-sm">
+                    Você não possui cursos aguardando aprovação dos líderes
+                  </p>
+                  <Button className="dark-btn-primary">Explorar Cursos</Button>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </div>

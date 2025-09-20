@@ -17,6 +17,12 @@ enum UserRole {
   LIDER
 }
 
+enum CourseCategory {
+  CREATIVITY
+  PROVISION
+  MULTIPLICATION
+}
+
 model User {
   id                   String    @id @default(uuid())
   name                 String?
@@ -25,6 +31,7 @@ model User {
   image                String?
   username             String?   @unique
   role                 UserRole  @default(MEMBROS)
+  isPastor             Boolean   @default(false) // Se a pessoa é um pastor
   bio                  String?
   phone                String?
   cpf                  String?   @unique
@@ -51,49 +58,50 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relations
-  enrollments       Enrollment[]
-  progress          LessonProgress[]
-  certificates      Certificate[]
-  subscriptions     Subscription[]
-  notifications     Notification[]
-  forumPosts        ForumPost[]
-  forumComments     ForumComment[]
-  eventEnrollments  EventEnrollment[]
-  eventReviews      EventReview[]
-  courseReviews     CourseReview[]
-  achievements      UserAchievement[]
-  stats             UserStats?
-  instructorCourses Course[]          @relation("CourseInstructor")
-  instructorEvents  Event[]           @relation("EventInstructor")
+  enrollments         Enrollment[]
+  progress            LessonProgress[]
+  certificates        Certificate[]
+  subscriptions       Subscription[]
+  notifications       Notification[]
+  forumPosts          ForumPost[]
+  forumComments       ForumComment[]
+  eventEnrollments    EventEnrollment[]
+  eventReviews        EventReview[]
+  courseReviews       CourseReview[]
+  achievements        UserAchievement[]
+  stats               UserStats?
+  instructorCourses   Course[]          @relation("CourseInstructor")
+  instructorEvents    Event[]           @relation("EventInstructor")
+  approvedEnrollments Enrollment[]      @relation("EnrollmentApprover")
 
   @@map("users")
 }
 
 model Course {
-  id              String   @id @default(uuid())
+  id              String          @id @default(uuid())
   title           String
   description     String?
   longDescription String?
-  slug            String   @unique
+  slug            String          @unique
   image           String?
   duration        Int? // in minutes
   level           String? // beginner, intermediate, advanced
-  category        String?
+  category        CourseCategory?
   instructorId    String?
-  price           Float?   @default(0)
-  rating          Float?   @default(0)
-  reviewsCount    Int?     @default(0)
-  studentsCount   Int?     @default(0)
-  totalLessons    Int?     @default(0)
-  isFeatured      Boolean  @default(false)
-  isPublished     Boolean  @default(false)
-  certificate     Boolean  @default(false)
+  price           Float?          @default(0)
+  rating          Float?          @default(0)
+  reviewsCount    Int?            @default(0)
+  studentsCount   Int?            @default(0)
+  totalLessons    Int?            @default(0)
+  isFeatured      Boolean         @default(false)
+  isPublished     Boolean         @default(false)
+  certificate     Boolean         @default(false)
   tags            String[] // Array of tags
   objectives      String[] // Array of learning objectives
   requirements    String[] // Array of requirements
-  lastUpdated     DateTime @default(now())
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  lastUpdated     DateTime        @default(now())
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 
   // Relations
   instructor   User?          @relation("CourseInstructor", fields: [instructorId], references: [id])
@@ -153,10 +161,15 @@ model Enrollment {
   progress         Float?    @default(0) // 0-100
   completedLessons Int?      @default(0)
   isActive         Boolean   @default(true)
+  status           String    @default("pending") // pending, approved, rejected
+  approvedAt       DateTime?
+  approvedBy       String? // ID do líder/pastor que aprovou
+  rejectionReason  String? // Motivo da rejeição se aplicável
 
   // Relations
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  approver User?  @relation("EnrollmentApprover", fields: [approvedBy], references: [id])
 
   @@unique([userId, courseId])
   @@map("enrollments")

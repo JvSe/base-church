@@ -1,9 +1,8 @@
 import { Roboto } from "next/font/google";
 import localFont from "next/font/local";
 
-import { Providers } from "@/src/components/providers";
+import { AppProviders } from "../components/providers/app-providers";
 import "../global.css";
-import { AppProviders } from "../lib/providers/app-providers";
 
 const roboto = Roboto({
   weight: "400",
@@ -109,7 +108,7 @@ export default function RootLayout({
         <body
           className={`${belfast.variable} ${roboto.variable} ${surgena.variable} ${helvetica.variable} antialiased`}
         >
-          <Providers>{children}</Providers>
+          {children}
         </body>
       </AppProviders>
     </html>

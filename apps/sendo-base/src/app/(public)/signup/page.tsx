@@ -1,5 +1,6 @@
 "use client";
 
+import { useUserStore } from "@/src/hooks";
 import { signUp } from "@/src/lib/actions";
 import { signUpSchema, SignUpScheme } from "@/src/lib/forms/auth/signup.scheme";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,6 +23,7 @@ import { toast } from "sonner";
 
 export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const { setUser } = useUserStore();
   const router = useRouter();
 
   const form = useForm<SignUpScheme>({
@@ -29,8 +31,6 @@ export default function SignUpPage() {
     defaultValues: {
       name: "",
       cpf: "",
-      email: "",
-      phone: "",
       password: "",
       confirmPassword: "",
     },
@@ -43,13 +43,16 @@ export default function SignUpPage() {
         name: data.name,
         cpf: data.cpf,
         password: data.password,
-        email: data.email || undefined,
-        phone: data.phone || undefined,
       });
 
       if (result.success) {
         toast.success("Conta criada com sucesso!");
-        router.push("/signin");
+
+        // Atualizar dados do usuário no store
+        if (result.user) {
+          setUser(result.user);
+          router.replace("/home");
+        }
       } else {
         toast.error(result.error || "Erro ao criar conta");
       }
@@ -132,47 +135,6 @@ export default function SignUpPage() {
 
             <FormField
               control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-foreground text-sm font-medium">
-                    Email (opcional)
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type="email"
-                      placeholder="seu@email.com"
-                      className="dark-input"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-foreground text-sm font-medium">
-                    Telefone (opcional)
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      placeholder="(11) 99999-9999"
-                      className="dark-input"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
               name="password"
               render={({ field }) => (
                 <FormItem>
@@ -180,12 +142,7 @@ export default function SignUpPage() {
                     Senha
                   </FormLabel>
                   <FormControl>
-                    <Input
-                      {...field}
-                      type="password"
-                      placeholder="••••••••"
-                      className="dark-input"
-                    />
+                    <Input {...field} type="password" className="dark-input" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -201,12 +158,7 @@ export default function SignUpPage() {
                     Confirmar senha
                   </FormLabel>
                   <FormControl>
-                    <Input
-                      {...field}
-                      type="password"
-                      placeholder="••••••••"
-                      className="dark-input"
-                    />
+                    <Input {...field} type="password" className="dark-input" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
