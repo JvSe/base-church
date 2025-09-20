@@ -55,7 +55,7 @@ import {
   Video,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Usable, use, useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -122,9 +122,9 @@ interface Lesson {
 }
 
 interface EditCoursePageProps {
-  params: {
+  params: Promise<{
     courseId: string;
-  };
+  }>;
 }
 
 export default function EditCoursePage(props: EditCoursePageProps) {
@@ -139,9 +139,7 @@ export default function EditCoursePage(props: EditCoursePageProps) {
   } | null>(null);
   const router = useRouter();
 
-  const { courseId } = use(
-    props.params as unknown as Usable<{ courseId: string }>,
-  );
+  const { courseId } = use(props.params);
 
   // Buscar dados do curso do banco
   const {
