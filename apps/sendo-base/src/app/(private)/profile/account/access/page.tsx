@@ -10,7 +10,7 @@ import { Input } from "@repo/ui/components/input";
 import { Label } from "@repo/ui/components/label";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Eye, EyeOff, Key, Mail, Save, Shield, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export default function ProfileEditAccessPage() {
@@ -38,12 +38,14 @@ export default function ProfileEditAccessPage() {
     queryKey: ["user", "30d453b9-88c9-429e-9700-81d2db735f7a"],
     queryFn: () => getUserProfile("30d453b9-88c9-429e-9700-81d2db735f7a"),
     select: (data) => data.user,
-    onSuccess: (data) => {
-      if (data) {
-        setEmailData((prev) => ({ ...prev, currentEmail: data.email || "" }));
-      }
-    },
   });
+
+  // Update email data when user data is loaded
+  useEffect(() => {
+    if (userAuth) {
+      setEmailData((prev) => ({ ...prev, currentEmail: userAuth.email || "" }));
+    }
+  }, [userAuth]);
 
   const updateEmailMutation = useMutation({
     mutationFn: updateUserEmail,

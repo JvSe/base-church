@@ -127,7 +127,7 @@ export default function ForumPage() {
     (post) =>
       post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.tags.some((tag) =>
+      post.tags.some((tag: string) =>
         tag.toLowerCase().includes(searchQuery.toLowerCase()),
       ),
   );

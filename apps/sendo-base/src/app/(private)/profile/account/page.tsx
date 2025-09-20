@@ -9,7 +9,6 @@ import {
   Calendar,
   Download,
   Edit,
-  Globe,
   Mail,
   MapPin,
   Phone,
@@ -85,12 +84,14 @@ export default function ProfileEditOverviewPage() {
               </div>
             )}
 
-            {userAuth?.location && (
+            {(userAuth?.city || userAuth?.state) && (
               <div className="flex items-center space-x-3">
                 <MapPin className="dark-text-tertiary" size={16} />
                 <div>
                   <p className="dark-text-secondary text-sm font-medium">
-                    {userAuth.location}
+                    {[userAuth?.city, userAuth?.state]
+                      .filter(Boolean)
+                      .join(", ")}
                   </p>
                   <p className="dark-text-tertiary text-xs">Localização</p>
                 </div>
@@ -105,18 +106,6 @@ export default function ProfileEditOverviewPage() {
                     {userAuth.phone}
                   </p>
                   <p className="dark-text-tertiary text-xs">Telefone</p>
-                </div>
-              </div>
-            )}
-
-            {userAuth?.website && (
-              <div className="flex items-center space-x-3">
-                <Globe className="dark-text-tertiary" size={16} />
-                <div>
-                  <p className="dark-text-secondary text-sm font-medium">
-                    {userAuth.website}
-                  </p>
-                  <p className="dark-text-tertiary text-xs">Website</p>
                 </div>
               </div>
             )}

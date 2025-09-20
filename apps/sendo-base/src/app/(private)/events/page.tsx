@@ -80,7 +80,7 @@ export default function EventosPage() {
     (event) =>
       event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.tags.some((tag) =>
+      event.tags.some((tag: string) =>
         tag.toLowerCase().includes(searchQuery.toLowerCase()),
       ),
   );
