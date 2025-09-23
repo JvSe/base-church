@@ -53,12 +53,11 @@ export default function SignInPage() {
 
         toast.success("Login realizado com sucesso!");
         router.push("/home");
-      } else {
-        console.log(result);
-        toast.error(result.error || "Erro ao fazer login");
       }
     } catch (error) {
-      toast.error("Erro interno do servidor");
+      toast.error(
+        error instanceof Error ? error.message : "Erro ao fazer login",
+      );
     } finally {
       setIsLoading(false);
     }

@@ -101,7 +101,7 @@ export async function signIn(data: SignInInput) {
   try {
     // Validar CPF
     if (!isValidCpf(data.cpf)) {
-      return { success: false, error: "CPF inválido" };
+      throw new Error("CPF inválido");
     }
 
     const cleanCpfValue = cleanCpf(data.cpf);
@@ -112,13 +112,13 @@ export async function signIn(data: SignInInput) {
     });
 
     if (!user) {
-      return { success: false, error: "Usuário não cadastrado!" };
+      throw new Error("Usuário não cadastrado!");
     }
 
     const isPasswordValid = await verifyPassword(data.password, user.password!);
 
     if (!isPasswordValid) {
-      return { success: false, error: "CPF ou senha incorretos" };
+      throw new Error("CPF ou senha incorretos");
     }
 
     // Criar sessão
@@ -146,7 +146,7 @@ export async function signIn(data: SignInInput) {
       sessionCookie,
     };
   } catch (error) {
-    return { success: false, error: "Erro interno do servidor" };
+    throw new Error("Erro interno do servidor");
   }
 }
 
