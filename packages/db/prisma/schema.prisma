@@ -78,30 +78,30 @@ model User {
 }
 
 model Course {
-  id              String          @id @default(uuid())
+  id              String   @id @default(uuid())
   title           String
   description     String?
   longDescription String?
-  slug            String          @unique
+  slug            String   @unique
   image           String?
   duration        Int? // in minutes
   level           String? // beginner, intermediate, advanced
-  category        CourseCategory?
+  category        String?
   instructorId    String?
-  price           Float?          @default(0)
-  rating          Float?          @default(0)
-  reviewsCount    Int?            @default(0)
-  studentsCount   Int?            @default(0)
-  totalLessons    Int?            @default(0)
-  isFeatured      Boolean         @default(false)
-  isPublished     Boolean         @default(false)
-  certificate     Boolean         @default(false)
+  price           Float?   @default(0)
+  rating          Float?   @default(0)
+  reviewsCount    Int?     @default(0)
+  studentsCount   Int?     @default(0)
+  totalLessons    Int?     @default(0)
+  isFeatured      Boolean  @default(false)
+  isPublished     Boolean  @default(false)
+  certificate     Boolean  @default(false)
   tags            String[] // Array of tags
   objectives      String[] // Array of learning objectives
   requirements    String[] // Array of requirements
-  lastUpdated     DateTime        @default(now())
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  lastUpdated     DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   // Relations
   instructor   User?          @relation("CourseInstructor", fields: [instructorId], references: [id])

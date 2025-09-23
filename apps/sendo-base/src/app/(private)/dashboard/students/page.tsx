@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@/src/hooks";
 import {
   approveEnrollment,
   deleteStudent,
@@ -90,6 +91,8 @@ export default function StudentsPage() {
   const [currentEnrollment, setCurrentEnrollment] = useState<Enrollment | null>(
     null,
   );
+
+  const { user, isAuthenticated, isLoading: userLoading } = useAuth();
 
   // Buscar dados dos alunos
   const {
@@ -232,14 +235,12 @@ export default function StudentsPage() {
   const handleApproveEnrollment = async (enrollmentId: string) => {
     try {
       // TODO: Obter ID do usuário atual (líder/pastor que está aprovando)
-      const approverId = "current-user-id"; // Substituir por ID real do usuário logado
+      const approverId = user?.id || ""; // Substituir por ID real do usuário logado
 
       const result = await approveEnrollment(enrollmentId, approverId);
       if (result.success) {
         toast.success(result.message);
         refetchEnrollments();
-      } else {
-        toast.error(result.error);
       }
     } catch (error) {
       toast.error("Erro ao aprovar matrícula");

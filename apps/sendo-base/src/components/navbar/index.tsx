@@ -1,7 +1,6 @@
 "use client";
 import { Button } from "@repo/ui/components/button";
 
-import { useUser } from "@/src/hooks";
 import { cn } from "@repo/ui/lib/utils";
 import { LogOut, User } from "lucide-react";
 import Image from "next/image";
@@ -12,7 +11,7 @@ import { NavLinks } from "./nav-links";
 
 export const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
-  const { user, isAuthenticated, logout } = useUser();
+  const { user, isAuthenticated, logout } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {

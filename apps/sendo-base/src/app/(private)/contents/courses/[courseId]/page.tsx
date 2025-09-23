@@ -1,6 +1,12 @@
 "use client";
 
+import {
+  getCourseById,
+  getUserEnrollmentStatus,
+  getUserProgress,
+} from "@/src/lib/actions";
 import { Button } from "@repo/ui/components/button";
+import { useQuery } from "@tanstack/react-query";
 import {
   BookOpen,
   Calendar,
@@ -28,211 +34,60 @@ interface CoursePageProps {
   }>;
 }
 
-export default function CoursePage() {
-  const courseId = 1;
-  const [isEnrolled, setIsEnrolled] = useState(true);
+export default function CoursePage({ params }: CoursePageProps) {
+  const [courseId, setCourseId] = useState<string>("");
   const [activeTab, setActiveTab] = useState("overview");
+  const [userId] = useState("30d453b9-88c9-429e-9700-81d2db735f7a"); // TODO: Obter ID do usuário logado
 
-  // Mock data - in real app this would come from server actions
-  const course = {
-    id: courseId,
-    title: "Fundamentos Ministeriais - Base Church",
-    description:
-      "Um curso abrangente sobre os fundamentos ministeriais da Base Church, cobrindo princípios bíblicos, estrutura ministerial e práticas essenciais para líderes eficazes.",
-    longDescription:
-      "Este curso foi desenvolvido especificamente para formar líderes sólidos na Base Church. Você aprenderá desde os princípios bíblicos fundamentais até as práticas avançadas de liderança ministerial. O conteúdo é baseado em anos de experiência pastoral e está estruturado para proporcionar uma base sólida para seu ministério.",
-    image: null,
-    instructor: {
-      name: "Pr. Robson Silva",
-      role: "Pastor Principal",
-      experience: "15 anos de ministério",
-      avatar: null,
-      bio: "Pastor principal da Base Church há mais de 15 anos, formado em Teologia e especialista em liderança ministerial.",
-    },
-    level: "Iniciante",
-    duration: 180, // minutes
-    totalLessons: 24,
-    completedLessons: 8,
-    progress: 33,
-    rating: 4.8,
-    reviewsCount: 234,
-    studentsCount: 1247,
-    price: 0, // Free
-    tags: ["Fundamentos", "Liderança", "Ministério", "Princípios Bíblicos"],
-    certificate: true,
-    lastUpdated: new Date("2024-01-10"),
-    createdAt: new Date("2023-06-15"),
-    objectives: [
-      "Compreender os princípios bíblicos fundamentais da Base Church",
-      "Desenvolver habilidades de liderança ministerial eficaz",
-      "Aplicar estruturas organizacionais no ministério",
-      "Criar uma base sólida para crescimento ministerial",
-      "Implementar práticas de discipulado efetivas",
-    ],
-    requirements: [
-      "Compromisso com o ministério cristão",
-      "Disponibilidade de 3-4 horas semanais",
-      "Acesso à internet para aulas online",
-      "Bíblia para estudos práticos",
-    ],
-  };
+  // Resolver params
+  useState(() => {
+    params.then((resolvedParams) => {
+      setCourseId(resolvedParams.courseId);
+    });
+  });
 
-  const modules = [
-    {
-      id: "1",
-      title: "Introdução aos Fundamentos",
-      description: "Visão geral dos princípios da Base Church",
-      lessons: [
-        {
-          id: "1",
-          title: "Bem-vindo à Base Church",
-          duration: 8,
-          completed: true,
-          type: "video",
-        },
-        {
-          id: "2",
-          title: "Nossa História e Visão",
-          duration: 12,
-          completed: true,
-          type: "video",
-        },
-        {
-          id: "3",
-          title: "Princípios Fundamentais",
-          duration: 15,
-          completed: true,
-          type: "video",
-        },
-        {
-          id: "4",
-          title: "Leitura: Manual do Líder",
-          duration: 20,
-          completed: false,
-          type: "reading",
-        },
-      ],
-      duration: 55,
-      completed: 3,
-      total: 4,
-    },
-    {
-      id: "2",
-      title: "Estrutura Ministerial",
-      description: "Como organizar e estruturar seu ministério",
-      lessons: [
-        {
-          id: "5",
-          title: "Organização Ministerial",
-          duration: 18,
-          completed: true,
-          type: "video",
-        },
-        {
-          id: "6",
-          title: "Hierarquia e Responsabilidades",
-          duration: 22,
-          completed: true,
-          type: "video",
-        },
-        {
-          id: "7",
-          title: "Gestão de Equipes",
-          duration: 25,
-          completed: true,
-          type: "video",
-        },
-        {
-          id: "8",
-          title: "Exercício Prático: Estrutura",
-          duration: 30,
-          completed: true,
-          type: "exercise",
-        },
-        {
-          id: "9",
-          title: "Comunicação Interna",
-          duration: 15,
-          completed: true,
-          type: "video",
-        },
-      ],
-      duration: 110,
-      completed: 5,
-      total: 5,
-    },
-    {
-      id: "3",
-      title: "Discipulado e Mentoria",
-      description: "Técnicas eficazes de discipulado",
-      lessons: [
-        {
-          id: "10",
-          title: "Fundamentos do Discipulado",
-          duration: 20,
-          completed: false,
-          type: "video",
-        },
-        {
-          id: "11",
-          title: "Métodos de Mentoria",
-          duration: 25,
-          completed: false,
-          type: "video",
-        },
-        {
-          id: "12",
-          title: "Discipulado de Novos Convertidos",
-          duration: 30,
-          completed: false,
-          type: "video",
-        },
-        {
-          id: "13",
-          title: "Avaliação: Casos Práticos",
-          duration: 45,
-          completed: false,
-          type: "quiz",
-        },
-      ],
-      duration: 120,
-      completed: 0,
-      total: 4,
-    },
-  ];
+  // Buscar dados do curso
+  const {
+    data: courseData,
+    isLoading: courseLoading,
+    error: courseError,
+  } = useQuery({
+    queryKey: ["course", courseId],
+    queryFn: () => getCourseById(courseId),
+    enabled: !!courseId,
+  });
 
-  const reviews = [
-    {
-      id: "1",
-      author: "Ana Costa",
-      role: "Líder de Célula",
-      rating: 5,
-      comment:
-        "Curso transformador! Me ajudou muito a entender melhor os princípios ministeriais e aplicar no meu dia a dia.",
-      date: new Date("2024-01-05"),
-      avatar: null,
-    },
-    {
-      id: "2",
-      author: "Carlos Silva",
-      role: "Pastor Auxiliar",
-      rating: 5,
-      comment:
-        "Conteúdo excelente e muito bem estruturado. O Pr. Robson tem uma didática excepcional.",
-      date: new Date("2023-12-20"),
-      avatar: null,
-    },
-    {
-      id: "3",
-      author: "Maria Santos",
-      role: "Coordenadora",
-      rating: 4,
-      comment:
-        "Muito bom para quem está começando no ministério. Recomendo fortemente!",
-      date: new Date("2023-12-15"),
-      avatar: null,
-    },
-  ];
+  // Buscar status da matrícula do usuário
+  const {
+    data: enrollmentData,
+    isLoading: enrollmentLoading,
+    refetch: refetchEnrollment,
+  } = useQuery({
+    queryKey: ["enrollment", courseId, userId],
+    queryFn: () => getUserEnrollmentStatus(courseId, userId),
+    enabled: !!courseId && !!userId,
+  });
+
+  // Buscar progresso do usuário no curso
+  const {
+    data: progressData,
+    isLoading: progressLoading,
+    refetch: refetchProgress,
+  } = useQuery({
+    queryKey: ["progress", courseId, userId],
+    queryFn: () => getUserProgress(userId),
+    enabled: !!courseId && !!userId,
+  });
+
+  const course = courseData?.course as any;
+  const enrollment = enrollmentData?.enrollment;
+  const progress = progressData?.progress || [];
+  const modules = course?.modules || [];
+  const reviews = course?.reviews || [];
+
+  // Verificar se o usuário está matriculado e aprovado
+  const isEnrolled = enrollment?.status === "approved";
+  const enrollmentStatus = enrollment?.status;
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString("pt-BR");
@@ -262,6 +117,106 @@ export default function CoursePage() {
     }
   };
 
+  // Função para verificar se uma lição foi concluída
+  const isLessonCompleted = (lessonId: string) => {
+    return progress.some((p: any) => p.lessonId === lessonId && p.isCompleted);
+  };
+
+  // Função para calcular progresso do curso
+  const calculateCourseProgress = () => {
+    if (!course || !progress) return 0;
+
+    const totalLessons = modules.reduce(
+      (acc: number, module: any) => acc + (module.lessons?.length || 0),
+      0,
+    );
+
+    const completedLessons = progress.filter(
+      (p: any) =>
+        p.isCompleted &&
+        modules.some((module: any) =>
+          module.lessons?.some((lesson: any) => lesson.id === p.lessonId),
+        ),
+    ).length;
+
+    return totalLessons > 0
+      ? Math.round((completedLessons / totalLessons) * 100)
+      : 0;
+  };
+
+  const courseProgress = calculateCourseProgress();
+
+  // Função para encontrar a próxima lição não concluída
+  const getNextLesson = () => {
+    for (const module of modules) {
+      for (const lesson of module.lessons || []) {
+        if (!isLessonCompleted(lesson.id)) {
+          return lesson;
+        }
+      }
+    }
+    return null;
+  };
+
+  const nextLesson = getNextLesson();
+
+  // Estados de loading e error
+  if (courseLoading || enrollmentLoading || progressLoading) {
+    return (
+      <div className="dark-bg-primary min-h-screen">
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="dark-glass dark-shadow-md rounded-xl p-8 text-center">
+            <div className="dark-text-primary mb-4 text-lg font-semibold">
+              Carregando curso...
+            </div>
+            <div className="dark-text-secondary text-sm">
+              Aguarde enquanto buscamos as informações
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (courseError || !course) {
+    return (
+      <div className="dark-bg-primary min-h-screen">
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="dark-glass dark-shadow-md rounded-xl p-8 text-center">
+            <div className="dark-text-primary mb-4 text-lg font-semibold">
+              Curso não encontrado
+            </div>
+            <div className="dark-text-secondary text-sm">
+              O curso que você está procurando não existe ou foi removido
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Verificar se o usuário tem acesso ao curso
+  if (!isEnrolled) {
+    return (
+      <div className="dark-bg-primary min-h-screen">
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="dark-glass dark-shadow-md rounded-xl p-8 text-center">
+            <div className="dark-text-primary mb-4 text-lg font-semibold">
+              Acesso Negado
+            </div>
+            <div className="dark-text-secondary text-sm">
+              {enrollmentStatus === "pending"
+                ? "Sua matrícula está pendente de aprovação"
+                : enrollmentStatus === "rejected"
+                  ? `Sua matrícula foi rejeitada: ${enrollment?.rejectionReason || "Motivo não informado"}`
+                  : "Você precisa estar matriculado para acessar este curso"}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="dark-bg-primary min-h-screen">
       {/* Background Pattern */}
@@ -277,7 +232,7 @@ export default function CoursePage() {
               <div className="mb-4">
                 <div className="mb-2 flex items-center gap-2">
                   <span className="dark-primary-subtle-bg dark-primary rounded-full px-3 py-1 text-sm font-medium">
-                    {course.level}
+                    {course.level || "Iniciante"}
                   </span>
                   <span className="dark-success-bg dark-success rounded-full px-3 py-1 text-sm font-medium">
                     Gratuito
@@ -303,10 +258,16 @@ export default function CoursePage() {
                   </div>
                   <div>
                     <div className="dark-text-primary text-sm font-medium">
-                      {course.instructor.name}
+                      {course.instructor?.name || "Instrutor não informado"}
                     </div>
                     <div className="dark-text-tertiary text-xs">
-                      {course.instructor.role === "LIDER" ? "Líder" : "Membro"}
+                      {course.instructor?.role === "LIDER"
+                        ? course.instructor?.isPastor
+                          ? "Líder (Pastor)"
+                          : "Líder"
+                        : course.instructor?.isPastor
+                          ? "Membro (Pastor)"
+                          : "Membro"}
                     </div>
                   </div>
                 </div>
@@ -314,17 +275,17 @@ export default function CoursePage() {
                 <div className="flex items-center gap-1">
                   <Star className="dark-warning fill-current" size={16} />
                   <span className="dark-text-primary font-semibold">
-                    {course.rating}
+                    {course.averageRating || 0}
                   </span>
                   <span className="dark-text-tertiary text-sm">
-                    ({course.reviewsCount} avaliações)
+                    ({reviews.length} avaliações)
                   </span>
                 </div>
 
                 <div className="flex items-center gap-1">
                   <Users className="dark-text-tertiary" size={16} />
                   <span className="dark-text-tertiary text-sm">
-                    {course.studentsCount.toLocaleString()} alunos
+                    {course.studentsCount?.toLocaleString() || 0} alunos
                   </span>
                 </div>
               </div>
@@ -333,13 +294,13 @@ export default function CoursePage() {
                 <div className="flex items-center gap-1">
                   <Clock className="dark-text-tertiary" size={16} />
                   <span className="dark-text-tertiary">
-                    {formatDuration(course.duration)}
+                    {formatDuration(course.totalDuration || 0)}
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
                   <BookOpen className="dark-text-tertiary" size={16} />
                   <span className="dark-text-tertiary">
-                    {course.totalLessons} aulas
+                    {course.totalLessons || 0} aulas
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
@@ -355,57 +316,59 @@ export default function CoursePage() {
               </div>
             </div>
 
-            {/* Course Preview */}
+            {/* Course Preview - Adaptado para usuários matriculados */}
             <div className="dark-card dark-shadow-sm rounded-xl p-6">
               <div className="dark-bg-tertiary mb-4 flex h-48 items-center justify-center rounded-lg">
                 <Play className="dark-text-tertiary" size={48} />
               </div>
 
-              {isEnrolled ? (
-                <div className="space-y-4">
-                  <div className="mb-4 text-center">
-                    <div className="dark-text-primary mb-1 text-2xl font-bold">
-                      {course.progress}%
-                    </div>
-                    <div className="dark-text-tertiary mb-2 text-sm">
-                      Concluído
-                    </div>
-                    <div className="dark-bg-tertiary h-2 w-full rounded-full">
-                      <div
-                        className="dark-gradient-primary h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${course.progress}%` }}
-                      />
-                    </div>
+              <div className="space-y-4">
+                {/* Progresso do Curso */}
+                <div className="mb-4 text-center">
+                  <div className="dark-text-primary mb-1 text-2xl font-bold">
+                    {courseProgress}%
                   </div>
+                  <div className="dark-text-tertiary mb-2 text-sm">
+                    Concluído
+                  </div>
+                  <div className="dark-bg-tertiary h-2 w-full rounded-full">
+                    <div
+                      className="dark-gradient-primary h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${courseProgress}%` }}
+                    />
+                  </div>
+                </div>
 
+                {/* Botão de Continuar Assistindo */}
+                {nextLesson ? (
                   <Button asChild className="dark-btn-primary w-full">
-                    <Link href={`/courses/${courseId}/lessons/10`}>
+                    <Link
+                      href={`/contents/courses/${courseId}/lessons/${nextLesson.id}`}
+                    >
                       <Play className="mr-2" size={16} />
                       Continuar Assistindo
                     </Link>
                   </Button>
+                ) : (
+                  <div className="dark-success-bg dark-success rounded-lg p-4 text-center">
+                    <CheckCircle className="mx-auto mb-2" size={20} />
+                    <p className="text-sm font-medium">Curso Concluído!</p>
+                    <p className="text-xs opacity-80">
+                      Parabéns por finalizar o curso
+                    </p>
+                  </div>
+                )}
 
-                  <Button className="dark-glass dark-border hover:dark-border-hover w-full">
-                    <Download className="mr-2" size={16} />
-                    Baixar Recursos
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <Button
-                    className="dark-btn-primary w-full"
-                    onClick={() => setIsEnrolled(true)}
-                  >
-                    <Play className="mr-2" size={16} />
-                    Matricular-se Gratuitamente
-                  </Button>
+                <Button className="dark-glass dark-border hover:dark-border-hover w-full">
+                  <Download className="mr-2" size={16} />
+                  Baixar Recursos
+                </Button>
 
-                  <Button className="dark-glass dark-border hover:dark-border-hover w-full">
-                    <Heart className="mr-2" size={16} />
-                    Adicionar aos Favoritos
-                  </Button>
-                </div>
-              )}
+                <Button className="dark-glass dark-border hover:dark-border-hover w-full">
+                  <Heart className="mr-2" size={16} />
+                  Adicionar aos Favoritos
+                </Button>
+              </div>
 
               <div className="mt-4 flex items-center justify-center gap-2">
                 <Button
@@ -462,48 +425,63 @@ export default function CoursePage() {
                     Sobre este curso
                   </h2>
                   <p className="dark-text-secondary mb-6 leading-relaxed">
-                    {course.longDescription}
+                    {course.description}
                   </p>
 
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <div>
-                      <h3 className="dark-text-primary mb-3 font-semibold">
-                        O que você aprenderá
-                      </h3>
-                      <ul className="space-y-2">
-                        {course.objectives.map((objective, index) => (
-                          <li key={index} className="flex items-start gap-2">
-                            <CheckCircle
-                              className="dark-success mt-0.5 flex-shrink-0"
-                              size={16}
-                            />
-                            <span className="dark-text-secondary text-sm">
-                              {objective}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                  {course.objectives && course.objectives.length > 0 && (
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                      <div>
+                        <h3 className="dark-text-primary mb-3 font-semibold">
+                          O que você aprenderá
+                        </h3>
+                        <ul className="space-y-2">
+                          {course.objectives.map(
+                            (objective: any, index: number) => (
+                              <li
+                                key={index}
+                                className="flex items-start gap-2"
+                              >
+                                <CheckCircle
+                                  className="dark-success mt-0.5 flex-shrink-0"
+                                  size={16}
+                                />
+                                <span className="dark-text-secondary text-sm">
+                                  {objective}
+                                </span>
+                              </li>
+                            ),
+                          )}
+                        </ul>
+                      </div>
 
-                    <div>
-                      <h3 className="dark-text-primary mb-3 font-semibold">
-                        Pré-requisitos
-                      </h3>
-                      <ul className="space-y-2">
-                        {course.requirements.map((requirement, index) => (
-                          <li key={index} className="flex items-start gap-2">
-                            <Target
-                              className="dark-primary mt-0.5 flex-shrink-0"
-                              size={16}
-                            />
-                            <span className="dark-text-secondary text-sm">
-                              {requirement}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
+                      {course.requirements &&
+                        course.requirements.length > 0 && (
+                          <div>
+                            <h3 className="dark-text-primary mb-3 font-semibold">
+                              Pré-requisitos
+                            </h3>
+                            <ul className="space-y-2">
+                              {course.requirements.map(
+                                (requirement: any, index: number) => (
+                                  <li
+                                    key={index}
+                                    className="flex items-start gap-2"
+                                  >
+                                    <Target
+                                      className="dark-primary mt-0.5 flex-shrink-0"
+                                      size={16}
+                                    />
+                                    <span className="dark-text-secondary text-sm">
+                                      {requirement}
+                                    </span>
+                                  </li>
+                                ),
+                              )}
+                            </ul>
+                          </div>
+                        )}
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             )}
@@ -515,65 +493,96 @@ export default function CoursePage() {
                 </h2>
 
                 <div className="space-y-4">
-                  {modules.map((module) => (
-                    <div key={module.id} className="dark-card rounded-xl p-4">
-                      <div className="mb-3 flex items-center justify-between">
-                        <h3 className="dark-text-primary font-semibold">
-                          {module.title}
-                        </h3>
-                        <div className="flex items-center gap-4 text-sm">
-                          <span className="dark-text-tertiary">
-                            {module.completed}/{module.total} aulas
-                          </span>
-                          <span className="dark-text-tertiary">
-                            {formatDuration(module.duration)}
-                          </span>
-                        </div>
-                      </div>
-                      <p className="dark-text-secondary mb-4 text-sm">
-                        {module.description}
-                      </p>
+                  {modules.map((module: any) => {
+                    const moduleLessons = module.lessons || [];
+                    const completedInModule = moduleLessons.filter(
+                      (lesson: any) => isLessonCompleted(lesson.id),
+                    ).length;
+                    const moduleProgress =
+                      moduleLessons.length > 0
+                        ? Math.round(
+                            (completedInModule / moduleLessons.length) * 100,
+                          )
+                        : 0;
 
-                      <div className="space-y-2">
-                        {module.lessons.map((lesson) => {
-                          const Icon = getTypeIcon(lesson.type);
-                          return (
+                    return (
+                      <div key={module.id} className="dark-card rounded-xl p-4">
+                        <div className="mb-3 flex items-center justify-between">
+                          <h3 className="dark-text-primary font-semibold">
+                            {module.title}
+                          </h3>
+                          <div className="flex items-center gap-4 text-sm">
+                            <span className="dark-text-tertiary">
+                              {completedInModule}/{moduleLessons.length} aulas
+                            </span>
+                            <span className="dark-text-tertiary">
+                              {formatDuration(module.duration || 0)}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Progresso do Módulo */}
+                        <div className="mb-4">
+                          <div className="dark-bg-tertiary h-1 w-full rounded-full">
                             <div
-                              key={lesson.id}
-                              className="hover:dark-bg-secondary flex items-center justify-between rounded-lg px-3 py-2 transition-colors"
-                            >
-                              <div className="flex items-center gap-3">
-                                {lesson.completed ? (
-                                  <CheckCircle
-                                    className="dark-success"
+                              className="dark-gradient-primary h-1 rounded-full transition-all duration-300"
+                              style={{ width: `${moduleProgress}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        <p className="dark-text-secondary mb-4 text-sm">
+                          {module.description}
+                        </p>
+
+                        <div className="space-y-2">
+                          {moduleLessons.map((lesson: any) => {
+                            const Icon = getTypeIcon(lesson.type || "video");
+                            const completed = isLessonCompleted(lesson.id);
+
+                            return (
+                              <Link
+                                key={lesson.id}
+                                href={`/contents/courses/${courseId}/lessons/${lesson.id}`}
+                                className="hover:dark-bg-secondary flex items-center justify-between rounded-lg px-3 py-2 transition-colors"
+                              >
+                                <div className="flex items-center gap-3">
+                                  {completed ? (
+                                    <CheckCircle
+                                      className="dark-success"
+                                      size={16}
+                                    />
+                                  ) : (
+                                    <div className="dark-bg-tertiary h-4 w-4 rounded-full" />
+                                  )}
+                                  <Icon
+                                    className="dark-text-tertiary"
                                     size={16}
                                   />
-                                ) : (
-                                  <div className="dark-bg-tertiary h-4 w-4 rounded-full" />
-                                )}
-                                <Icon
-                                  className="dark-text-tertiary"
-                                  size={16}
-                                />
-                                <span
-                                  className={`text-sm ${
-                                    lesson.completed
-                                      ? "dark-text-secondary"
-                                      : "dark-text-primary"
-                                  }`}
-                                >
-                                  {lesson.title}
+                                  <span
+                                    className={`text-sm ${
+                                      completed
+                                        ? "dark-text-secondary"
+                                        : "dark-text-primary"
+                                    }`}
+                                  >
+                                    {lesson.title}
+                                  </span>
+                                </div>
+                                <span className="dark-text-tertiary text-xs">
+                                  {formatDuration(lesson.duration || 0)}
                                 </span>
-                              </div>
-                              <span className="dark-text-tertiary text-xs">
-                                {formatDuration(lesson.duration)}
-                              </span>
+                              </Link>
+                            );
+                          }) || (
+                            <div className="dark-text-tertiary py-4 text-center text-sm">
+                              Nenhuma lição disponível
                             </div>
-                          );
-                        })}
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -590,16 +599,19 @@ export default function CoursePage() {
                   </div>
                   <div className="flex-1">
                     <h3 className="dark-text-primary mb-1 text-lg font-semibold">
-                      {course.instructor.name}
+                      {course.instructor?.name || "Instrutor não informado"}
                     </h3>
                     <p className="dark-text-secondary mb-2">
-                      {course.instructor.role === "LIDER" ? "Líder" : "Membro"}
-                    </p>
-                    <p className="dark-text-tertiary mb-4 text-sm">
-                      {course.instructor.experience}
+                      {course.instructor?.role === "LIDER"
+                        ? course.instructor?.isPastor
+                          ? "Líder (Pastor)"
+                          : "Líder"
+                        : course.instructor?.isPastor
+                          ? "Membro (Pastor)"
+                          : "Membro"}
                     </p>
                     <p className="dark-text-secondary leading-relaxed">
-                      {course.instructor.bio}
+                      {course.instructor?.bio || "Biografia não disponível"}
                     </p>
                   </div>
                 </div>
@@ -615,55 +627,69 @@ export default function CoursePage() {
                   <div className="flex items-center gap-2">
                     <Star className="dark-warning fill-current" size={20} />
                     <span className="dark-text-primary text-lg font-bold">
-                      {course.rating}
+                      {course.averageRating || 0}
                     </span>
                     <span className="dark-text-tertiary">
-                      ({course.reviewsCount} avaliações)
+                      ({reviews.length} avaliações)
                     </span>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  {reviews.map((review) => (
-                    <div key={review.id} className="dark-card rounded-xl p-4">
-                      <div className="flex items-start gap-4">
-                        <div className="dark-primary-subtle-bg rounded-full p-2">
-                          <User className="dark-primary" size={16} />
-                        </div>
-                        <div className="flex-1">
-                          <div className="mb-2 flex items-center justify-between">
-                            <div>
-                              <div className="dark-text-primary text-sm font-medium">
-                                {review.author}
-                              </div>
-                              <div className="dark-text-tertiary text-xs">
-                                {review.role === "LIDER" ? "Líder" : "Membro"}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              {Array.from({ length: 5 }).map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={`${
-                                    i < review.rating
-                                      ? "dark-warning fill-current"
-                                      : "dark-text-tertiary"
-                                  }`}
-                                  size={12}
-                                />
-                              ))}
-                            </div>
+                  {reviews.length > 0 ? (
+                    reviews.map((review: any) => (
+                      <div key={review.id} className="dark-card rounded-xl p-4">
+                        <div className="flex items-start gap-4">
+                          <div className="dark-primary-subtle-bg rounded-full p-2">
+                            <User className="dark-primary" size={16} />
                           </div>
-                          <p className="dark-text-secondary mb-2 text-sm">
-                            {review.comment}
-                          </p>
-                          <p className="dark-text-tertiary text-xs">
-                            {formatDate(review.date)}
-                          </p>
+                          <div className="flex-1">
+                            <div className="mb-2 flex items-center justify-between">
+                              <div>
+                                <div className="dark-text-primary text-sm font-medium">
+                                  {review.user?.name || "Usuário"}
+                                </div>
+                                <div className="dark-text-tertiary text-xs">
+                                  {review.user?.role === "LIDER"
+                                    ? review.user?.isPastor
+                                      ? "Líder (Pastor)"
+                                      : "Líder"
+                                    : review.user?.isPastor
+                                      ? "Membro (Pastor)"
+                                      : "Membro"}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                {Array.from({ length: 5 }).map((_, i) => (
+                                  <Star
+                                    key={i}
+                                    className={`${
+                                      i < review.rating
+                                        ? "dark-warning fill-current"
+                                        : "dark-text-tertiary"
+                                    }`}
+                                    size={12}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                            <p className="dark-text-secondary mb-2 text-sm">
+                              {review.comment}
+                            </p>
+                            <p className="dark-text-tertiary text-xs">
+                              {formatDate(new Date(review.createdAt))}
+                            </p>
+                          </div>
                         </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className="dark-card rounded-xl p-8 text-center">
+                      <div className="dark-text-tertiary text-sm">
+                        Nenhuma avaliação disponível ainda
+                      </div>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             )}
@@ -672,19 +698,21 @@ export default function CoursePage() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Course Tags */}
-            <div className="dark-glass dark-shadow-sm rounded-xl p-6">
-              <h3 className="dark-text-primary mb-4 font-semibold">Tags</h3>
-              <div className="flex flex-wrap gap-2">
-                {course.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="dark-primary-subtle-bg dark-primary rounded-full px-3 py-1 text-xs font-medium"
-                  >
-                    {tag}
-                  </span>
-                ))}
+            {course.tags && course.tags.length > 0 && (
+              <div className="dark-glass dark-shadow-sm rounded-xl p-6">
+                <h3 className="dark-text-primary mb-4 font-semibold">Tags</h3>
+                <div className="flex flex-wrap gap-2">
+                  {course.tags.map((tag: any) => (
+                    <span
+                      key={tag}
+                      className="dark-primary-subtle-bg dark-primary rounded-full px-3 py-1 text-xs font-medium"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Course Stats */}
             <div className="dark-glass dark-shadow-sm rounded-xl p-6">
@@ -697,7 +725,7 @@ export default function CoursePage() {
                     Total de aulas
                   </span>
                   <span className="dark-primary font-semibold">
-                    {course.totalLessons}
+                    {course.totalLessons || 0}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -705,7 +733,7 @@ export default function CoursePage() {
                     Duração total
                   </span>
                   <span className="dark-primary font-semibold">
-                    {formatDuration(course.duration)}
+                    {formatDuration(course.totalDuration || 0)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -713,7 +741,7 @@ export default function CoursePage() {
                     Alunos matriculados
                   </span>
                   <span className="dark-primary font-semibold">
-                    {course.studentsCount.toLocaleString()}
+                    {course.studentsCount?.toLocaleString() || 0}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -721,7 +749,50 @@ export default function CoursePage() {
                     Nota média
                   </span>
                   <span className="dark-primary font-semibold">
-                    {course.rating}/5
+                    {course.averageRating || 0}/5
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Progress Stats */}
+            <div className="dark-glass dark-shadow-sm rounded-xl p-6">
+              <h3 className="dark-text-primary mb-4 font-semibold">
+                Seu Progresso
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="dark-text-secondary text-sm">
+                    Progresso geral
+                  </span>
+                  <span className="dark-success font-semibold">
+                    {courseProgress}%
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="dark-text-secondary text-sm">
+                    Aulas concluídas
+                  </span>
+                  <span className="dark-success font-semibold">
+                    {progress.filter((p: any) => p.isCompleted).length}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="dark-text-secondary text-sm">
+                    Módulos concluídos
+                  </span>
+                  <span className="dark-success font-semibold">
+                    {
+                      modules.filter((module: any) => {
+                        const moduleLessons = module.lessons || [];
+                        return (
+                          moduleLessons.length > 0 &&
+                          moduleLessons.every((lesson: any) =>
+                            isLessonCompleted(lesson.id),
+                          )
+                        );
+                      }).length
+                    }
                   </span>
                 </div>
               </div>

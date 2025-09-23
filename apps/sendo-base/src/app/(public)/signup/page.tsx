@@ -1,6 +1,7 @@
 "use client";
 
-import { useUserStore } from "@/src/hooks";
+import { PasswordInput } from "@/src/components/password-input";
+import { useAuth } from "@/src/hooks";
 import { signUp } from "@/src/lib/actions";
 import { signUpSchema, SignUpScheme } from "@/src/lib/forms/auth/signup.scheme";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,7 +24,7 @@ import { toast } from "sonner";
 
 export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const { setUser } = useUserStore();
+  const { setUser } = useAuth();
   const router = useRouter();
 
   const form = useForm<SignUpScheme>({
@@ -142,7 +143,7 @@ export default function SignUpPage() {
                     Senha
                   </FormLabel>
                   <FormControl>
-                    <Input {...field} type="password" className="dark-input" />
+                    <PasswordInput {...field} className="dark-input" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -158,7 +159,7 @@ export default function SignUpPage() {
                     Confirmar senha
                   </FormLabel>
                   <FormControl>
-                    <Input {...field} type="password" className="dark-input" />
+                    <PasswordInput {...field} className="dark-input" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

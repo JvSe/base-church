@@ -15,17 +15,17 @@ const signUpSchema = z
     password: z
       .string()
       .min(1, { message: "Senha é obrigatória" })
-      .min(8, { message: "Senha deve ter pelo menos 8 caracteres" })
-      .regex(/[A-Z]/, {
-        message: "Senha deve conter pelo menos uma letra maiúscula",
-      })
-      .regex(/[a-z]/, {
-        message: "Senha deve conter pelo menos uma letra minúscula",
-      })
-      .regex(/\d/, { message: "Senha deve conter pelo menos um número" })
-      .regex(/[!@#$%^&*(),.?":{}|<>]/, {
-        message: "Senha deve conter pelo menos um caractere especial",
-      }),
+      .min(8, { message: "Senha deve ter pelo menos 8 caracteres" }),
+    // .regex(/[A-Z]/, {
+    //   message: "Senha deve conter pelo menos uma letra maiúscula",
+    // })
+    // .regex(/[a-z]/, {
+    //   message: "Senha deve conter pelo menos uma letra minúscula",
+    // })
+    // .regex(/\d/, { message: "Senha deve conter pelo menos um número" })
+    // .regex(/[!@#$%^&*(),.?":{}|<>]/, {
+    //   message: "Senha deve conter pelo menos um caractere especial",
+    // }),
     confirmPassword: z
       .string()
       .min(1, { message: "Confirmação de senha é obrigatória" }),

@@ -2,7 +2,9 @@
 
 import { DashboardCourseCard } from "@/src/components/dashboard-course-card";
 import { DashboardCourseListCard } from "@/src/components/dashboard-course-list-card";
-import { getAllUserEnrollments, getUserEnrollments } from "@/src/lib/actions";
+import { useAuth } from "@/src/hooks";
+
+import { getUserEnrollments } from "@/src/lib/actions";
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
 import {
@@ -18,54 +20,47 @@ import { useState } from "react";
 export default function ContentsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const { user } = useAuth();
 
-  // Fetch approved user enrollments from database
+  console.log("user", user);
+
   const {
-    data: enrollmentsData,
+    data: allEnrollmentsData,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["user-enrollments", "30d453b9-88c9-429e-9700-81d2db735f7a"],
-    queryFn: () => getUserEnrollments("30d453b9-88c9-429e-9700-81d2db735f7a"),
+    queryKey: ["all-user-enrollments", user?.id],
+    queryFn: () => getUserEnrollments(user?.id || ""),
+    enabled: !!user?.id,
     select: (data) => data.enrollments,
   });
 
-  // Fetch all user enrollments (including pending) for pending tab
-  const { data: allEnrollmentsData, isLoading: allEnrollmentsLoading } =
-    useQuery({
-      queryKey: [
-        "all-user-enrollments",
-        "30d453b9-88c9-429e-9700-81d2db735f7a",
-      ],
-      queryFn: () =>
-        getAllUserEnrollments("30d453b9-88c9-429e-9700-81d2db735f7a"),
-      select: (data) => data.enrollments,
-    });
-
   // Transform enrollments to course format for compatibility with existing components
   const courses =
-    enrollmentsData?.map((enrollment: any) => ({
-      id: enrollment.course.id,
-      title: enrollment.course.title,
-      description: enrollment.course.description,
-      image: enrollment.course.image || "/api/placeholder/300/200",
-      duration: enrollment.course.duration,
-      level: enrollment.course.level,
-      category: enrollment.course.category,
-      instructor:
-        enrollment.course.instructor?.name || "Instrutor não definido",
-      price: enrollment.course.price || 0,
-      rating: enrollment.course.rating || 0,
-      enrolledStudents: enrollment.course._count?.enrollments || 0,
-      isEnrolled: true,
-      isFeatured: enrollment.course.isFeatured,
-      tags: enrollment.course.tags || [],
-      progress: Math.round(enrollment.progress || 0),
-      enrollmentId: enrollment.id,
-      enrolledAt: enrollment.enrolledAt,
-      completedAt: enrollment.completedAt,
-      lastAccessedAt: enrollment.lastAccessedAt,
-    })) || [];
+    allEnrollmentsData
+      ?.filter((enrollment: any) => enrollment.status === "approved")
+      .map((enrollment: any) => ({
+        id: enrollment.course.id,
+        title: enrollment.course.title,
+        description: enrollment.course.description,
+        image: enrollment.course.image || "/api/placeholder/300/200",
+        duration: enrollment.course.duration,
+        level: enrollment.course.level,
+        category: enrollment.course.category,
+        instructor:
+          enrollment.course.instructor?.name || "Instrutor não definido",
+        price: enrollment.course.price || 0,
+        rating: enrollment.course.rating || 0,
+        enrolledStudents: enrollment.course._count?.enrollments || 0,
+        isEnrolled: true,
+        isFeatured: enrollment.course.isFeatured,
+        tags: enrollment.course.tags || [],
+        progress: Math.round(enrollment.progress || 0),
+        enrollmentId: enrollment.id,
+        enrolledAt: enrollment.enrolledAt,
+        completedAt: enrollment.completedAt,
+        lastAccessedAt: enrollment.lastAccessedAt,
+      })) || [];
 
   const filteredEnrollments = courses.filter((course) => {
     const searchLower = searchQuery.toLowerCase();

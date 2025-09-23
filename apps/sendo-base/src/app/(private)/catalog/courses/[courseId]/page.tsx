@@ -102,10 +102,8 @@ export default function CoursePage({ params }: CoursePageProps) {
   };
 
   const handleEnrollmentRequest = async () => {
-    console.log("salve 01");
     try {
       const result = await createEnrollmentRequest(courseId, userId);
-      console.log("salve 02");
 
       if (result.success) {
         toast.success(result.message);
@@ -114,7 +112,6 @@ export default function CoursePage({ params }: CoursePageProps) {
         toast.error(result.error);
       }
     } catch (error) {
-      console.log("salve 03");
       toast.error("Erro ao enviar solicitação de matrícula");
     }
   };

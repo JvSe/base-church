@@ -22,7 +22,7 @@ function MeuComponente() {
     isLoading,
     logout,
     updateUserData
-  } = useUser();
+  } = useAuth();
 
   if (isLoading) {
     return <div>Carregando...</div>;
@@ -98,7 +98,7 @@ O hook se integra automaticamente com as server actions:
 import { useUser } from "@/src/hooks";
 
 function Navbar() {
-  const { user, isAuthenticated, logout } = useUser();
+  const { user, isAuthenticated, logout } = useAuth();
 
   return (
     <nav>
@@ -122,7 +122,7 @@ import { useUser } from "@/src/hooks";
 import { redirect } from "next/navigation";
 
 function PaginaProtegida() {
-  const { user, isAuthenticated, isLoading } = useUser();
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return <div>Carregando...</div>;
@@ -172,7 +172,7 @@ O hook inclui tratamento de erros para:
 Para debug, você pode usar:
 
 ```typescript
-const { user, isAuthenticated, isLoading } = useUser();
+const { user, isAuthenticated, isLoading } = useAuth();
 
 console.log("User:", user);
 console.log("Is Authenticated:", isAuthenticated);

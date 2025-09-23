@@ -1,6 +1,6 @@
 "use client";
 
-import { useUser } from "@/src/hooks";
+import { useAuth } from "@/src/hooks";
 import { getEvents, getUserProfile } from "@/src/lib/actions";
 import { Button } from "@repo/ui/components/button";
 import { useQuery } from "@tanstack/react-query";
@@ -28,7 +28,7 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("TODOS OS LEMBRETES");
 
   // Hook de usuário
-  const { user, isAuthenticated, isLoading: userLoading } = useUser();
+  const { user, isAuthenticated, isLoading: userLoading } = useAuth();
 
   // Fetch user data - usar ID do usuário logado se disponível
   const { data: userData } = useQuery({
@@ -109,7 +109,7 @@ export default function DashboardPage() {
   return (
     <div className="dark-bg-primary min-h-screen">
       {/* Background Pattern */}
-      <div className="opacity-3 fixed inset-0">
+      <div className="fixed inset-0 opacity-3">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
       </div>
 

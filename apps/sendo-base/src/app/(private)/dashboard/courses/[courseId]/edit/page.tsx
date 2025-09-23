@@ -13,7 +13,7 @@ import {
   updateCourseStatus,
   updateLesson,
 } from "@/src/lib/actions";
-import { COURSE_CATEGORIES, CourseCategory } from "@/src/lib/constants";
+import { COURSE_CATEGORIES } from "@/src/lib/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Accordion,
@@ -75,9 +75,7 @@ const courseSchema = z.object({
   level: z.enum(["beginner", "intermediate", "advanced"], {
     required_error: "Nível é obrigatório",
   }),
-  category: z.nativeEnum(CourseCategory, {
-    required_error: "Categoria é obrigatória",
-  }),
+  category: z.string().min(1, "Categoria é obrigatória"),
   tags: z.string().optional(),
   price: z.number().min(0, "Preço não pode ser negativo"),
 });
@@ -200,7 +198,7 @@ export default function EditCoursePage(props: EditCoursePageProps) {
       instructorId: "",
       duration: 120,
       level: "beginner",
-      category: CourseCategory.CREATIVITY,
+      category: "CREATIVITY",
       tags: "",
       price: 0,
     },
@@ -242,8 +240,7 @@ export default function EditCoursePage(props: EditCoursePageProps) {
         level:
           (courseData.level as "beginner" | "intermediate" | "advanced") ||
           "beginner",
-        category:
-          (courseData.category as CourseCategory) || CourseCategory.CREATIVITY,
+        category: courseData.category || "CREATIVITY",
         tags: courseData.tags?.join(", ") || "",
         price: courseData.price || 0,
       });

@@ -2,15 +2,18 @@
 
 import { signOut } from "@/src/lib/actions";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 export default function LogoutPage() {
   const router = useRouter();
 
+  const loading = useRef(false);
+
   useEffect(() => {
     const handleLogout = async () => {
       try {
+        loading.current = true;
         const result = await signOut();
 
         if (result.success) {
@@ -20,18 +23,19 @@ export default function LogoutPage() {
           }
 
           toast.success("Logout realizado com sucesso!");
-          router.push("/signin");
-        } else {
-          toast.error("Erro ao fazer logout");
-          router.push("/home");
+          setTimeout(() => {
+            router.push("/signin");
+          }, 1000);
         }
       } catch (error) {
         toast.error("Erro interno do servidor");
         router.push("/home");
+      } finally {
+        loading.current = false;
       }
     };
 
-    handleLogout();
+    if (!loading.current) handleLogout();
   }, [router]);
 
   return (

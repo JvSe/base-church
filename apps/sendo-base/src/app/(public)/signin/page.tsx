@@ -1,6 +1,7 @@
 "use client";
 
-import { useUserStore } from "@/src/hooks";
+import { PasswordInput } from "@/src/components/password-input";
+import { useAuth } from "@/src/hooks";
 import { signIn } from "@/src/lib/actions";
 import { signInSchema, SignInScheme } from "@/src/lib/forms/auth/signin.scheme";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,7 +25,7 @@ import { toast } from "sonner";
 export default function SignInPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { setUser } = useUserStore();
+  const { setUser } = useAuth();
 
   const form = useForm<SignInScheme>({
     resolver: zodResolver(signInSchema),
@@ -53,6 +54,7 @@ export default function SignInPage() {
         toast.success("Login realizado com sucesso!");
         router.push("/home");
       } else {
+        console.log(result);
         toast.error(result.error || "Erro ao fazer login");
       }
     } catch (error) {
@@ -123,12 +125,7 @@ export default function SignInPage() {
                     Senha
                   </FormLabel>
                   <FormControl>
-                    <Input
-                      {...field}
-                      type="password"
-                      placeholder="••••••••"
-                      className="dark-input"
-                    />
+                    <PasswordInput {...field} className="dark-input" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -7,6 +7,7 @@ import {
   FileText,
   HelpCircle,
   Home,
+  LogOut,
   Map,
   MessageCircle,
   User,
@@ -17,7 +18,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
 
-import { getUserProfile } from "@/src/lib/actions";
+import { useAuth } from "@/src/hooks";
 import { getInitials } from "@/src/lib/get-initial-by-name";
 import {
   Avatar,
@@ -38,24 +39,13 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
 } from "@repo/ui/components/sidebar";
-import { useQuery } from "@tanstack/react-query";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
 
-  const { data: userAuth } = useQuery({
-    queryKey: ["user", "30d453b9-88c9-429e-9700-81d2db735f7a"],
-    queryFn: () => getUserProfile("30d453b9-88c9-429e-9700-81d2db735f7a"),
-    select: (data) => data.user,
-  });
+  const { user } = useAuth();
 
   const data = {
-    user: {
-      name: "João Vitor Soares",
-      email: "joao@basechurch.com",
-      avatar: "/avatars/joao.jpg",
-      title: "Líder em Formação",
-    },
     navMain: [
       {
         title: "Início",
@@ -69,7 +59,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       },
     ],
     navAdmin:
-      userAuth?.role === "LIDER"
+      user?.role === "LIDER"
         ? [
             {
               title: "Dashboard",
@@ -191,11 +181,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/help",
         icon: HelpCircle,
       },
-      // {
-      //   title: "Configurações",
-      //   url: "/settings",
-      //   icon: Settings,
-      // },
+      {
+        title: "Sair",
+        url: "/logout",
+        icon: LogOut,
+      },
     ],
     documents: [
       {
@@ -224,22 +214,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <div className="flex cursor-pointer items-center gap-3 overflow-hidden transition-[margin,opacity,width] duration-300 ease-in-out group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:opacity-0">
             <div className="dark-primary-subtle-bg flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full">
               <Avatar className="h-full w-full">
-                <AvatarImage
-                  src={userAuth?.image ?? ""}
-                  alt={userAuth?.name ?? ""}
-                />
+                <AvatarImage src={user?.image ?? ""} alt={user?.name ?? ""} />
                 <AvatarFallback className="rounded-full">
-                  {getInitials(userAuth?.name ?? "")}
+                  {getInitials(user?.name ?? "")}
                 </AvatarFallback>
               </Avatar>
             </div>
             <div className="flex-1">
               <h3 className="dark-text-primary text-sm font-semibold text-nowrap">
-                {data.user.name}
+                {user?.name}
               </h3>
-              <p className="dark-text-tertiary mt-0.5 text-xs">
-                {data.user.title}
-              </p>
+              <p className="dark-text-tertiary mt-0.5 text-xs">{user?.role}</p>
             </div>
           </div>
         </Link>
@@ -247,7 +232,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
 
       {/* Navegação Principal */}
-      <SidebarContent className="">
+      <SidebarContent>
         {/* Navegação Principal */}
         <SidebarGroup>
           <SidebarGroupContent>
@@ -256,10 +241,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     tooltip={item.title}
-                    isActive={pathname === item.url}
+                    isActive={pathname.startsWith(item.url)}
                     asChild
                     className={`h-10 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:!p-2 [&>span]:group-data-[collapsible=icon]:hidden [&>svg]:!size-5 ${
-                      pathname === item.url
+                      pathname.startsWith(item.url)
                         ? "dark-primary-subtle-bg dark-primary"
                         : "dark-text-secondary hover:dark-text-primary hover:dark-bg-secondary"
                     }`}
@@ -288,10 +273,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
                       tooltip={item.title}
-                      isActive={pathname === item.url}
+                      isActive={pathname.startsWith(item.url)}
                       asChild
                       className={`h-10 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:!p-2 [&>span]:group-data-[collapsible=icon]:hidden [&>svg]:!size-5 ${
-                        pathname === item.url
+                        pathname.startsWith(item.url)
                           ? "dark-primary-subtle-bg dark-primary"
                           : "dark-text-secondary hover:dark-text-primary hover:dark-bg-secondary"
                       }`}
@@ -320,10 +305,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     tooltip={item.title}
-                    isActive={pathname === item.url}
+                    isActive={pathname.startsWith(item.url)}
                     asChild
                     className={`h-10 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:!p-2 [&>span]:group-data-[collapsible=icon]:hidden [&>svg]:!size-5 ${
-                      pathname === item.url
+                      pathname.startsWith(item.url)
                         ? "dark-primary-subtle-bg dark-primary"
                         : "dark-text-secondary hover:dark-text-primary hover:dark-bg-secondary"
                     }`}
@@ -351,10 +336,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     tooltip={item.title}
-                    isActive={pathname === item.url}
+                    isActive={pathname.startsWith(item.url)}
                     asChild
                     className={`h-10 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:!p-2 [&>span]:group-data-[collapsible=icon]:hidden [&>svg]:!size-5 ${
-                      pathname === item.url
+                      pathname.startsWith(item.url)
                         ? "dark-primary-subtle-bg dark-primary"
                         : "dark-text-secondary hover:dark-text-primary hover:dark-bg-secondary"
                     }`}
@@ -383,10 +368,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     tooltip={item.title}
-                    isActive={pathname === item.url}
+                    isActive={pathname.startsWith(item.url)}
                     asChild
                     className={`h-10 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:!p-2 [&>span]:group-data-[collapsible=icon]:hidden [&>svg]:!size-5 ${
-                      pathname === item.url
+                      pathname.startsWith(item.url)
                         ? "dark-primary-subtle-bg dark-primary"
                         : "dark-text-secondary hover:dark-text-primary hover:dark-bg-secondary"
                     }`}

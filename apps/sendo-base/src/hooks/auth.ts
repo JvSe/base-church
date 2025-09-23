@@ -10,6 +10,7 @@ export interface User {
   email?: string;
   role: "MEMBROS" | "LIDER";
   isPastor?: boolean;
+  image?: string;
 }
 
 interface UserStore {
@@ -24,7 +25,7 @@ interface UserStore {
   updateUser: (updates: Partial<User>) => void;
 }
 
-export const useUserStore = create<UserStore>()(
+export const useAuth = create<UserStore>()(
   persist(
     (set, get) => ({
       user: null,
@@ -62,10 +63,6 @@ export const useUserStore = create<UserStore>()(
     }),
     {
       name: "user-store", // nome da chave no localStorage
-      partialize: (state) => ({
-        user: state.user,
-        isAuthenticated: state.isAuthenticated,
-      }),
     },
   ),
 );
