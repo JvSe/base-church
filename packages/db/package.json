@@ -15,13 +15,7 @@
       "require": "./dist/client.cjs",
       "default": "./dist/client.js"
     },
-    "./schema": "./prisma/schema.prisma",
-    "./seed": {
-      "types": "./dist/seed.d.ts",
-      "import": "./dist/seed.js",
-      "require": "./dist/seed.cjs",
-      "default": "./dist/seed.js"
-    }
+    "./schema": "./prisma/schema.prisma"
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -38,7 +32,6 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",
     "db:push": "prisma db push",
-    "db:seed": "tsx src/seed.ts",
     "format": "prisma format",
     "generate": "prisma generate --generator client",
     "lint": "eslint . --max-warnings 0",

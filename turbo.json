@@ -29,9 +29,6 @@
     },
     "db:push": {
       "cache": false
-    },
-    "db:seed": {
-      "cache": false
     }
   }
 }

@@ -64,12 +64,6 @@ pnpm build
 pnpm db:migrate:deploy
 ```
 
-### Seed the database
-
-```bash
-pnpm db:seed
-```
-
 ## Production Deployment
 
 This package is optimized for Vercel deployment:
@@ -83,7 +77,6 @@ This package is optimized for Vercel deployment:
 
 - `src/client.ts` - Main Prisma client with Vercel optimizations
 - `src/index.ts` - Package exports and utilities
-- `src/seed.ts` - Database seeding script
 - `prisma/schema.prisma` - Database schema definition
 - `generated/` - Auto-generated Prisma client (do not edit)
 
