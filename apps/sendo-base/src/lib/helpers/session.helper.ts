@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { NextRequest } from "next/server";
+import { isProduction } from "../config/env";
 
 const SESSION_COOKIE_NAME = "sendo-base-session";
 const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 dias em millisegundos
@@ -27,7 +28,10 @@ export function createSession(userData: SessionData): string {
     "base64",
   );
 
-  return `${SESSION_COOKIE_NAME}=${cookieValue}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${SESSION_DURATION / 1000}`;
+  // Configuração de cookie mais flexível para produção
+  const secureFlag = isProduction ? "Secure" : "";
+
+  return `${SESSION_COOKIE_NAME}=${cookieValue}; Path=/; HttpOnly; ${secureFlag}; SameSite=Lax; Max-Age=${SESSION_DURATION / 1000}`;
 }
 
 /**
@@ -107,5 +111,8 @@ export function getSessionFromRequest(
  * @returns Cookie string para ser definido (limpa o cookie)
  */
 export function clearSession(): string {
-  return `${SESSION_COOKIE_NAME}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0`;
+  // Configuração de cookie mais flexível para produção
+  const secureFlag = isProduction ? "Secure" : "";
+
+  return `${SESSION_COOKIE_NAME}=; Path=/; HttpOnly; ${secureFlag}; SameSite=Lax; Max-Age=0`;
 }
