@@ -1,14 +1,35 @@
 {
   "name": "@repo/db",
   "version": "1.0.0",
+  "type": "module",
   "exports": {
-    ".": "./src/client.ts",
-    "./client": "./src/client.ts",
+    ".": {
+      "import": "./dist/client.js",
+      "require": "./dist/client.cjs",
+      "types": "./dist/client.d.ts"
+    },
+    "./client": {
+      "import": "./dist/client.js",
+      "require": "./dist/client.cjs",
+      "types": "./dist/client.d.ts"
+    },
     "./schema": "./prisma/schema.prisma",
-    "./seed": "./src/seed.ts"
+    "./seed": {
+      "import": "./dist/seed.js",
+      "require": "./dist/seed.cjs"
+    }
   },
+  "main": "./dist/client.cjs",
+  "module": "./dist/client.js",
+  "types": "./dist/client.d.ts",
+  "files": [
+    "dist",
+    "generated",
+    "prisma"
+  ],
   "scripts": {
-    "build": "pnpm generate",
+    "build": "tsup",
+    "dev": "tsup --watch",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",
     "db:push": "prisma db push",
@@ -16,10 +37,11 @@
     "format": "prisma format",
     "generate": "prisma generate",
     "lint": "eslint . --max-warnings 0",
-    "prebuild": "pnpm generate",
+    "prebuild": "pnpm generate && pnpm clean",
     "predev": "pnpm generate",
     "studio": "prisma studio",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist"
   },
   "dependencies": {
     "@prisma/client": "latest"

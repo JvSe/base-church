@@ -8,12 +8,15 @@
   },
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "prisma generate --schema=../../packages/db/prisma/schema.prisma && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "typecheck": "tsc --noEmit",
-    "postinstall": "prisma generate --schema=../../packages/db/prisma/schema.prisma"
+    "prebuild": "prisma generate --schema=../../packages/db/prisma/schema.prisma",
+    "postinstall": "prisma generate --schema=../../packages/db/prisma/schema.prisma",
+    "db:migrate:deploy": "prisma migrate deploy --schema=../../packages/db/prisma/schema.prisma",
+    "db:generate": "prisma generate --schema=../../packages/db/prisma/schema.prisma"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

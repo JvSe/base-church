@@ -3,25 +3,51 @@
   "ui": "tui",
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "dependsOn": ["^build", "generate"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".env*",
+        "!**/node_modules/**",
+        "!**/.next/**",
+        "!**/dist/**",
+        "!**/generated/**"
+      ],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**", "generated/**"],
+      "env": ["NODE_ENV", "DATABASE_URL"]
     },
     "lint": {
-      "dependsOn": ["^lint"]
+      "dependsOn": ["^lint"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!**/node_modules/**",
+        "!**/.next/**",
+        "!**/dist/**",
+        "!**/generated/**"
+      ]
     },
-    "check-types": {
-      "dependsOn": ["^check-types"]
+    "typecheck": {
+      "dependsOn": ["^typecheck", "generate"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!**/node_modules/**",
+        "!**/.next/**",
+        "!**/dist/**",
+        "!**/generated/**"
+      ]
     },
     "dev": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "dependsOn": ["generate"]
     },
     "generate": {
-      "cache": false
+      "cache": false,
+      "inputs": ["prisma/schema.prisma", "package.json", "tsconfig.json"],
+      "outputs": ["generated/**"]
     },
     "db:migrate:deploy": {
-      "cache": false
+      "cache": false,
+      "inputs": ["prisma/migrations/**"]
     },
     "db:migrate:dev": {
       "cache": false
@@ -30,6 +56,10 @@
       "cache": false
     },
     "db:seed": {
+      "cache": false,
+      "dependsOn": ["generate"]
+    },
+    "clean": {
       "cache": false
     }
   }
