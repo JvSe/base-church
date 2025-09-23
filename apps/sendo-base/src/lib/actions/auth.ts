@@ -93,7 +93,7 @@ export async function signUp(data: SignUpInput) {
 
     return { success: true, user: userData, sessionCookie };
   } catch (error) {
-    return { success: false, error: "Erro interno do servidor" };
+    throw new Error("Erro interno do servidor");
   }
 }
 
