@@ -1,6 +1,8 @@
 // Main exports for the database package
+import { prisma } from "./client.js";
+
 export * from "../generated/client/index.js";
-export { prisma } from "./client.js";
+export { prisma };
 
 // Re-export commonly used types and utilities
 export type {
