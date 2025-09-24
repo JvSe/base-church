@@ -1,13 +1,13 @@
 "use client";
 
 import {
-  getUserProfile,
-  updateUserEmail,
-  updateUserPassword,
+    getUserProfile,
+    updateUserEmail,
+    updateUserPassword,
 } from "@/src/lib/actions";
-import { Button } from "@repo/ui/components/button";
-import { Input } from "@repo/ui/components/input";
-import { Label } from "@repo/ui/components/label";
+import { Button } from "@base-church/ui/components/button";
+import { Input } from "@base-church/ui/components/input";
+import { Label } from "@base-church/ui/components/label";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Eye, EyeOff, Key, Mail, Save, Shield, X } from "lucide-react";
 import { useEffect, useState } from "react";

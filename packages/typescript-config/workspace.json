@@ -19,11 +19,11 @@
     "baseUrl": ".",
     "paths": {
       "@repo/*": ["../*/src/*"],
-      "@repo/ui/*": ["../ui/src/*"],
-      "@repo/db": ["../db/src/client.ts"],
-      "@repo/db/*": ["../db/*"],
+      "@base-church/ui/*": ["../ui/src/*"],
+      "@base-church/db": ["../db/src/client.ts"],
+      "@base-church/db/*": ["../db/*"],
       "@repo/icons/*": ["../icons/src/*"],
-      "@repo/typescript-config/*": ["./*"]
+      "@base-church/typescript-config/*": ["./*"]
     }
   }
 }

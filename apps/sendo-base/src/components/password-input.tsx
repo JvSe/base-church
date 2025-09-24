@@ -1,6 +1,6 @@
 "use client";
 
-import { Input } from "@repo/ui/components/input";
+import { Input } from "@base-church/ui/components/input";
 import { Eye, EyeOff } from "lucide-react";
 import { ForwardRefRenderFunction, forwardRef, useState } from "react";
 import { twMerge } from "tailwind-merge";

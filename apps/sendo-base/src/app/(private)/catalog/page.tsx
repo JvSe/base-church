@@ -3,32 +3,32 @@
 import { DashboardCourseCard } from "@/src/components/dashboard-course-card";
 import { DashboardCourseListCard } from "@/src/components/dashboard-course-list-card";
 import { getCourses, getUserEnrollments } from "@/src/lib/actions";
-import { Button } from "@repo/ui/components/button";
-import { Input } from "@repo/ui/components/input";
+import { Button } from "@base-church/ui/components/button";
+import { Input } from "@base-church/ui/components/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@repo/ui/components/select";
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@base-church/ui/components/select";
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@repo/ui/components/tabs";
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
+} from "@base-church/ui/components/tabs";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Database,
-  Filter,
-  Grid,
-  List,
-  Palette,
-  Search,
-  Target,
-  TrendingUp,
-  Zap,
+    Database,
+    Filter,
+    Grid,
+    List,
+    Palette,
+    Search,
+    Target,
+    TrendingUp,
+    Zap,
 } from "lucide-react";
 import { useState } from "react";
 

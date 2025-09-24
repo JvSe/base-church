@@ -1,18 +1,18 @@
 "use client";
 
-import { Button } from "@repo/ui/components/button";
-import { Checkbox } from "@repo/ui/components/checkbox";
+import { Button } from "@base-church/ui/components/button";
+import { Checkbox } from "@base-church/ui/components/checkbox";
 import {
-  ArrowLeft,
-  Bookmark,
-  CheckCircle,
-  Circle,
-  Clock,
-  Menu,
-  MessageCircle,
-  Search,
-  Settings,
-  Star,
+    ArrowLeft,
+    Bookmark,
+    CheckCircle,
+    Circle,
+    Clock,
+    Menu,
+    MessageCircle,
+    Search,
+    Settings,
+    Star,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";

@@ -1,27 +1,27 @@
 "use client";
 
 import { formatTime } from "@/src/lib/formatters";
-import { Button } from "@repo/ui/components/button";
+import { Button } from "@base-church/ui/components/button";
 import {
-  BookOpen,
-  Calendar,
-  CheckCircle,
-  Clock,
-  Download,
-  ExternalLink,
-  Globe,
-  Heart,
-  MapPin,
-  MessageCircle,
-  Play,
-  Share,
-  Star,
-  Target,
-  User,
-  Users,
-  Video,
-  X,
-  Zap,
+    BookOpen,
+    Calendar,
+    CheckCircle,
+    Clock,
+    Download,
+    ExternalLink,
+    Globe,
+    Heart,
+    MapPin,
+    MessageCircle,
+    Play,
+    Share,
+    Star,
+    Target,
+    User,
+    Users,
+    Video,
+    X,
+    Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";

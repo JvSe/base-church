@@ -1,15 +1,15 @@
 "use client";
 
 import { formatDuration } from "@/src/lib/formatters";
-import { Button } from "@repo/ui/components/button";
+import { Button } from "@base-church/ui/components/button";
 import {
-  BookOpen,
-  Clock,
-  Heart,
-  Play,
-  Star,
-  TrendingUp,
-  Users,
+    BookOpen,
+    Clock,
+    Heart,
+    Play,
+    Star,
+    TrendingUp,
+    Users,
 } from "lucide-react";
 import Link from "next/link";
 

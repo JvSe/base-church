@@ -1,22 +1,22 @@
 "use client";
 
 import { deleteCourse, getCourses } from "@/src/lib/actions";
-import { Button } from "@repo/ui/components/button";
-import { Input } from "@repo/ui/components/input";
+import { Button } from "@base-church/ui/components/button";
+import { Input } from "@base-church/ui/components/input";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Award,
-  BookOpen,
-  CheckCircle,
-  Clock,
-  Edit,
-  FileText,
-  Plus,
-  Search,
-  Star,
-  Trash2,
-  TrendingUp,
-  Users,
+    Award,
+    BookOpen,
+    CheckCircle,
+    Clock,
+    Edit,
+    FileText,
+    Plus,
+    Search,
+    Star,
+    Trash2,
+    TrendingUp,
+    Users,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

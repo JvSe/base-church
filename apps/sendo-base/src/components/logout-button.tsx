@@ -1,16 +1,16 @@
 "use client";
 
-import { Button } from "@repo/ui/components/button";
+import { Button } from "@base-church/ui/components/button";
 import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-  DialogTrigger,
-} from "@repo/ui/components/dialog";
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogTitle,
+    DialogTrigger,
+} from "@base-church/ui/components/dialog";
 
-import { cn } from "@repo/ui/lib/utils";
+import { cn } from "@base-church/ui/lib/utils";
 import { LogOut } from "lucide-react";
 import { toast } from "sonner";
 

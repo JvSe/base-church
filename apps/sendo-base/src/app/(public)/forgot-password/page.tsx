@@ -1,18 +1,18 @@
 "use client";
 
 import { requestPasswordReset } from "@/src/lib/actions";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@repo/ui/components/button";
+import { Button } from "@base-church/ui/components/button";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@repo/ui/components/form";
-import { Input } from "@repo/ui/components/input";
-import { formatDocument } from "@repo/ui/helpers/format-document.helper";
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@base-church/ui/components/form";
+import { Input } from "@base-church/ui/components/input";
+import { formatDocument } from "@base-church/ui/helpers/format-document.helper";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";

@@ -22,8 +22,8 @@
     "generate": "turbo run generate"
   },
   "devDependencies": {
-    "@repo/eslint-config": "workspace:*",
-    "@repo/typescript-config": "workspace:*",
+    "@base-church/eslint-config": "workspace:*",
+    "@base-church/typescript-config": "workspace:*",
     "prettier": "^3.5.1",
     "prisma": "latest",
     "tsx": "4.19.1",

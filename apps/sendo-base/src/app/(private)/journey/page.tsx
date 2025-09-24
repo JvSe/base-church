@@ -1,20 +1,20 @@
 "use client";
 
 import { getCourses, getUserProfile } from "@/src/lib/actions";
-import { Button } from "@repo/ui/components/button";
+import { Button } from "@base-church/ui/components/button";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Award,
-  BookOpen,
-  Calendar,
-  CheckCircle,
-  Clock,
-  MapPin,
-  Play,
-  Target,
-  Trophy,
-  Users,
-  Zap,
+    Award,
+    BookOpen,
+    Calendar,
+    CheckCircle,
+    Clock,
+    MapPin,
+    Play,
+    Target,
+    Trophy,
+    Users,
+    Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";

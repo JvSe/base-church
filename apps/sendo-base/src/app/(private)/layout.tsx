@@ -1,5 +1,5 @@
 import { AppSidebar } from "@/src/components/sidebar/app-sidebar";
-import { SidebarInset, SidebarProvider } from "@repo/ui/components/sidebar";
+import { SidebarInset, SidebarProvider } from "@base-church/ui/components/sidebar";
 
 export default function DashboardLayout({
   children,

@@ -4,9 +4,9 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@repo/ui/*": ["../../packages/ui/src/*"],
-      "@repo/db": ["../../packages/db/src/client.ts"],
-      "@repo/db/*": ["../../packages/db/*"]
+      "@base-church/ui/*": ["../../packages/ui/src/*"],
+      "@base-church/db": ["../../packages/database/src/client.ts"],
+      "@base-church/db/*": ["../../packages/db/*"]
     },
     "plugins": [
       {

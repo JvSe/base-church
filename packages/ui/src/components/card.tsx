@@ -1,7 +1,7 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 
-import { cn } from "@repo/ui/lib/utils";
+import { cn } from "@base-church/ui/lib/utils";
 
 const cardVariants = cva(
   "dark-card dark-text-primary flex flex-col gap-6 rounded-xl shadow-lg transition-all duration-300",
@@ -117,11 +117,12 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 export {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardAction,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle
 };
+

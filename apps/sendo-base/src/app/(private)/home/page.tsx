@@ -2,24 +2,24 @@
 
 import { useAuth } from "@/src/hooks";
 import { getEvents, getUserProfile } from "@/src/lib/actions";
-import { Button } from "@repo/ui/components/button";
+import { Button } from "@base-church/ui/components/button";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Activity,
-  Award,
-  Bell,
-  BookOpen,
-  Calendar,
-  Clock,
-  Flame,
-  Gift,
-  PlayCircle,
-  Plus,
-  Star,
-  Target,
-  TrendingUp,
-  User,
-  Users,
+    Activity,
+    Award,
+    Bell,
+    BookOpen,
+    Calendar,
+    Clock,
+    Flame,
+    Gift,
+    PlayCircle,
+    Plus,
+    Star,
+    Target,
+    TrendingUp,
+    User,
+    Users,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";

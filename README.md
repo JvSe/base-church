@@ -4,7 +4,7 @@ Este é um monorepo usando Turbo e pnpm para gerenciar múltiplos packages relac
 
 ## 📦 Packages
 
-### `@repo/ui` - Componentes UI
+### `@base-church/ui` - Componentes UI
 
 Biblioteca de componentes React reutilizáveis baseada em shadcn/ui.
 
@@ -12,23 +12,23 @@ Biblioteca de componentes React reutilizáveis baseada em shadcn/ui.
 
 ```typescript
 // Importar componentes específicos
-import { Button } from "@repo/ui/components/button";
-import { Card } from "@repo/ui/components/card";
+import { Button } from "@base-church/ui/components/button";
+import { Card } from "@base-church/ui/components/card";
 
 // Importar todos os componentes
-import * as UI from "@repo/ui/components";
+import * as UI from "@base-church/ui/components";
 
 // Importar hooks
-import { useIsMobile } from "@repo/ui/hooks/use-mobile";
+import { useIsMobile } from "@base-church/ui/hooks/use-mobile";
 
 // Importar utilitários
-import { cn } from "@repo/ui/lib/utils";
+import { cn } from "@base-church/ui/lib/utils";
 
 // Importar estilos globais
-import "@repo/ui/globals.css";
+import "@base-church/ui/globals.css";
 ```
 
-### `@repo/db` - Banco de Dados
+### `@base-church/db` - Banco de Dados
 
 Cliente Prisma e configurações de banco de dados.
 
@@ -36,13 +36,13 @@ Cliente Prisma e configurações de banco de dados.
 
 ```typescript
 // Cliente Prisma
-import { prisma } from "@repo/db";
+import { prisma } from "@base-church/db";
 
 // Schema do Prisma
-import "@repo/db/schema";
+import "@base-church/db/schema";
 
 // Seed do banco
-import "@repo/db/seed";
+import "@base-church/db/seed";
 ```
 
 ### `@repo/icons` - Ícones Customizados
@@ -59,7 +59,7 @@ import { IconsNextMed } from "@repo/icons";
 import { SendoBase } from "@repo/icons/components/send-base";
 ```
 
-### `@repo/typescript-config` - Configurações TypeScript
+### `@base-church/typescript-config` - Configurações TypeScript
 
 Configurações compartilhadas do TypeScript.
 
@@ -67,13 +67,13 @@ Configurações compartilhadas do TypeScript.
 
 ```json
 {
-  "extends": "@repo/typescript-config/base",
-  "extends": "@repo/typescript-config/nextjs",
-  "extends": "@repo/typescript-config/react-library"
+  "extends": "@base-church/typescript-config/base",
+  "extends": "@base-church/typescript-config/nextjs",
+  "extends": "@base-church/typescript-config/react-library"
 }
 ```
 
-### `@repo/eslint-config` - Configurações ESLint
+### `@base-church/eslint-config` - Configurações ESLint
 
 Configurações compartilhadas do ESLint.
 
@@ -81,9 +81,9 @@ Configurações compartilhadas do ESLint.
 
 ```json
 {
-  "extends": "@repo/eslint-config/base",
-  "extends": "@repo/eslint-config/next-js",
-  "extends": "@repo/eslint-config/react-internal"
+  "extends": "@base-church/eslint-config/base",
+  "extends": "@base-church/eslint-config/next-js",
+  "extends": "@base-church/eslint-config/react-internal"
 }
 ```
 
@@ -167,8 +167,8 @@ base-church/
 
 - **Naming:** Todos os packages usam o prefixo `@repo/`
 - **Exports:** Cada package define seus exports no `package.json`
-- **TypeScript:** Configurações compartilhadas via `@repo/typescript-config`
-- **ESLint:** Configurações compartilhadas via `@repo/eslint-config`
+- **TypeScript:** Configurações compartilhadas via `@base-church/typescript-config`
+- **ESLint:** Configurações compartilhadas via `@base-church/eslint-config`
 - **Dependências:** Usar `workspace:*` para dependências internas
 
 ## 🤝 Contribuição

@@ -2,29 +2,29 @@
 
 import { getEvents } from "@/src/lib/actions";
 import { formatDateTime, formatTime } from "@/src/lib/formatters";
-import { Button } from "@repo/ui/components/button";
-import { Input } from "@repo/ui/components/input";
+import { Button } from "@base-church/ui/components/button";
+import { Input } from "@base-church/ui/components/input";
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@repo/ui/components/tabs";
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
+} from "@base-church/ui/components/tabs";
 import { useQuery } from "@tanstack/react-query";
 import {
-  ArrowRight,
-  Calendar,
-  CheckCircle,
-  Clock,
-  Filter,
-  Grid,
-  List,
-  MapPin,
-  Search,
-  TrendingUp,
-  Users,
-  X,
-  Zap,
+    ArrowRight,
+    Calendar,
+    CheckCircle,
+    Clock,
+    Filter,
+    Grid,
+    List,
+    MapPin,
+    Search,
+    TrendingUp,
+    Users,
+    X,
+    Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";

@@ -1,29 +1,29 @@
 "use client";
 
 import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@repo/ui/components/avatar";
+    Avatar,
+    AvatarFallback,
+    AvatarImage,
+} from "@base-church/ui/components/avatar";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@repo/ui/components/dropdown-menu";
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@base-church/ui/components/dropdown-menu";
 import {
-  SidebarMenuButton,
-  SidebarTrigger,
-  useSidebar,
-} from "@repo/ui/components/sidebar";
+    SidebarMenuButton,
+    SidebarTrigger,
+    useSidebar,
+} from "@base-church/ui/components/sidebar";
 import {
-  IconCreditCard,
-  IconLogout,
-  IconNotification,
-  IconUserCircle,
+    IconCreditCard,
+    IconLogout,
+    IconNotification,
+    IconUserCircle,
 } from "@tabler/icons-react";
 import { Bell, Flame, Search } from "lucide-react";
 import Image from "next/image";

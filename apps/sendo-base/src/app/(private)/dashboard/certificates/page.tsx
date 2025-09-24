@@ -1,23 +1,23 @@
 "use client";
 
-import { Button } from "@repo/ui/components/button";
-import { Input } from "@repo/ui/components/input";
+import { Button } from "@base-church/ui/components/button";
+import { Input } from "@base-church/ui/components/input";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Award,
-  BookOpen,
-  Calendar,
-  CheckCircle,
-  Clock,
-  Download,
-  Eye,
-  Search,
-  TrendingUp,
+    Award,
+    BookOpen,
+    Calendar,
+    CheckCircle,
+    Clock,
+    Download,
+    Eye,
+    Search,
+    TrendingUp,
 } from "lucide-react";
 import { useState } from "react";
 import {
-  getAllCertificates,
-  getCertificateStats,
+    getAllCertificates,
+    getCertificateStats,
 } from "../../../../lib/actions";
 
 interface Certificate {

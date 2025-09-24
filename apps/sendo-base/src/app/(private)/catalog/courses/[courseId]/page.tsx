@@ -1,29 +1,29 @@
 "use client";
 
 import {
-  createEnrollmentRequest,
-  getCourseById,
-  getUserEnrollmentStatus,
+    createEnrollmentRequest,
+    getCourseById,
+    getUserEnrollmentStatus,
 } from "@/src/lib/actions";
-import { Button } from "@repo/ui/components/button";
+import { Button } from "@base-church/ui/components/button";
 import { useQuery } from "@tanstack/react-query";
 import {
-  BookOpen,
-  Calendar,
-  CheckCircle,
-  Clock,
-  FileText,
-  Globe,
-  Heart,
-  Info,
-  MessageCircle,
-  Play,
-  Share,
-  Star,
-  Target,
-  User,
-  Users,
-  Video,
+    BookOpen,
+    Calendar,
+    CheckCircle,
+    Clock,
+    FileText,
+    Globe,
+    Heart,
+    Info,
+    MessageCircle,
+    Play,
+    Share,
+    Star,
+    Target,
+    User,
+    Users,
+    Video,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";

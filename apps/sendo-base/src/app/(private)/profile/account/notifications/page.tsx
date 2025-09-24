@@ -1,17 +1,17 @@
 "use client";
 
 import { getUserProfile, updateUserNotifications } from "@/src/lib/actions";
-import { Button } from "@repo/ui/components/button";
-import { Checkbox } from "@repo/ui/components/checkbox";
-import { Label } from "@repo/ui/components/label";
+import { Button } from "@base-church/ui/components/button";
+import { Checkbox } from "@base-church/ui/components/checkbox";
+import { Label } from "@base-church/ui/components/label";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  Bell,
-  Mail,
-  MessageSquare,
-  Save,
-  Settings,
-  Smartphone,
+    Bell,
+    Mail,
+    MessageSquare,
+    Save,
+    Settings,
+    Smartphone,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";

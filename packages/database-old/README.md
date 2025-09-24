@@ -1,4 +1,4 @@
-# @repo/db
+# @base-church/db
 
 Database package for the Base Church application using Prisma ORM.
 
@@ -16,21 +16,21 @@ Database package for the Base Church application using Prisma ORM.
 ### Import the client
 
 ```typescript
-import { prisma } from "@repo/db";
+import { prisma } from "@base-church/db";
 // or
-import { prisma } from "@repo/db/client";
+import { prisma } from "@base-church/db/client";
 ```
 
 ### Import types
 
 ```typescript
-import type { User, Course, Enrollment } from "@repo/db";
+import type { User, Course, Enrollment } from "@base-church/db";
 ```
 
 ### Use database utilities
 
 ```typescript
-import { db } from "@repo/db";
+import { db } from "@base-church/db";
 
 // Health check
 const health = await db.health();

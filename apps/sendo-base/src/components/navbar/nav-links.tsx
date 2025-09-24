@@ -1,4 +1,4 @@
-import { cn } from "@repo/ui/lib/utils";
+import { cn } from "@base-church/ui/lib/utils";
 import Link, { LinkProps } from "next/link";
 import { PropsWithChildren } from "react";
 

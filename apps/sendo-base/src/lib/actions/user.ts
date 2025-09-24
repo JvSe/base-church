@@ -1,6 +1,6 @@
 "use server";
 
-import { prisma } from "@repo/db";
+import { prisma } from "@base-church/db";
 import { revalidatePath } from "next/cache";
 import { cleanCpf } from "../helpers/auth.helper";
 

@@ -2,29 +2,29 @@
 
 import { getForumPosts } from "@/src/lib/actions";
 import { formatDate } from "@/src/lib/formatters";
-import { Button } from "@repo/ui/components/button";
-import { Input } from "@repo/ui/components/input";
+import { Button } from "@base-church/ui/components/button";
+import { Input } from "@base-church/ui/components/input";
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@repo/ui/components/tabs";
-import { Textarea } from "@repo/ui/components/textarea";
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
+} from "@base-church/ui/components/tabs";
+import { Textarea } from "@base-church/ui/components/textarea";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Bookmark,
-  Clock,
-  Eye,
-  Filter,
-  Heart,
-  MessageCircle,
-  MoreHorizontal,
-  Plus,
-  Search,
-  Share,
-  TrendingUp,
-  Users,
+    Bookmark,
+    Clock,
+    Eye,
+    Filter,
+    Heart,
+    MessageCircle,
+    MoreHorizontal,
+    Plus,
+    Search,
+    Share,
+    TrendingUp,
+    Users,
 } from "lucide-react";
 import { useState } from "react";
 

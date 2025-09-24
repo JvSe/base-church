@@ -3,26 +3,26 @@
 import { getUserProfile } from "@/src/lib/actions";
 import { getInitials } from "@/src/lib/get-initial-by-name";
 import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@repo/ui/components/avatar";
-import { Button } from "@repo/ui/components/button";
+    Avatar,
+    AvatarFallback,
+    AvatarImage,
+} from "@base-church/ui/components/avatar";
+import { Button } from "@base-church/ui/components/button";
 import { useQuery } from "@tanstack/react-query";
 import {
-  BookOpen,
-  Calendar,
-  Download,
-  Edit,
-  Flame,
-  Mail,
-  MessageCircle,
-  Phone,
-  Plus,
-  Share,
-  Target,
-  Trophy,
-  Zap,
+    BookOpen,
+    Calendar,
+    Download,
+    Edit,
+    Flame,
+    Mail,
+    MessageCircle,
+    Phone,
+    Plus,
+    Share,
+    Target,
+    Trophy,
+    Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";

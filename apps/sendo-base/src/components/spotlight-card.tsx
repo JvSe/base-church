@@ -1,5 +1,5 @@
 "use client";
-import { cn } from "@repo/ui/lib/utils";
+import { cn } from "@base-church/ui/lib/utils";
 import React, { useRef, useState } from "react";
 
 interface Position {

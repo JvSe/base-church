@@ -1,9 +1,9 @@
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@repo/ui/components/accordion";
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from "@base-church/ui/components/accordion";
 import { BorderContainerGradient } from "../border-container-gradient";
 
 const AccordionQuestionItem = ({

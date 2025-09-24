@@ -12,8 +12,7 @@
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
-    "typecheck": "tsc --noEmit",
-    "postinstall": "prisma generate --schema=../../packages/db/prisma/schema.prisma"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -22,8 +21,8 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^5.0.1",
     "@prisma/client": "latest",
-    "@repo/db": "workspace:*",
-    "@repo/ui": "workspace:*",
+    "@base-church/db": "workspace:*",
+    "@base-church/ui": "workspace:*",
     "@tabler/icons-react": "^3.34.1",
     "@tailwindcss/postcss": "^4.1.8",
     "@tanstack/react-query": "^5.86.0",
@@ -48,8 +47,8 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
-    "@repo/eslint-config": "workspace:*",
-    "@repo/typescript-config": "workspace:*",
+    "@base-church/eslint-config": "workspace:*",
+    "@base-church/typescript-config": "workspace:*",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

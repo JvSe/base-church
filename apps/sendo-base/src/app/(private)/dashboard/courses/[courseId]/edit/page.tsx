@@ -1,58 +1,58 @@
 "use client";
 
 import {
-  createLesson,
-  createModule,
-  deleteCourse,
-  deleteLesson,
-  deleteModule,
-  getCourseById,
-  getCourseModules,
-  getLeaders,
-  updateCourse,
-  updateCourseStatus,
-  updateLesson,
+    createLesson,
+    createModule,
+    deleteCourse,
+    deleteLesson,
+    deleteModule,
+    getCourseById,
+    getCourseModules,
+    getLeaders,
+    updateCourse,
+    updateCourseStatus,
+    updateLesson,
 } from "@/src/lib/actions";
 import { COURSE_CATEGORIES } from "@/src/lib/constants";
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from "@base-church/ui/components/accordion";
+import { Button } from "@base-church/ui/components/button";
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@base-church/ui/components/form";
+import { Input } from "@base-church/ui/components/input";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@base-church/ui/components/select";
+import { Textarea } from "@base-church/ui/components/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@repo/ui/components/accordion";
-import { Button } from "@repo/ui/components/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@repo/ui/components/form";
-import { Input } from "@repo/ui/components/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@repo/ui/components/select";
-import { Textarea } from "@repo/ui/components/textarea";
 import { useQuery } from "@tanstack/react-query";
 import {
-  ArrowLeft,
-  BookOpen,
-  CheckCircle,
-  Edit,
-  FileText,
-  Layers,
-  Play,
-  Plus,
-  Save,
-  Trash2,
-  Upload,
-  Video,
+    ArrowLeft,
+    BookOpen,
+    CheckCircle,
+    Edit,
+    FileText,
+    Layers,
+    Play,
+    Plus,
+    Save,
+    Trash2,
+    Upload,
+    Video,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";

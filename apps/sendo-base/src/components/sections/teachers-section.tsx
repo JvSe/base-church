@@ -1,12 +1,12 @@
 "use client";
 import { Teacher } from "@/src/lib/types";
 import {
-  AutoScroll,
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from "@repo/ui/components/carousel";
-import { cn } from "@repo/ui/lib/utils";
+    AutoScroll,
+    Carousel,
+    CarouselContent,
+    CarouselItem,
+} from "@base-church/ui/components/carousel";
+import { cn } from "@base-church/ui/lib/utils";
 import { TeacherCard } from "../teacher-card";
 
 export const TeachersSection = () => {

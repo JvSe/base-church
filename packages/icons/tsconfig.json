@@ -3,7 +3,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@repo/ui/*": ["./src/*"]
+      "@base-church/ui/*": ["./src/*"]
     },
     "emitDeclarationOnly": true,
     "allowImportingTsExtensions": true

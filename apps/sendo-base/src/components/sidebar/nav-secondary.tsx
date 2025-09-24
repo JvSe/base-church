@@ -1,15 +1,15 @@
 "use client"
 
-import * as React from "react"
 import { type Icon } from "@tabler/icons-react"
+import * as React from "react"
 
 import {
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "@repo/ui/components/sidebar"
+    SidebarGroup,
+    SidebarGroupContent,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+} from "@base-church/ui/components/sidebar"
 
 export function NavSecondary({
   items,

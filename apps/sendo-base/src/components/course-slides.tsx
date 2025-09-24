@@ -1,10 +1,10 @@
 "use client";
 import {
-  AutoScroll,
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from "@repo/ui/components/carousel";
+    AutoScroll,
+    Carousel,
+    CarouselContent,
+    CarouselItem,
+} from "@base-church/ui/components/carousel";
 import { CourseCard } from "./course-card";
 import { CoursesType } from "./sections/courses-section";
 

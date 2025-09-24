@@ -3,37 +3,37 @@
 import { getUserProfile, updateUserProfileData } from "@/src/lib/actions";
 import { dayjs } from "@/src/lib/dayjs";
 import {
-  addressSchema,
-  AddressScheme,
+    addressSchema,
+    AddressScheme,
 } from "@/src/lib/forms/profile/address.scheme";
 import {
-  adicionalDataSchema,
-  AdicionalDataScheme,
+    adicionalDataSchema,
+    AdicionalDataScheme,
 } from "@/src/lib/forms/profile/adicional-data.scheme";
 import {
-  PersonalDataScheme,
-  personalSchema,
+    PersonalDataScheme,
+    personalSchema,
 } from "@/src/lib/forms/profile/personal-data.scheme";
 import {
-  cleanCep,
-  fetchCepData,
-  formatCep,
+    cleanCep,
+    fetchCepData,
+    formatCep,
 } from "@/src/lib/helpers/cep.helper";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@repo/ui/components/button";
-import { DatePicker } from "@repo/ui/components/date-picker";
+import { Button } from "@base-church/ui/components/button";
+import { DatePicker } from "@base-church/ui/components/date-picker";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@repo/ui/components/form";
-import { Input } from "@repo/ui/components/input";
-import { Label } from "@repo/ui/components/label";
-import { Textarea } from "@repo/ui/components/textarea";
-import { formatDocument } from "@repo/ui/helpers/format-document.helper";
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@base-church/ui/components/form";
+import { Input } from "@base-church/ui/components/input";
+import { Label } from "@base-church/ui/components/label";
+import { Textarea } from "@base-church/ui/components/textarea";
+import { formatDocument } from "@base-church/ui/helpers/format-document.helper";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Edit, Save, User, X } from "lucide-react";
 import { useEffect, useState } from "react";

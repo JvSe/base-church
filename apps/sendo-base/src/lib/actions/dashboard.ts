@@ -1,6 +1,6 @@
 "use server";
 
-import { prisma } from "@repo/db";
+import { prisma } from "@base-church/db";
 import { revalidatePath, unstable_cache } from "next/cache";
 
 // Dashboard Actions

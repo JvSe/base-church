@@ -2,47 +2,47 @@
 
 import { useAuth } from "@/src/hooks";
 import {
-  approveEnrollment,
-  deleteStudent,
-  getAllStudents,
-  getStudentEnrollments,
-  getStudentStats,
-  rejectEnrollment,
-  updateStudentStatus,
-  updateUserPastorStatus,
-  updateUserRole,
+    approveEnrollment,
+    deleteStudent,
+    getAllStudents,
+    getStudentEnrollments,
+    getStudentStats,
+    rejectEnrollment,
+    updateStudentStatus,
+    updateUserPastorStatus,
+    updateUserRole,
 } from "@/src/lib/actions";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@repo/ui/components/accordion";
-import { Button } from "@repo/ui/components/button";
-import { Input } from "@repo/ui/components/input";
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from "@base-church/ui/components/accordion";
+import { Button } from "@base-church/ui/components/button";
+import { Input } from "@base-church/ui/components/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@repo/ui/components/select";
-import { Textarea } from "@repo/ui/components/textarea";
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@base-church/ui/components/select";
+import { Textarea } from "@base-church/ui/components/textarea";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Award,
-  BookOpen,
-  Calendar,
-  CheckCircle,
-  Download,
-  Eye,
-  Filter,
-  Mail,
-  Phone,
-  Search,
-  TrendingUp,
-  Users,
-  XCircle,
+    Award,
+    BookOpen,
+    Calendar,
+    CheckCircle,
+    Download,
+    Eye,
+    Filter,
+    Mail,
+    Phone,
+    Search,
+    TrendingUp,
+    Users,
+    XCircle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";

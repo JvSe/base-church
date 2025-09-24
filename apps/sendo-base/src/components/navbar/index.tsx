@@ -1,8 +1,8 @@
 "use client";
-import { Button } from "@repo/ui/components/button";
+import { Button } from "@base-church/ui/components/button";
 
 import { useAuth } from "@/src/hooks";
-import { cn } from "@repo/ui/lib/utils";
+import { cn } from "@base-church/ui/lib/utils";
 import { User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";

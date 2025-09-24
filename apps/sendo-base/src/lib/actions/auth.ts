@@ -1,6 +1,6 @@
 "use server";
 
-import { prisma } from "@repo/db";
+import { prisma } from "@base-church/db";
 import {
   cleanCpf,
   hashPassword,
@@ -93,6 +93,7 @@ export async function signUp(data: SignUpInput) {
 
     return { success: true, user: userData, sessionCookie };
   } catch (error) {
+    console.error("[SENDO-BASE-ERROR]:", JSON.stringify(error, null, 2));
     throw new Error("Erro interno do servidor");
   }
 }
@@ -146,7 +147,7 @@ export async function signIn(data: SignInInput) {
       sessionCookie,
     };
   } catch (error) {
-    throw new Error("Erro interno do servidor");
+    throw new Error("Erro interno do servidor: " + error);
   }
 }
 

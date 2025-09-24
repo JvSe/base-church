@@ -1,5 +1,5 @@
 {
-  "name": "@repo/ui",
+  "name": "@base-church/ui",
   "version": "0.0.0",
   "type": "module",
   "private": true,
@@ -44,8 +44,8 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@repo/eslint-config": "workspace:*",
-    "@repo/typescript-config": "workspace:*",
+    "@base-church/eslint-config": "workspace:*",
+    "@base-church/typescript-config": "workspace:*",
     "@tailwindcss/postcss": "latest",
     "@turbo/gen": "^2.4.2",
     "@types/node": "^20",

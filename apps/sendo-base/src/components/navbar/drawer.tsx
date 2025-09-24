@@ -1,13 +1,13 @@
 "use client";
 import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@repo/ui/components/drawer";
+    Drawer,
+    DrawerContent,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerTrigger,
+} from "@base-church/ui/components/drawer";
 import { Menu } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";

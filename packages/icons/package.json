@@ -18,8 +18,8 @@
     "usehooks-ts": "^3.1.1"
   },
   "devDependencies": {
-    "@repo/eslint-config": "workspace:*",
-    "@repo/typescript-config": "workspace:*",
+    "@base-church/eslint-config": "workspace:*",
+    "@base-church/typescript-config": "workspace:*",
     "@turbo/gen": "^2.4.2",
     "@types/node": "^20",
     "@types/react": "^19",

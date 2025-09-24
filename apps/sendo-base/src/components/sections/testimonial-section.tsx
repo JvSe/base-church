@@ -3,14 +3,14 @@
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { CommentCard } from "../comment-card";
 
-import { Button } from "@repo/ui/components/button";
+import { Button } from "@base-church/ui/components/button";
 import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  type CarouselApi,
-} from "@repo/ui/components/carousel";
-import { cn } from "@repo/ui/lib/utils";
+    Carousel,
+    CarouselContent,
+    CarouselItem,
+    type CarouselApi,
+} from "@base-church/ui/components/carousel";
+import { cn } from "@base-church/ui/lib/utils";
 import { useEffect, useState } from "react";
 import { BorderContainerGradient } from "../border-container-gradient";
 

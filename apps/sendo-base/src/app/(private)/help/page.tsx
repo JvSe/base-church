@@ -1,20 +1,20 @@
 "use client";
 
-import { Button } from "@repo/ui/components/button";
-import { Input } from "@repo/ui/components/input";
+import { Button } from "@base-church/ui/components/button";
+import { Input } from "@base-church/ui/components/input";
 import {
-  BookOpen,
-  ChevronRight,
-  Clock,
-  HelpCircle,
-  Mail,
-  MessageCircle,
-  Phone,
-  Search,
-  Star,
-  ThumbsUp,
-  Users,
-  Video,
+    BookOpen,
+    ChevronRight,
+    Clock,
+    HelpCircle,
+    Mail,
+    MessageCircle,
+    Phone,
+    Search,
+    Star,
+    ThumbsUp,
+    Users,
+    Video,
 } from "lucide-react";
 import { useState } from "react";
 

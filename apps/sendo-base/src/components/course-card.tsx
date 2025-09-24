@@ -1,4 +1,4 @@
-import { cn } from "@repo/ui/lib/utils";
+import { cn } from "@base-church/ui/lib/utils";
 import { BookOpen, User } from "lucide-react";
 import Image from "next/image";
 import { Teacher } from "../lib/types";

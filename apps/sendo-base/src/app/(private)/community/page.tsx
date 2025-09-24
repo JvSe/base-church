@@ -1,25 +1,25 @@
 "use client";
 
 import { getCommunityData } from "@/src/lib/actions";
-import { Button } from "@repo/ui/components/button";
+import { Button } from "@base-church/ui/components/button";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Award,
-  Bookmark,
-  BookOpen,
-  Calendar,
-  Heart,
-  Image as ImageIcon,
-  MessageCircle,
-  MoreHorizontal,
-  Plus,
-  Send,
-  Share2,
-  Smile,
-  TrendingUp,
-  User,
-  Users,
-  Video,
+    Award,
+    Bookmark,
+    BookOpen,
+    Calendar,
+    Heart,
+    Image as ImageIcon,
+    MessageCircle,
+    MoreHorizontal,
+    Plus,
+    Send,
+    Share2,
+    Smile,
+    TrendingUp,
+    User,
+    Users,
+    Video,
 } from "lucide-react";
 import { useState } from "react";
 

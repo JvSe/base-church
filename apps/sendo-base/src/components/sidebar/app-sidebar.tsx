@@ -1,17 +1,17 @@
 "use client";
 
 import {
-  Award,
-  BarChart3,
-  BookOpen,
-  FileText,
-  HelpCircle,
-  Home,
-  LogOut,
-  Map,
-  MessageCircle,
-  User,
-  Users,
+    Award,
+    BarChart3,
+    BookOpen,
+    FileText,
+    HelpCircle,
+    Home,
+    LogOut,
+    Map,
+    MessageCircle,
+    User,
+    Users,
 } from "lucide-react";
 
 import Link from "next/link";
@@ -21,24 +21,24 @@ import * as React from "react";
 import { useAuth } from "@/src/hooks";
 import { getInitials } from "@/src/lib/get-initial-by-name";
 import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@repo/ui/components/avatar";
-import { Separator } from "@repo/ui/components/separator";
+    Avatar,
+    AvatarFallback,
+    AvatarImage,
+} from "@base-church/ui/components/avatar";
+import { Separator } from "@base-church/ui/components/separator";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarTrigger,
-} from "@repo/ui/components/sidebar";
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarGroup,
+    SidebarGroupContent,
+    SidebarGroupLabel,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+    SidebarTrigger,
+} from "@base-church/ui/components/sidebar";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();

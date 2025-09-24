@@ -5,14 +5,14 @@ import { DashboardCourseListCard } from "@/src/components/dashboard-course-list-
 import { useAuth } from "@/src/hooks";
 
 import { getUserEnrollments } from "@/src/lib/actions";
-import { Button } from "@repo/ui/components/button";
-import { Input } from "@repo/ui/components/input";
+import { Button } from "@base-church/ui/components/button";
+import { Input } from "@base-church/ui/components/input";
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@repo/ui/components/tabs";
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
+} from "@base-church/ui/components/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { Filter, Grid, List, Search } from "lucide-react";
 import { useState } from "react";

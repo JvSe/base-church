@@ -1,19 +1,19 @@
 "use client";
 
 import { getUserProfile } from "@/src/lib/actions";
-import { Button } from "@repo/ui/components/button";
+import { Button } from "@base-church/ui/components/button";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Award,
-  BookOpen,
-  Calendar,
-  Download,
-  Edit,
-  Mail,
-  MapPin,
-  Phone,
-  Shield,
-  User,
+    Award,
+    BookOpen,
+    Calendar,
+    Download,
+    Edit,
+    Mail,
+    MapPin,
+    Phone,
+    Shield,
+    User,
 } from "lucide-react";
 import Link from "next/link";
 

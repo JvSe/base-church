@@ -2,13 +2,13 @@
 
 import * as React from "react";
 
-import { Calendar } from "@repo/ui/components/calendar";
-import { Input } from "@repo/ui/components/input";
+import { Calendar } from "@base-church/ui/components/calendar";
+import { Input } from "@base-church/ui/components/input";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@repo/ui/components/popover";
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@base-church/ui/components/popover";
 import { ptBR } from "date-fns/locale";
 import { Matcher } from "react-day-picker";
 import { useBoolean } from "usehooks-ts";
