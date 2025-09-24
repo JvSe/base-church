@@ -1,31 +1,9 @@
-import { PrismaClient } from "../generated/client/index.js";
+import { PrismaClient } from "../generated/client";
 
-declare global {
-  // eslint-disable-next-line no-var
-  var __prisma: PrismaClient | undefined;
-}
+const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
-const createPrismaClient = () => {
-  return new PrismaClient({
-    log:
-      process.env.NODE_ENV === "development"
-        ? ["query", "error", "warn"]
-        : ["error"],
-    errorFormat: "pretty",
-  });
-};
+export const prisma = globalForPrisma.prisma || new PrismaClient();
 
-export const prisma = globalThis.__prisma ?? createPrismaClient();
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
-if (process.env.NODE_ENV !== "production") {
-  globalThis.__prisma = prisma;
-}
-
-// Graceful shutdown
-if (typeof process !== "undefined") {
-  process.on("beforeExit", async () => {
-    await prisma.$disconnect();
-  });
-}
-
-export * from "../generated/client/index.js";
+export * from "../generated/client";
