@@ -79,11 +79,11 @@ export default function ProfileEditOverviewPage() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        // 5MB limit
-        toast.error("A imagem deve ter no máximo 5MB");
-        return;
-      }
+      // if (file.size > 5 * 1024 * 1024) {
+      //   // 5MB limit
+      //   toast.error("A imagem deve ter no máximo 5MB");
+      //   return;
+      // }
 
       const reader = new FileReader();
       reader.onload = (e) => {
