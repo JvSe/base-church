@@ -1,9 +1,10 @@
 "use client";
 
+import { useAuth } from "@/src/hooks";
 import {
-    getUserProfile,
-    updateUserEmail,
-    updateUserPassword,
+  getUserProfile,
+  updateUserEmail,
+  updateUserPassword,
 } from "@/src/lib/actions";
 import { Button } from "@base-church/ui/components/button";
 import { Input } from "@base-church/ui/components/input";
@@ -34,10 +35,12 @@ export default function ProfileEditAccessPage() {
 
   const queryClient = useQueryClient();
 
+  const { user } = useAuth();
   const { data: userAuth, isLoading } = useQuery({
-    queryKey: ["user", "30d453b9-88c9-429e-9700-81d2db735f7a"],
-    queryFn: () => getUserProfile("30d453b9-88c9-429e-9700-81d2db735f7a"),
+    queryKey: ["user", user?.id],
+    queryFn: () => getUserProfile(user!.id),
     select: (data) => data.user,
+    enabled: !!user?.id,
   });
 
   // Update email data when user data is loaded
@@ -83,7 +86,7 @@ export default function ProfileEditAccessPage() {
     }
 
     updateEmailMutation.mutate({
-      userId: "30d453b9-88c9-429e-9700-81d2db735f7a",
+      userId: user!.id,
       newEmail: emailData.newEmail,
     });
   };
@@ -100,7 +103,7 @@ export default function ProfileEditAccessPage() {
     }
 
     updatePasswordMutation.mutate({
-      userId: "30d453b9-88c9-429e-9700-81d2db735f7a",
+      userId: user!.id,
       currentPassword: passwordData.currentPassword,
       newPassword: passwordData.newPassword,
     });

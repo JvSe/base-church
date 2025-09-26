@@ -1,11 +1,12 @@
 "use client";
 
+import { useAuth } from "@/src/hooks";
 import { getUserProfile } from "@/src/lib/actions";
 import { getInitials } from "@/src/lib/get-initial-by-name";
 import {
-    Avatar,
-    AvatarFallback,
-    AvatarImage,
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
 } from "@base-church/ui/components/avatar";
 import { Button } from "@base-church/ui/components/button";
 import { useQuery } from "@tanstack/react-query";
@@ -19,11 +20,13 @@ export default function ProfileEditLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const { user } = useAuth();
 
   const { data: userAuth } = useQuery({
-    queryKey: ["user", "30d453b9-88c9-429e-9700-81d2db735f7a"],
-    queryFn: () => getUserProfile("30d453b9-88c9-429e-9700-81d2db735f7a"),
+    queryKey: ["user", user?.id],
+    queryFn: () => getUserProfile(user!.id),
     select: (data) => data.user,
+    enabled: !!user?.id,
   });
 
   const formatDate = (date: Date) => {

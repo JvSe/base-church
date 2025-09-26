@@ -1,17 +1,18 @@
 "use client";
 
+import { useAuth } from "@/src/hooks";
 import { getUserProfile, updateUserNotifications } from "@/src/lib/actions";
 import { Button } from "@base-church/ui/components/button";
 import { Checkbox } from "@base-church/ui/components/checkbox";
 import { Label } from "@base-church/ui/components/label";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-    Bell,
-    Mail,
-    MessageSquare,
-    Save,
-    Settings,
-    Smartphone,
+  Bell,
+  Mail,
+  MessageSquare,
+  Save,
+  Settings,
+  Smartphone,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -40,11 +41,12 @@ export default function ProfileEditNotificationsPage() {
   });
 
   const queryClient = useQueryClient();
-
+  const { user } = useAuth();
   const { data: userAuth, isLoading } = useQuery({
-    queryKey: ["user", "30d453b9-88c9-429e-9700-81d2db735f7a"],
-    queryFn: () => getUserProfile("30d453b9-88c9-429e-9700-81d2db735f7a"),
+    queryKey: ["user", user?.id],
+    queryFn: () => getUserProfile(user!.id),
     select: (data) => data.user,
+    enabled: !!user?.id,
   });
 
   useEffect(() => {
@@ -91,7 +93,7 @@ export default function ProfileEditNotificationsPage() {
 
   const handleSave = () => {
     updateNotificationsMutation.mutate({
-      userId: "30d453b9-88c9-429e-9700-81d2db735f7a",
+      userId: user!.id,
       settings: notificationSettings,
     });
   };

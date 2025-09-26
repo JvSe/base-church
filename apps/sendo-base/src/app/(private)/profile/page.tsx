@@ -1,42 +1,43 @@
 "use client";
 
+import { useAuth } from "@/src/hooks";
 import { getUserProfile } from "@/src/lib/actions";
 import { getInitials } from "@/src/lib/get-initial-by-name";
 import {
-    Avatar,
-    AvatarFallback,
-    AvatarImage,
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
 } from "@base-church/ui/components/avatar";
 import { Button } from "@base-church/ui/components/button";
 import { useQuery } from "@tanstack/react-query";
 import {
-    BookOpen,
-    Calendar,
-    Download,
-    Edit,
-    Flame,
-    Mail,
-    MessageCircle,
-    Phone,
-    Plus,
-    Share,
-    Target,
-    Trophy,
-    Zap,
+  BookOpen,
+  Calendar,
+  Download,
+  Edit,
+  Flame,
+  Mail,
+  MessageCircle,
+  Phone,
+  Plus,
+  Share,
+  Target,
+  Trophy,
+  Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("overview");
+  const { user } = useAuth();
 
   const { data: userAuth } = useQuery({
-    queryKey: ["user", "30d453b9-88c9-429e-9700-81d2db735f7a"],
-    queryFn: () => getUserProfile("30d453b9-88c9-429e-9700-81d2db735f7a"),
+    queryKey: ["user", user?.id],
+    queryFn: () => getUserProfile(user!.id),
     select: (data) => data.user,
+    enabled: !!user?.id,
   });
-
-  console.log("data", userAuth);
 
   const calculateProfileCompletion = (user: any) => {
     if (!user) return 0;
@@ -55,6 +56,32 @@ export default function ProfilePage() {
       (field) => field && typeof field === "string" && field.trim() !== "",
     ).length;
     return Math.round((filledFields / fields.length) * 100);
+  };
+
+  const getEnrollmentStatusColor = (status: string) => {
+    switch (status) {
+      case "pending":
+        return "dark-warning dark-warning-bg";
+      case "approved":
+        return "dark-success dark-success-bg";
+      case "rejected":
+        return "dark-error dark-error-bg";
+      default:
+        return "dark-text-tertiary dark-bg-tertiary";
+    }
+  };
+
+  const getEnrollmentStatusText = (status: string) => {
+    switch (status) {
+      case "pending":
+        return "Pendente";
+      case "approved":
+        return "Aprovado";
+      case "rejected":
+        return "Rejeitado";
+      default:
+        return "Desconhecido";
+    }
   };
 
   // Use real user data with fallbacks
@@ -259,54 +286,82 @@ export default function ProfilePage() {
               {userAuth?.enrollments && userAuth.enrollments.length > 0 ? (
                 <div className="space-y-4">
                   {userAuth.enrollments.slice(0, 4).map((enrollment: any) => (
-                    <div
+                    <Link
                       key={enrollment.id}
-                      className="dark-bg-secondary rounded-lg p-4"
+                      href={`/contents/course/${enrollment.course.id}`}
                     >
-                      <div className="mb-3 flex items-center justify-between">
-                        <div>
-                          <h3 className="dark-text-primary mb-1 font-semibold">
-                            {enrollment.course?.title || "Curso sem título"}
-                          </h3>
-                          <p className="dark-text-tertiary text-sm">
-                            Instrutor:{" "}
-                            {enrollment.course?.instructor?.name ||
-                              "Instrutor não definido"}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          {enrollment.completedAt ? (
-                            <div className="flex items-center gap-2">
-                              <span className="dark-success text-sm font-medium">
-                                Concluído
-                              </span>
-                              <Button
-                                size="sm"
-                                className="dark-glass dark-border hover:dark-border-hover"
-                              >
-                                <Download size={14} className="mr-1" />
-                                Certificado
-                              </Button>
+                      <div className="dark-card dark-shadow-sm rounded-lg p-4 shadow-2xl transition-all duration-300">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="mb-2 flex items-center gap-3">
+                              <div className="dark-bg-tertiary rounded-lg p-2">
+                                <BookOpen className="dark-text-primary h-4 w-4" />
+                              </div>
+                              <div>
+                                <h3 className="dark-text-primary font-semibold">
+                                  {enrollment.course?.title ||
+                                    "Curso sem título"}
+                                </h3>
+                                <p className="dark-text-tertiary text-sm">
+                                  Instrutor:{" "}
+                                  <span className="dark-text-primary font-medium">
+                                    {enrollment.course?.instructor?.name ||
+                                      "Instrutor não definido"}
+                                  </span>
+                                </p>
+                              </div>
                             </div>
-                          ) : (
-                            <span className="dark-primary text-sm font-medium">
-                              {Math.round(enrollment.progress || 0)}% completo
-                            </span>
-                          )}
-                        </div>
-                      </div>
+                          </div>
 
-                      <div className="dark-bg-tertiary h-2 w-full rounded-full">
-                        <div
-                          className={`h-2 rounded-full transition-all duration-300 ${
-                            enrollment.progress === 100
-                              ? "dark-gradient-secondary"
-                              : "dark-gradient-primary"
-                          }`}
-                          style={{ width: `${enrollment.progress || 0}%` }}
-                        />
+                          <div className="flex flex-col items-end gap-2">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={`inline-flex items-center rounded-full px-3 py-1.5 text-xs font-medium ${getEnrollmentStatusColor(enrollment.status)}`}
+                              >
+                                {getEnrollmentStatusText(enrollment.status)}
+                              </span>
+                            </div>
+
+                            {enrollment.status === "approved" && (
+                              <div className="text-right">
+                                {enrollment.completedAt ? (
+                                  <div className="flex items-center gap-2">
+                                    <span className="dark-success text-sm font-medium">
+                                      Concluído
+                                    </span>
+                                    <Button
+                                      size="sm"
+                                      className="dark-glass dark-border hover:dark-border-hover"
+                                    >
+                                      <Download size={14} className="mr-1" />
+                                      Certificado
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <span className="dark-primary text-sm font-medium">
+                                    {Math.round(enrollment.progress || 0)}%
+                                    completo
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {enrollment.status === "approved" && (
+                          <div className="dark-bg-tertiary h-2 w-full rounded-full">
+                            <div
+                              className={`h-2 rounded-full transition-all duration-300 ${
+                                enrollment.progress === 100
+                                  ? "dark-gradient-secondary"
+                                  : "dark-gradient-primary"
+                              }`}
+                              style={{ width: `${enrollment.progress || 0}%` }}
+                            />
+                          </div>
+                        )}
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               ) : (

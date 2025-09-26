@@ -1,29 +1,30 @@
 "use client";
 
+import { useAuth } from "@/src/hooks";
 import {
-    getCourseById,
-    getUserEnrollmentStatus,
-    getUserProgress,
+  getCourseById,
+  getUserEnrollmentStatus,
+  getUserProgress,
 } from "@/src/lib/actions";
 import { Button } from "@base-church/ui/components/button";
 import { useQuery } from "@tanstack/react-query";
 import {
-    BookOpen,
-    Calendar,
-    CheckCircle,
-    Clock,
-    Download,
-    FileText,
-    Globe,
-    Heart,
-    MessageCircle,
-    Play,
-    Share,
-    Star,
-    Target,
-    User,
-    Users,
-    Video,
+  BookOpen,
+  Calendar,
+  CheckCircle,
+  Clock,
+  Download,
+  FileText,
+  Globe,
+  Heart,
+  MessageCircle,
+  Play,
+  Share,
+  Star,
+  Target,
+  User,
+  Users,
+  Video,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -37,7 +38,7 @@ interface CoursePageProps {
 export default function CoursePage({ params }: CoursePageProps) {
   const [courseId, setCourseId] = useState<string>("");
   const [activeTab, setActiveTab] = useState("overview");
-  const [userId] = useState("30d453b9-88c9-429e-9700-81d2db735f7a"); // TODO: Obter ID do usuário logado
+  const { user } = useAuth();
 
   // Resolver params
   useState(() => {
@@ -63,9 +64,9 @@ export default function CoursePage({ params }: CoursePageProps) {
     isLoading: enrollmentLoading,
     refetch: refetchEnrollment,
   } = useQuery({
-    queryKey: ["enrollment", courseId, userId],
-    queryFn: () => getUserEnrollmentStatus(courseId, userId),
-    enabled: !!courseId && !!userId,
+    queryKey: ["enrollment", courseId, user?.id],
+    queryFn: () => getUserEnrollmentStatus(courseId, user!.id),
+    enabled: !!courseId && !!user?.id,
   });
 
   // Buscar progresso do usuário no curso
@@ -74,9 +75,9 @@ export default function CoursePage({ params }: CoursePageProps) {
     isLoading: progressLoading,
     refetch: refetchProgress,
   } = useQuery({
-    queryKey: ["progress", courseId, userId],
-    queryFn: () => getUserProgress(userId),
-    enabled: !!courseId && !!userId,
+    queryKey: ["progress", courseId, user?.id],
+    queryFn: () => getUserProgress(user!.id),
+    enabled: !!courseId && !!user?.id,
   });
 
   const course = courseData?.course as any;
@@ -343,7 +344,7 @@ export default function CoursePage({ params }: CoursePageProps) {
                 {nextLesson ? (
                   <Button asChild className="dark-btn-primary w-full">
                     <Link
-                      href={`/contents/courses/${courseId}/lessons/${nextLesson.id}`}
+                      href={`/contents/course/${courseId}/lessons/${nextLesson.id}`}
                     >
                       <Play className="mr-2" size={16} />
                       Continuar Assistindo
@@ -543,7 +544,7 @@ export default function CoursePage({ params }: CoursePageProps) {
                             return (
                               <Link
                                 key={lesson.id}
-                                href={`/contents/courses/${courseId}/lessons/${lesson.id}`}
+                                href={`/contents/course/${courseId}/lessons/${lesson.id}`}
                                 className="hover:dark-bg-secondary flex items-center justify-between rounded-lg px-3 py-2 transition-colors"
                               >
                                 <div className="flex items-center gap-3">

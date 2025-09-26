@@ -3,14 +3,14 @@
 import { formatDuration } from "@/src/lib/formatters";
 import { Button } from "@base-church/ui/components/button";
 import {
-    ArrowRight,
-    BookOpen,
-    Clock,
-    Heart,
-    Play,
-    Star,
-    TrendingUp,
-    Users,
+  ArrowRight,
+  BookOpen,
+  Clock,
+  Heart,
+  Play,
+  Star,
+  TrendingUp,
+  Users,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -236,9 +236,9 @@ export function DashboardCourseCard({
                 href={
                   variant === "catalog"
                     ? course.isEnrolled
-                      ? `/contents/courses/${course.id}`
+                      ? `/contents/course/${course.id}`
                       : `/catalog/courses/${course.id}`
-                    : `/contents/courses/${course.id}`
+                    : `/contents/course/${course.id}`
                 }
               >
                 <Play size={16} className="mr-2" />

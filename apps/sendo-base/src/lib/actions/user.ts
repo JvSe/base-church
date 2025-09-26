@@ -86,6 +86,7 @@ export type UpdateUserProfileInput = {
   birthDate?: string;
   bio?: string;
   phone?: string;
+  image?: string;
   // Address fields
   cep?: string;
   street?: string;

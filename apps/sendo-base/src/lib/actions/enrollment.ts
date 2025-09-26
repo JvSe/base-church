@@ -324,10 +324,12 @@ export async function createEnrollmentRequest(
     });
 
     if (existingEnrollment) {
-      return {
-        success: false,
-        error: "Você já possui uma solicitação de matrícula para este curso",
-      };
+      throw new Error(
+        JSON.stringify({
+          success: false,
+          error: "Você já possui uma solicitação de matrícula para este curso",
+        }),
+      );
     }
 
     // Criar nova solicitação de matrícula
@@ -348,14 +350,14 @@ export async function createEnrollmentRequest(
     });
 
     // Criar notificação para o usuário
-    await prisma.notification.create({
-      data: {
-        userId: userId,
-        title: "Solicitação de Matrícula Enviada",
-        message: `Sua solicitação de matrícula no curso "${enrollment.course.title}" foi enviada com sucesso. Aguarde aprovação dos líderes.`,
-        type: "info",
-      },
-    });
+    // await prisma.notification.create({
+    //   data: {
+    //     userId: userId,
+    //     title: "Solicitação de Matrícula Enviada",
+    //     message: `Sua solicitação de matrícula no curso "${enrollment.course.title}" foi enviada com sucesso. Aguarde aprovação dos líderes.`,
+    //     type: "info",
+    //   },
+    // });
 
     revalidatePath(`/catalog/courses/${courseId}`);
     return {
@@ -365,12 +367,7 @@ export async function createEnrollmentRequest(
     };
   } catch (error) {
     console.error("Error creating enrollment request:", error);
-    throw new Error(
-      JSON.stringify({
-        success: false,
-        error: "Erro ao enviar solicitação de matrícula",
-      }),
-    );
+    throw new Error("Error creating enrollment request:" + error);
   }
 }
 

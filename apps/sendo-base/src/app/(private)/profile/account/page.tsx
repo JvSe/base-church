@@ -1,31 +1,117 @@
 "use client";
 
-import { getUserProfile } from "@/src/lib/actions";
-import { Button } from "@base-church/ui/components/button";
-import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/src/hooks";
+import { getUserProfile, updateUserProfileData } from "@/src/lib/actions";
 import {
-    Award,
-    BookOpen,
-    Calendar,
-    Download,
-    Edit,
-    Mail,
-    MapPin,
-    Phone,
-    Shield,
-    User,
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@base-church/ui/components/avatar";
+import { Button } from "@base-church/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@base-church/ui/components/dialog";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Award,
+  BookOpen,
+  Calendar,
+  Camera,
+  Download,
+  Edit,
+  Mail,
+  MapPin,
+  Phone,
+  Shield,
+  User,
+  X,
 } from "lucide-react";
 import Link from "next/link";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
 
 export default function ProfileEditOverviewPage() {
+  const { user, setUser } = useAuth();
+  const queryClient = useQueryClient();
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [croppedImage, setCroppedImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const { data: userAuth } = useQuery({
-    queryKey: ["user", "30d453b9-88c9-429e-9700-81d2db735f7a"],
-    queryFn: () => getUserProfile("30d453b9-88c9-429e-9700-81d2db735f7a"),
+    queryKey: ["user", user?.id],
+    queryFn: () => getUserProfile(user!.id),
     select: (data) => data.user,
+    enabled: !!user?.id,
   });
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString("pt-BR");
+  };
+
+  // Mutation para atualizar foto do perfil
+  const updatePhotoMutation = useMutation({
+    mutationFn: updateUserProfileData,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["user", user?.id],
+      });
+      setUser({ ...user } as any);
+      setShowImageModal(false);
+      setSelectedImage(null);
+      setCroppedImage(null);
+      toast.success("Foto do perfil atualizada com sucesso!");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Erro ao atualizar foto do perfil");
+    },
+  });
+
+  // Função para abrir seletor de arquivo
+  const handleImageSelect = () => {
+    fileInputRef.current?.click();
+  };
+
+  // Função para processar arquivo selecionado
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        // 5MB limit
+        toast.error("A imagem deve ter no máximo 5MB");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setSelectedImage(e.target?.result as string);
+        setShowImageModal(true);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Função para simular recorte (em produção, usar uma biblioteca como react-image-crop)
+  const handleCrop = () => {
+    if (selectedImage) {
+      // Simulação de recorte - em produção usar react-image-crop
+      setCroppedImage(selectedImage);
+    }
+  };
+
+  // Função para salvar a foto
+  const handleSavePhoto = () => {
+    if (selectedImage) {
+      updatePhotoMutation.mutate({
+        userId: user!.id,
+        data: {
+          image: selectedImage,
+        },
+      });
+    }
   };
 
   const coursesCompleted =
@@ -59,56 +145,69 @@ export default function ProfileEditOverviewPage() {
             </Button>
           </div>
 
-          <div className="space-y-3">
-            <div className="flex items-center space-x-3">
-              <User className="dark-text-tertiary" size={16} />
-              <div>
-                <p className="dark-text-secondary text-sm font-medium">
-                  {userAuth?.name || "Nome não definido"}
-                </p>
-                <p className="dark-text-tertiary text-xs">Nome completo</p>
+          <div className="flex gap-6">
+            {/* Foto do perfil */}
+            <div className="flex justify-center">
+              <div
+                className="group relative cursor-pointer"
+                onClick={handleImageSelect}
+              >
+                <Avatar className="group-hover:ring-primary h-28 w-28 ring-2 ring-transparent transition-all duration-200">
+                  <AvatarImage
+                    src={userAuth?.image ?? ""}
+                    alt={userAuth?.name ?? "Foto do perfil"}
+                    className="object-cover"
+                  />
+                  <AvatarFallback className="dark-bg-tertiary dark-text-primary text-xl font-semibold">
+                    {userAuth?.name?.charAt(0)?.toUpperCase() || "U"}
+                  </AvatarFallback>
+                </Avatar>
+
+                {/* Overlay de hover */}
+                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                  <Camera className="h-6 w-6 text-white" />
+                </div>
               </div>
             </div>
 
-            {userAuth?.bio && (
-              <div className="flex items-start space-x-3">
-                <User className="dark-text-tertiary mt-0.5" size={16} />
-                <div>
-                  <p className="dark-text-secondary text-sm">
-                    {userAuth.bio.length > 60
-                      ? `${userAuth.bio.substring(0, 60)}...`
-                      : userAuth.bio}
-                  </p>
-                  <p className="dark-text-tertiary text-xs">Biografia</p>
-                </div>
-              </div>
-            )}
-
-            {(userAuth?.city || userAuth?.state) && (
+            {/* Informações pessoais */}
+            <div className="space-y-3">
               <div className="flex items-center space-x-3">
-                <MapPin className="dark-text-tertiary" size={16} />
+                <User className="dark-text-tertiary" size={16} />
                 <div>
                   <p className="dark-text-secondary text-sm font-medium">
-                    {[userAuth?.city, userAuth?.state]
-                      .filter(Boolean)
-                      .join(", ")}
+                    {userAuth?.name || "Nome não definido"}
                   </p>
-                  <p className="dark-text-tertiary text-xs">Localização</p>
+                  <p className="dark-text-tertiary text-xs">Nome completo</p>
                 </div>
               </div>
-            )}
 
-            {userAuth?.phone && (
-              <div className="flex items-center space-x-3">
-                <Phone className="dark-text-tertiary" size={16} />
-                <div>
-                  <p className="dark-text-secondary text-sm font-medium">
-                    {userAuth.phone}
-                  </p>
-                  <p className="dark-text-tertiary text-xs">Telefone</p>
+              {(userAuth?.city || userAuth?.state) && (
+                <div className="flex items-center space-x-3">
+                  <MapPin className="dark-text-tertiary" size={16} />
+                  <div>
+                    <p className="dark-text-secondary text-sm font-medium">
+                      {[userAuth?.city, userAuth?.state]
+                        .filter(Boolean)
+                        .join(", ")}
+                    </p>
+                    <p className="dark-text-tertiary text-xs">Localização</p>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+
+              {userAuth?.phone && (
+                <div className="flex items-center space-x-3">
+                  <Phone className="dark-text-tertiary" size={16} />
+                  <div>
+                    <p className="dark-text-secondary text-sm font-medium">
+                      {userAuth.phone}
+                    </p>
+                    <p className="dark-text-tertiary text-xs">Telefone</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -280,6 +379,75 @@ export default function ProfileEditOverviewPage() {
           </div>
         </div> */}
       </div>
+
+      {/* Modal de Edição de Foto */}
+      <Dialog open={showImageModal} onOpenChange={setShowImageModal}>
+        <DialogContent className="dark-bg-elevated dark-border max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="dark-text-primary flex items-center gap-2">
+              <Camera size={20} />
+              Editar Foto do Perfil
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {selectedImage && (
+              <div className="space-y-4">
+                {/* Preview da imagem selecionada */}
+                <div className="dark-bg-secondary rounded-lg p-4">
+                  <h4 className="dark-text-primary mb-3 font-medium">
+                    Imagem Selecionada
+                  </h4>
+                  <div className="flex justify-center">
+                    <img
+                      src={selectedImage}
+                      alt="Preview"
+                      className="max-h-64 max-w-full rounded-full object-contain"
+                    />
+                  </div>
+                </div>
+
+                {/* Botões de ação */}
+                <div className="flex justify-between">
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedImage(null);
+                        setCroppedImage(null);
+                        setShowImageModal(false);
+                      }}
+                      className="dark-border dark-text-secondary hover:dark-bg-tertiary"
+                    >
+                      <X size={14} className="mr-1" />
+                      Cancelar
+                    </Button>
+                  </div>
+
+                  <Button
+                    onClick={handleSavePhoto}
+                    className="dark-btn-primary"
+                    disabled={updatePhotoMutation.isPending}
+                  >
+                    {updatePhotoMutation.isPending
+                      ? "Salvando..."
+                      : "Salvar Foto"}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Input de arquivo oculto */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileChange}
+        className="hidden"
+      />
     </div>
   );
 }

@@ -1,29 +1,30 @@
 "use client";
 
+import { useAuth } from "@/src/hooks";
 import {
-    createEnrollmentRequest,
-    getCourseById,
-    getUserEnrollmentStatus,
+  createEnrollmentRequest,
+  getCourseById,
+  getUserEnrollmentStatus,
 } from "@/src/lib/actions";
 import { Button } from "@base-church/ui/components/button";
 import { useQuery } from "@tanstack/react-query";
 import {
-    BookOpen,
-    Calendar,
-    CheckCircle,
-    Clock,
-    FileText,
-    Globe,
-    Heart,
-    Info,
-    MessageCircle,
-    Play,
-    Share,
-    Star,
-    Target,
-    User,
-    Users,
-    Video,
+  BookOpen,
+  Calendar,
+  CheckCircle,
+  Clock,
+  FileText,
+  Globe,
+  Heart,
+  Info,
+  MessageCircle,
+  Play,
+  Share,
+  Star,
+  Target,
+  User,
+  Users,
+  Video,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -37,7 +38,7 @@ interface CoursePageProps {
 export default function CoursePage({ params }: CoursePageProps) {
   const [courseId, setCourseId] = useState<string>("");
   const [activeTab, setActiveTab] = useState("overview");
-  const [userId] = useState("30d453b9-88c9-429e-9700-81d2db735f7a"); // TODO: Obter ID do usuário logado
+  const userId = useAuth((state) => state.user?.id); // TODO: Obter ID do usuário logado
 
   // Resolver params
   useState(() => {
@@ -64,7 +65,7 @@ export default function CoursePage({ params }: CoursePageProps) {
     refetch: refetchEnrollment,
   } = useQuery({
     queryKey: ["enrollment", courseId, userId],
-    queryFn: () => getUserEnrollmentStatus(courseId, userId),
+    queryFn: () => getUserEnrollmentStatus(courseId, userId || ""),
     enabled: !!courseId && !!userId,
   });
 
@@ -103,16 +104,17 @@ export default function CoursePage({ params }: CoursePageProps) {
 
   const handleEnrollmentRequest = async () => {
     try {
-      const result = await createEnrollmentRequest(courseId, userId);
+      const result = await createEnrollmentRequest(courseId, userId || "");
 
       if (result.success) {
         toast.success(result.message);
         refetchEnrollment();
-      } else {
-        toast.error(result.error);
       }
     } catch (error) {
-      toast.error("Erro ao enviar solicitação de matrícula");
+      console.error(error);
+      toast.error(
+        (error as any).error || "Erro ao enviar solicitação de matrícula",
+      );
     }
   };
 

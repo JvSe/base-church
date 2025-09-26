@@ -1,32 +1,35 @@
 "use client";
 
+import { useAuth } from "@/src/hooks";
 import { getCourses, getUserProfile } from "@/src/lib/actions";
 import { Button } from "@base-church/ui/components/button";
 import { useQuery } from "@tanstack/react-query";
 import {
-    Award,
-    BookOpen,
-    Calendar,
-    CheckCircle,
-    Clock,
-    MapPin,
-    Play,
-    Target,
-    Trophy,
-    Users,
-    Zap,
+  Award,
+  BookOpen,
+  Calendar,
+  CheckCircle,
+  Clock,
+  MapPin,
+  Play,
+  Target,
+  Trophy,
+  Users,
+  Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
 export default function JornadaPage() {
   const [activeStep, setActiveStep] = useState(1);
+  const { user } = useAuth();
 
   // Fetch user data
   const { data: userData } = useQuery({
-    queryKey: ["user", "30d453b9-88c9-429e-9700-81d2db735f7a"],
-    queryFn: () => getUserProfile("30d453b9-88c9-429e-9700-81d2db735f7a"),
+    queryKey: ["user", user?.id],
+    queryFn: () => getUserProfile(user!.id),
     select: (data) => data.user,
+    enabled: !!user?.id,
   });
 
   // Fetch courses (apenas publicados para a jornada)

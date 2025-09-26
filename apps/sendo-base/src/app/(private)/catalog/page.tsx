@@ -2,33 +2,34 @@
 
 import { DashboardCourseCard } from "@/src/components/dashboard-course-card";
 import { DashboardCourseListCard } from "@/src/components/dashboard-course-list-card";
+import { useAuth } from "@/src/hooks";
 import { getCourses, getUserEnrollments } from "@/src/lib/actions";
 import { Button } from "@base-church/ui/components/button";
 import { Input } from "@base-church/ui/components/input";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@base-church/ui/components/select";
 import {
-    Tabs,
-    TabsContent,
-    TabsList,
-    TabsTrigger,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
 } from "@base-church/ui/components/tabs";
 import { useQuery } from "@tanstack/react-query";
 import {
-    Database,
-    Filter,
-    Grid,
-    List,
-    Palette,
-    Search,
-    Target,
-    TrendingUp,
-    Zap,
+  Database,
+  Filter,
+  Grid,
+  List,
+  Palette,
+  Search,
+  Target,
+  TrendingUp,
+  Zap,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -49,13 +50,13 @@ export default function CatalogPage() {
     select: (data) => data.courses,
   });
 
-  console.log(coursesData);
-
+  const { user } = useAuth();
   // Fetch user enrollments to check which courses user is enrolled in
   const { data: enrollmentsData } = useQuery({
-    queryKey: ["user-enrollments", "30d453b9-88c9-429e-9700-81d2db735f7a"],
-    queryFn: () => getUserEnrollments("30d453b9-88c9-429e-9700-81d2db735f7a"),
+    queryKey: ["user-enrollments", user?.id],
+    queryFn: () => getUserEnrollments(user!.id),
     select: (data) => data.enrollments,
+    enabled: !!user?.id,
   });
 
   // Transform courses data for compatibility with existing components

@@ -2,47 +2,50 @@
 
 import { useAuth } from "@/src/hooks";
 import {
-    approveEnrollment,
-    deleteStudent,
-    getAllStudents,
-    getStudentEnrollments,
-    getStudentStats,
-    rejectEnrollment,
-    updateStudentStatus,
-    updateUserPastorStatus,
-    updateUserRole,
+  approveEnrollment,
+  deleteStudent,
+  getAllStudents,
+  getStudentEnrollments,
+  getStudentStats,
+  rejectEnrollment,
+  updateStudentStatus,
+  updateUserPastorStatus,
+  updateUserRole,
 } from "@/src/lib/actions";
 import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
 } from "@base-church/ui/components/accordion";
 import { Button } from "@base-church/ui/components/button";
 import { Input } from "@base-church/ui/components/input";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@base-church/ui/components/select";
 import { Textarea } from "@base-church/ui/components/textarea";
 import { useQuery } from "@tanstack/react-query";
 import {
-    Award,
-    BookOpen,
-    Calendar,
-    CheckCircle,
-    Download,
-    Eye,
-    Filter,
-    Mail,
-    Phone,
-    Search,
-    TrendingUp,
-    Users,
-    XCircle,
+  AlertCircle,
+  Award,
+  BookOpen,
+  Calendar,
+  CheckCircle,
+  Clock,
+  Download,
+  Eye,
+  Filter,
+  Loader2,
+  Mail,
+  Phone,
+  Search,
+  TrendingUp,
+  Users,
+  XCircle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -91,6 +94,9 @@ export default function StudentsPage() {
   const [currentEnrollment, setCurrentEnrollment] = useState<Enrollment | null>(
     null,
   );
+  const [showEnrollments, setShowEnrollments] = useState<
+    Record<string, boolean>
+  >({});
 
   const { user, isAuthenticated, isLoading: userLoading } = useAuth();
 
@@ -128,6 +134,27 @@ export default function StudentsPage() {
     select: (data) => data.enrollments,
     enabled: !!selectedStudent,
   });
+
+  // Buscar matrículas de todos os alunos para mostrar badges de pendências
+  const { data: allEnrollmentsData, isLoading: allEnrollmentsLoading } =
+    useQuery({
+      queryKey: ["all-enrollments"],
+      queryFn: async () => {
+        const enrollments = await Promise.all(
+          filteredStudents.map(async (student) => {
+            const result = await getStudentEnrollments(student.id).catch(
+              () => ({ enrollments: [] }),
+            );
+            return (result.enrollments || []).map((enrollment) => ({
+              ...enrollment,
+              studentId: student.id,
+            }));
+          }),
+        );
+        return enrollments.flat();
+      },
+      enabled: filteredStudents.length > 0,
+    });
 
   useEffect(() => {
     if (studentsData) {
@@ -333,6 +360,30 @@ export default function StudentsPage() {
         return "Rejeitada";
       default:
         return "Desconhecido";
+    }
+  };
+
+  // Função para obter matrículas pendentes de um aluno específico
+  const getStudentPendingEnrollments = (studentId: string) => {
+    if (!allEnrollmentsData) return [];
+    return allEnrollmentsData.filter(
+      (enrollment) =>
+        enrollment.studentId === studentId && enrollment.status === "pending",
+    );
+  };
+
+  // Função para alternar visibilidade das matrículas
+  const toggleEnrollments = (studentId: string) => {
+    setShowEnrollments((prev) => ({
+      ...prev,
+      [studentId]: !prev[studentId],
+    }));
+
+    // Se está abrindo, seleciona o aluno e busca as matrículas
+    if (!showEnrollments[studentId]) {
+      setSelectedStudent(
+        filteredStudents.find((s) => s.id === studentId) || null,
+      );
     }
   };
 
@@ -729,93 +780,189 @@ export default function StudentsPage() {
                         {/* Matrículas Pendentes */}
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
-                            <h4 className="dark-text-primary font-semibold">
-                              Matrículas em Cursos
-                            </h4>
+                            <div className="flex items-center gap-3">
+                              <h4 className="dark-text-primary font-semibold">
+                                Matrículas em Cursos
+                              </h4>
+                              {student.coursesEnrolled > 0 && (
+                                <div className="flex items-center gap-2">
+                                  <div className="dark-bg-secondary dark-border dark-text-secondary rounded-full px-2 py-1 text-xs">
+                                    {student.coursesEnrolled} curso
+                                    {student.coursesEnrolled !== 1 ? "s" : ""}
+                                  </div>
+                                  {student.coursesEnrolled > 0 && (
+                                    <div className="flex items-center gap-1">
+                                      <div className="dark-bg-primary h-2 w-2 animate-pulse rounded-full"></div>
+                                      <span className="dark-text-tertiary text-xs">
+                                        Ativo
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                              {getStudentPendingEnrollments(student.id).length >
+                                0 && (
+                                <div className="dark-warning-bg flex items-center gap-1 rounded-full px-2 py-1">
+                                  <Clock className="dark-warning h-3 w-3 animate-pulse" />
+                                  <span className="dark-warning text-xs font-medium">
+                                    {
+                                      getStudentPendingEnrollments(student.id)
+                                        .length
+                                    }{" "}
+                                    pendente
+                                    {getStudentPendingEnrollments(student.id)
+                                      .length !== 1
+                                      ? "s"
+                                      : ""}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
                             <Button
                               size="sm"
                               className="dark-btn-primary"
-                              onClick={() => {
-                                setSelectedStudent(student);
-                                refetchEnrollments();
-                              }}
+                              onClick={() => toggleEnrollments(student.id)}
                             >
                               <Eye className="mr-2 h-3 w-3" />
-                              Ver Matrículas
+                              {showEnrollments[student.id]
+                                ? "Ocultar Matrículas"
+                                : "Ver Matrículas"}
                             </Button>
                           </div>
 
-                          {selectedStudent?.id === student.id && (
+                          {showEnrollments[student.id] && (
                             <div className="space-y-3">
                               {enrollmentsLoading ? (
-                                <div className="dark-card dark-shadow-sm rounded-lg p-4 text-center">
-                                  <div className="dark-text-secondary">
-                                    Carregando matrículas...
+                                <div className="dark-card dark-shadow-sm rounded-lg p-6">
+                                  <div className="flex items-center justify-center gap-3">
+                                    <Loader2 className="dark-text-primary h-5 w-5 animate-spin" />
+                                    <div className="dark-text-secondary">
+                                      Carregando matrículas...
+                                    </div>
+                                  </div>
+                                  <div className="mt-4 space-y-3">
+                                    {[1, 2, 3].map((i) => (
+                                      <div key={i} className="animate-pulse">
+                                        <div className="dark-bg-tertiary h-16 rounded-lg"></div>
+                                      </div>
+                                    ))}
                                   </div>
                                 </div>
                               ) : enrollmentsData &&
                                 enrollmentsData.length > 0 ? (
-                                <div className="space-y-3">
+                                <div className="space-y-4">
                                   {enrollmentsData.map((enrollment) => (
                                     <div
                                       key={enrollment.id}
-                                      className="dark-card dark-shadow-sm rounded-lg p-4"
+                                      className={`dark-card dark-shadow-sm hover:dark-shadow-md rounded-lg p-5 transition-all duration-300 ${
+                                        enrollment.status === "pending"
+                                          ? "border-l-warning from-warning/5 border-l-4 bg-gradient-to-r to-transparent"
+                                          : ""
+                                      }`}
                                     >
-                                      <div className="flex items-center justify-between">
-                                        <div className="flex-1">
-                                          <h5 className="dark-text-primary font-medium">
-                                            {enrollment.course.title}
-                                          </h5>
-                                          <p className="dark-text-secondary text-sm">
-                                            Instrutor:{" "}
-                                            {enrollment.course.instructor
-                                              ?.name || "Não informado"}
-                                          </p>
-                                          <p className="dark-text-tertiary text-xs">
-                                            Solicitado em:{" "}
-                                            {formatDate(enrollment.enrolledAt)}
-                                          </p>
-                                          {enrollment.approvedAt && (
-                                            <p className="dark-text-tertiary text-xs">
-                                              Aprovado em:{" "}
-                                              {formatDate(
-                                                enrollment.approvedAt,
-                                              )}
-                                              {enrollment.approver &&
-                                                ` por ${enrollment.approver.name}`}
-                                            </p>
-                                          )}
-                                          {enrollment.rejectionReason && (
-                                            <p className="dark-text-tertiary text-xs">
-                                              Motivo da rejeição:{" "}
-                                              {enrollment.rejectionReason}
-                                            </p>
-                                          )}
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                          <span
-                                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getEnrollmentStatusColor(enrollment.status)}`}
-                                          >
-                                            {getEnrollmentStatusText(
-                                              enrollment.status,
+                                      <div className="flex items-start justify-between">
+                                        <div className="flex-1 space-y-3">
+                                          <div className="flex items-center gap-3">
+                                            <div className="dark-bg-tertiary rounded-lg p-2">
+                                              <BookOpen className="dark-text-primary h-4 w-4" />
+                                            </div>
+                                            <div>
+                                              <h5 className="dark-text-primary text-lg font-semibold">
+                                                {enrollment.course.title}
+                                              </h5>
+                                              <p className="dark-text-secondary text-sm">
+                                                Instrutor:{" "}
+                                                <span className="dark-text-primary font-medium">
+                                                  {enrollment.course.instructor
+                                                    ?.name || "Não informado"}
+                                                </span>
+                                              </p>
+                                            </div>
+                                          </div>
+
+                                          <div className="grid grid-cols-1 gap-3 text-sm md:grid-cols-2">
+                                            <div className="flex items-center gap-2">
+                                              <Calendar className="dark-text-tertiary h-4 w-4" />
+                                              <span className="dark-text-tertiary">
+                                                Solicitado em:{" "}
+                                                <span className="dark-text-secondary font-medium">
+                                                  {formatDate(
+                                                    enrollment.enrolledAt,
+                                                  )}
+                                                </span>
+                                              </span>
+                                            </div>
+
+                                            {enrollment.approvedAt && (
+                                              <div className="flex items-center gap-2">
+                                                <CheckCircle className="dark-success h-4 w-4" />
+                                                <span className="dark-text-tertiary">
+                                                  Aprovado em:{" "}
+                                                  <span className="dark-text-secondary font-medium">
+                                                    {formatDate(
+                                                      enrollment.approvedAt,
+                                                    )}
+                                                  </span>
+                                                  {enrollment.approver &&
+                                                    ` por ${enrollment.approver.name}`}
+                                                </span>
+                                              </div>
                                             )}
-                                          </span>
+
+                                            {enrollment.rejectionReason && (
+                                              <div className="flex items-center gap-2 md:col-span-2">
+                                                <AlertCircle className="dark-error h-4 w-4" />
+                                                <span className="dark-text-tertiary">
+                                                  Motivo da rejeição:{" "}
+                                                  <span className="dark-text-secondary font-medium">
+                                                    {enrollment.rejectionReason}
+                                                  </span>
+                                                </span>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+
+                                        <div className="flex flex-col items-end gap-3">
+                                          <div className="flex items-center gap-2">
+                                            <span
+                                              className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${getEnrollmentStatusColor(enrollment.status)}`}
+                                            >
+                                              {enrollment.status ===
+                                                "pending" && (
+                                                <Clock className="h-3 w-3 animate-pulse" />
+                                              )}
+                                              {enrollment.status ===
+                                                "approved" && (
+                                                <CheckCircle className="h-3 w-3" />
+                                              )}
+                                              {enrollment.status ===
+                                                "rejected" && (
+                                                <XCircle className="h-3 w-3" />
+                                              )}
+                                              {getEnrollmentStatusText(
+                                                enrollment.status,
+                                              )}
+                                            </span>
+                                          </div>
+
                                           {enrollment.status === "pending" && (
-                                            <div className="flex gap-1">
+                                            <div className="flex gap-2">
                                               <Button
                                                 size="sm"
-                                                className="dark-success-bg dark-success hover:dark-success-bg"
+                                                className="dark-success-bg dark-success hover:dark-success-bg transition-all duration-200 hover:scale-105"
                                                 onClick={() =>
                                                   handleApproveEnrollment(
                                                     enrollment.id,
                                                   )
                                                 }
                                               >
-                                                <CheckCircle className="h-3 w-3" />
+                                                <CheckCircle className="mr-1 h-3 w-3" />
+                                                Aprovar
                                               </Button>
                                               <Button
                                                 size="sm"
-                                                className="dark-error-bg dark-error hover:dark-error-bg"
+                                                className="dark-error-bg dark-error hover:dark-error-bg transition-all duration-200 hover:scale-105"
                                                 onClick={() => {
                                                   setCurrentEnrollment(
                                                     enrollment,
@@ -823,19 +970,43 @@ export default function StudentsPage() {
                                                   setShowRejectModal(true);
                                                 }}
                                               >
-                                                <XCircle className="h-3 w-3" />
+                                                <XCircle className="mr-1 h-3 w-3" />
+                                                Rejeitar
                                               </Button>
                                             </div>
                                           )}
                                         </div>
                                       </div>
+
+                                      {enrollment.status === "pending" && (
+                                        <div className="dark-bg-tertiary border-l-warning mt-4 rounded-lg border-l-4 p-3">
+                                          <div className="flex items-center gap-2">
+                                            <AlertCircle className="dark-warning h-4 w-4" />
+                                            <span className="dark-text-secondary text-sm font-medium">
+                                              Esta matrícula está aguardando
+                                              aprovação
+                                            </span>
+                                          </div>
+                                        </div>
+                                      )}
                                     </div>
                                   ))}
                                 </div>
                               ) : (
-                                <div className="dark-card dark-shadow-sm rounded-lg p-4 text-center">
-                                  <div className="dark-text-secondary">
-                                    Nenhuma matrícula encontrada
+                                <div className="dark-card dark-shadow-sm rounded-lg p-8 text-center">
+                                  <div className="flex flex-col items-center gap-4">
+                                    <div className="dark-bg-tertiary rounded-full p-4">
+                                      <BookOpen className="dark-text-tertiary h-8 w-8" />
+                                    </div>
+                                    <div>
+                                      <h4 className="dark-text-primary mb-2 font-semibold">
+                                        Nenhuma matrícula encontrada
+                                      </h4>
+                                      <p className="dark-text-secondary text-sm">
+                                        Este aluno ainda não possui matrículas
+                                        em cursos
+                                      </p>
+                                    </div>
                                   </div>
                                 </div>
                               )}

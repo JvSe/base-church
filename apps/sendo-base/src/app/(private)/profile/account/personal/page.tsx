@@ -1,33 +1,34 @@
 "use client";
 
+import { useAuth } from "@/src/hooks";
 import { getUserProfile, updateUserProfileData } from "@/src/lib/actions";
 import { dayjs } from "@/src/lib/dayjs";
 import {
-    addressSchema,
-    AddressScheme,
+  addressSchema,
+  AddressScheme,
 } from "@/src/lib/forms/profile/address.scheme";
 import {
-    adicionalDataSchema,
-    AdicionalDataScheme,
+  adicionalDataSchema,
+  AdicionalDataScheme,
 } from "@/src/lib/forms/profile/adicional-data.scheme";
 import {
-    PersonalDataScheme,
-    personalSchema,
+  PersonalDataScheme,
+  personalSchema,
 } from "@/src/lib/forms/profile/personal-data.scheme";
 import {
-    cleanCep,
-    fetchCepData,
-    formatCep,
+  cleanCep,
+  fetchCepData,
+  formatCep,
 } from "@/src/lib/helpers/cep.helper";
 import { Button } from "@base-church/ui/components/button";
 import { DatePicker } from "@base-church/ui/components/date-picker";
 import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from "@base-church/ui/components/form";
 import { Input } from "@base-church/ui/components/input";
 import { Label } from "@base-church/ui/components/label";
@@ -44,14 +45,14 @@ export default function ProfileEditPersonalPage() {
   const [isEditingPersonal, setIsEditingPersonal] = useState(false);
   const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [isEditingAdditional, setIsEditingAdditional] = useState(false);
-  const [isSearchingCep, setIsSearchingCep] = useState(false);
 
   const queryClient = useQueryClient();
-
+  const { user } = useAuth();
   const { data: userAuth, isLoading } = useQuery({
-    queryKey: ["user", "30d453b9-88c9-429e-9700-81d2db735f7a"],
-    queryFn: () => getUserProfile("30d453b9-88c9-429e-9700-81d2db735f7a"),
+    queryKey: ["user", user?.id],
+    queryFn: () => getUserProfile(user!.id),
     select: (data) => data.user,
+    enabled: !!user?.id,
   });
 
   const updateProfileMutation = useMutation({
@@ -59,7 +60,7 @@ export default function ProfileEditPersonalPage() {
     onSuccess: () => {
       console.log("Perfil atualizado com sucesso!");
       queryClient.invalidateQueries({
-        queryKey: ["user", "30d453b9-88c9-429e-9700-81d2db735f7a"],
+        queryKey: ["user", user?.id],
       });
       setIsEditingPersonal(false);
       setIsEditingAddress(false);
@@ -74,7 +75,7 @@ export default function ProfileEditPersonalPage() {
 
   const handleSavePersonal = (data: PersonalDataScheme) => {
     updateProfileMutation.mutate({
-      userId: "30d453b9-88c9-429e-9700-81d2db735f7a",
+      userId: user!.id,
       data: {
         name: data.name,
         cpf: data.cpf,
@@ -88,7 +89,7 @@ export default function ProfileEditPersonalPage() {
 
   const handleSaveAddress = (data: AddressScheme) => {
     updateProfileMutation.mutate({
-      userId: "30d453b9-88c9-429e-9700-81d2db735f7a",
+      userId: user!.id,
       data: {
         cep: cleanCep(data.cep),
         street: data.street,
@@ -103,7 +104,7 @@ export default function ProfileEditPersonalPage() {
 
   const handleSaveAdditional = (data: AdicionalDataScheme) => {
     updateProfileMutation.mutate({
-      userId: "30d453b9-88c9-429e-9700-81d2db735f7a",
+      userId: user!.id,
       data: {
         bio: data.bio,
       },
@@ -149,34 +150,6 @@ export default function ProfileEditPersonalPage() {
     setIsEditingAdditional(false);
   };
 
-  const handleSearchCep = async (cep: string) => {
-    if (!cep || cep.length < 8 || isSearchingCep) return;
-
-    setIsSearchingCep(true);
-    try {
-      const cepData = await fetchCepData(cep);
-
-      if ("erro" in cepData && cepData.erro) {
-        toast.error("CEP não encontrado");
-        return;
-      }
-
-      // Preenche os campos automaticamente
-      if ("logradouro" in cepData) {
-        formAddress.setValue("street", cepData.logradouro);
-        formAddress.setValue("neighborhood", cepData.bairro);
-        formAddress.setValue("city", cepData.localidade);
-        formAddress.setValue("state", cepData.uf);
-
-        toast.success("Endereço encontrado!");
-      }
-    } catch (error) {
-      toast.error("Erro ao buscar CEP");
-    } finally {
-      setIsSearchingCep(false);
-    }
-  };
-
   const formPersonalData = useForm<PersonalDataScheme>({
     resolver: zodResolver(personalSchema),
   });
@@ -190,24 +163,36 @@ export default function ProfileEditPersonalPage() {
   });
 
   const watchedCep = formAddress.watch("cep");
+  const cepField = formAddress.getFieldState("cep");
 
-  useEffect(() => {
-    if (
+  // useQuery para buscar dados do CEP
+  const { data: cepData, isLoading: isSearchingCep } = useQuery({
+    queryKey: ["cep", watchedCep],
+    queryFn: () => fetchCepData(watchedCep),
+    enabled: !!(
       watchedCep &&
       watchedCep.length === 8 &&
       isEditingAddress &&
-      !isSearchingCep
-    ) {
-      const cepField = formAddress.getFieldState("cep");
-      if (!cepField.invalid && !cepField.error) {
-        const timeoutId = setTimeout(() => {
-          handleSearchCep(watchedCep);
-        }, 500);
+      !cepField.invalid &&
+      !cepField.error
+    ),
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    retry: false,
+  });
 
-        return () => clearTimeout(timeoutId);
-      }
+  // useEffect para processar os dados do CEP quando recebidos
+  useEffect(() => {
+    if (cepData && !("erro" in cepData)) {
+      // Preenche os campos automaticamente
+      formAddress.setValue("street", cepData.logradouro);
+      formAddress.setValue("neighborhood", cepData.bairro);
+      formAddress.setValue("city", cepData.localidade);
+      formAddress.setValue("state", cepData.uf);
+      toast.success("Endereço encontrado com sucesso!");
+    } else if (cepData && "erro" in cepData) {
+      toast.error("CEP não encontrado");
     }
-  }, [watchedCep, isEditingAddress, isSearchingCep]);
+  }, [cepData, formAddress]);
 
   useEffect(() => {
     if (userAuth) {
