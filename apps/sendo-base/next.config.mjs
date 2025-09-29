@@ -23,6 +23,11 @@ const nextConfig = {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return config;
   },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "5mb",
+    },
+  },
 };
 
 export default nextConfig;

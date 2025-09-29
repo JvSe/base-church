@@ -20,6 +20,12 @@ enum CourseCategory {
   MULTIPLICATION
 }
 
+enum CertificateStatus {
+  PENDING // Certificado criado mas não emitido
+  ISSUED // Certificado emitido para o usuário
+  REVOKED // Certificado revogado
+}
+
 model User {
   id                   String    @id @default(uuid())
   name                 String?
@@ -101,11 +107,12 @@ model Course {
   updatedAt       DateTime @updatedAt
 
   // Relations
-  instructor   User?          @relation("CourseInstructor", fields: [instructorId], references: [id])
-  modules      Module[]
-  enrollments  Enrollment[]
-  certificates Certificate[]
-  reviews      CourseReview[]
+  instructor          User?                @relation("CourseInstructor", fields: [instructorId], references: [id])
+  modules             Module[]
+  enrollments         Enrollment[]
+  certificates        Certificate[]
+  certificateTemplate CertificateTemplate?
+  reviews             CourseReview[]
 
   @@map("courses")
 }
@@ -190,16 +197,41 @@ model LessonProgress {
   @@map("lesson_progresses")
 }
 
-model Certificate {
-  id             String   @id @default(uuid())
-  userId         String
-  courseId       String
-  issuedAt       DateTime @default(now())
-  certificateUrl String?
+// Template de certificado - criado quando o curso é criado
+model CertificateTemplate {
+  id          String   @id @default(uuid())
+  courseId    String   @unique // Um curso tem apenas um template de certificado
+  title       String
+  description String?
+  templateUrl String? // URL do template PDF
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   // Relations
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course       Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  certificates Certificate[] // Certificados emitidos baseados neste template
+
+  @@map("certificate_templates")
+}
+
+// Certificado emitido - criado quando usuário completa o curso
+model Certificate {
+  id               String            @id @default(uuid())
+  userId           String? // Nullable - só preenchido quando emitido
+  courseId         String
+  templateId       String
+  status           CertificateStatus @default(PENDING)
+  issuedAt         DateTime? // Nullable - só preenchido quando emitido
+  certificateUrl   String? // URL do certificado gerado
+  verificationCode String?           @unique // Código único para verificação
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  // Relations
+  user     User?               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course   Course              @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  template CertificateTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
   @@map("certificates")
 }

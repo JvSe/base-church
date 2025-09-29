@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/src/hooks";
 import { getUserProfile, updateUserProfileData } from "@/src/lib/actions";
+import { formatDocument } from "@/src/lib/helpers";
 import {
   Avatar,
   AvatarFallback,
@@ -22,7 +23,6 @@ import {
   Camera,
   Download,
   Edit,
-  Mail,
   MapPin,
   Phone,
   Shield,
@@ -34,11 +34,10 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 export default function ProfileEditOverviewPage() {
-  const { user, setUser } = useAuth();
+  const { user, updateUser } = useAuth();
   const queryClient = useQueryClient();
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [croppedImage, setCroppedImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: userAuth } = useQuery({
@@ -55,14 +54,23 @@ export default function ProfileEditOverviewPage() {
   // Mutation para atualizar foto do perfil
   const updatePhotoMutation = useMutation({
     mutationFn: updateUserProfileData,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["user", user?.id],
-      });
-      setUser({ ...user } as any);
+    onSuccess: (data) => {
+      // Atualiza o cache da query com os novos dados
+      queryClient.setQueryData(["user", user?.id], (oldData: any) => ({
+        ...oldData,
+        user: { ...oldData?.user, ...data.user },
+      }));
+
+      // Atualiza o estado do useAuth com os dados atualizados
+      updateUser({
+        image: data.user?.image,
+        isPastor: data.user?.isPastor,
+        name: data.user?.name,
+        role: data.user?.role,
+      } as any);
+
       setShowImageModal(false);
       setSelectedImage(null);
-      setCroppedImage(null);
       toast.success("Foto do perfil atualizada com sucesso!");
     },
     onError: (error: any) => {
@@ -79,26 +87,12 @@ export default function ProfileEditOverviewPage() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // if (file.size > 5 * 1024 * 1024) {
-      //   // 5MB limit
-      //   toast.error("A imagem deve ter no máximo 5MB");
-      //   return;
-      // }
-
       const reader = new FileReader();
       reader.onload = (e) => {
         setSelectedImage(e.target?.result as string);
         setShowImageModal(true);
       };
       reader.readAsDataURL(file);
-    }
-  };
-
-  // Função para simular recorte (em produção, usar uma biblioteca como react-image-crop)
-  const handleCrop = () => {
-    if (selectedImage) {
-      // Simulação de recorte - em produção usar react-image-crop
-      setCroppedImage(selectedImage);
     }
   };
 
@@ -147,7 +141,7 @@ export default function ProfileEditOverviewPage() {
 
           <div className="flex gap-6">
             {/* Foto do perfil */}
-            <div className="flex justify-center">
+            <div className="flex h-min justify-center">
               <div
                 className="group relative cursor-pointer"
                 onClick={handleImageSelect}
@@ -232,12 +226,12 @@ export default function ProfileEditOverviewPage() {
 
           <div className="space-y-3">
             <div className="flex items-center space-x-3">
-              <Mail className="dark-text-tertiary" size={16} />
+              <User className="dark-text-tertiary" size={16} />
               <div>
                 <p className="dark-text-secondary text-sm font-medium">
-                  {userAuth?.email || "Email não definido"}
+                  {formatDocument(userAuth?.cpf || "") || "CPF não definido"}
                 </p>
-                <p className="dark-text-tertiary text-xs">Email de acesso</p>
+                <p className="dark-text-tertiary text-xs">CPF</p>
               </div>
             </div>
 
@@ -414,7 +408,6 @@ export default function ProfileEditOverviewPage() {
                       variant="outline"
                       onClick={() => {
                         setSelectedImage(null);
-                        setCroppedImage(null);
                         setShowImageModal(false);
                       }}
                       className="dark-border dark-text-secondary hover:dark-bg-tertiary"

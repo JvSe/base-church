@@ -1,58 +1,61 @@
 "use client";
 
 import {
-    createLesson,
-    createModule,
-    deleteCourse,
-    deleteLesson,
-    deleteModule,
-    getCourseById,
-    getCourseModules,
-    getLeaders,
-    updateCourse,
-    updateCourseStatus,
-    updateLesson,
+  createLesson,
+  createModule,
+  deleteCourse,
+  deleteLesson,
+  deleteModule,
+  getCourseById,
+  getCourseModules,
+  getLeaders,
+  updateCourse,
+  updateCourseStatus,
+  updateLesson,
 } from "@/src/lib/actions";
+import { createCertificateTemplate } from "@/src/lib/actions/certificate";
 import { COURSE_CATEGORIES } from "@/src/lib/constants";
+import { extractYouTubeEmbedId } from "@/src/lib/helpers/youtube";
 import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
 } from "@base-church/ui/components/accordion";
 import { Button } from "@base-church/ui/components/button";
 import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from "@base-church/ui/components/form";
 import { Input } from "@base-church/ui/components/input";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@base-church/ui/components/select";
 import { Textarea } from "@base-church/ui/components/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import {
-    ArrowLeft,
-    BookOpen,
-    CheckCircle,
-    Edit,
-    FileText,
-    Layers,
-    Play,
-    Plus,
-    Save,
-    Trash2,
-    Upload,
-    Video,
+  ArrowLeft,
+  Award,
+  BookOpen,
+  CheckCircle,
+  Edit,
+  FileText,
+  Layers,
+  Play,
+  Plus,
+  Save,
+  Trash2,
+  Upload,
+  Video,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
@@ -96,9 +99,16 @@ const lessonSchema = z.object({
   }),
 });
 
+const certificateTemplateSchema = z.object({
+  title: z.string().min(1, "Título do certificado é obrigatório"),
+  description: z.string().min(1, "Descrição do certificado é obrigatória"),
+  pdfFile: z.any().optional(),
+});
+
 type CourseFormData = z.infer<typeof courseSchema>;
 type ModuleFormData = z.infer<typeof moduleSchema>;
 type LessonFormData = z.infer<typeof lessonSchema>;
+type CertificateTemplateFormData = z.infer<typeof certificateTemplateSchema>;
 
 interface Module {
   id: string;
@@ -114,6 +124,7 @@ interface Lesson {
   description: string;
   content?: string;
   videoUrl?: string;
+  youtubeEmbedId?: string;
   duration: number;
   order: number;
   type: "video" | "text" | "quiz";
@@ -135,6 +146,8 @@ export default function EditCoursePage(props: EditCoursePageProps) {
     moduleIndex: number;
     lessonIndex: number;
   } | null>(null);
+  const [showCertificateForm, setShowCertificateForm] = useState(false);
+  const [certificateFile, setCertificateFile] = useState<File | null>(null);
   const router = useRouter();
 
   const { courseId } = use(props.params);
@@ -226,8 +239,17 @@ export default function EditCoursePage(props: EditCoursePageProps) {
     },
   });
 
+  // Formulário do template de certificado
+  const certificateTemplateForm = useForm<CertificateTemplateFormData>({
+    resolver: zodResolver(certificateTemplateSchema),
+  });
+
   // Watch lesson type for conditional fields
   const selectedLessonType = lessonForm.watch("type");
+
+  // Watch course title to auto-generate certificate title
+  const courseTitle = courseForm.watch("title");
+  const courseDescription = courseForm.watch("description");
 
   // Atualizar formulário quando os dados chegarem
   useEffect(() => {
@@ -396,10 +418,23 @@ export default function EditCoursePage(props: EditCoursePageProps) {
     const lesson = modulesState[moduleIndex]?.lessons[lessonIndex];
     if (!lesson) return;
 
+    // Extrair YouTube Embed ID da URL fornecida
+    const youtubeEmbedId = extractYouTubeEmbedId(data.videoUrl || "");
+
+    console.log("🔍 Debug - videoUrl:", data.videoUrl);
+    console.log("🔍 Debug - youtubeEmbedId extraído:", youtubeEmbedId);
+
+    if (youtubeEmbedId) {
+      toast.success(`YouTube ID extraído: ${youtubeEmbedId}`);
+    } else if (data.videoUrl) {
+      toast.error("Não foi possível extrair o YouTube ID da URL fornecida");
+    }
+
     setIsLoading(true);
     try {
       const result = await updateLesson(lesson.id, {
         ...data,
+        youtubeEmbedId: youtubeEmbedId || "",
         order: lesson.order,
       });
       if (result.success) {
@@ -411,10 +446,15 @@ export default function EditCoursePage(props: EditCoursePageProps) {
             description: data.description,
             content: data.content,
             videoUrl: data.videoUrl,
+            youtubeEmbedId: youtubeEmbedId || "",
             duration: data.duration,
             type: data.type,
           };
           setModulesState(updatedModules);
+          console.log(
+            "🔍 Debug - Estado local atualizado com youtubeEmbedId:",
+            youtubeEmbedId,
+          );
         }
         setEditingLesson(null);
         toast.success("Lição atualizada com sucesso!");
@@ -462,10 +502,23 @@ export default function EditCoursePage(props: EditCoursePageProps) {
     const module = modulesState[moduleIndex];
     if (!module) return;
 
+    // Extrair YouTube Embed ID da URL fornecida
+    const youtubeEmbedId = extractYouTubeEmbedId(data.videoUrl || "");
+
+    console.log("🔍 Debug - videoUrl:", data.videoUrl);
+    console.log("🔍 Debug - youtubeEmbedId extraído:", youtubeEmbedId);
+
+    if (youtubeEmbedId) {
+      toast.success(`YouTube ID extraído: ${youtubeEmbedId}`);
+    } else if (data.videoUrl) {
+      toast.error("Não foi possível extrair o YouTube ID da URL fornecida");
+    }
+
     setIsLoading(true);
     try {
       const result = await createLesson(module.id, {
         ...data,
+        youtubeEmbedId: youtubeEmbedId || "",
         order: module.lessons.length + 1,
       });
 
@@ -476,6 +529,7 @@ export default function EditCoursePage(props: EditCoursePageProps) {
           description: data.description,
           content: data.content,
           videoUrl: data.videoUrl,
+          youtubeEmbedId: youtubeEmbedId || "",
           duration: data.duration,
           order: module.lessons.length + 1,
           type: data.type,
@@ -485,6 +539,10 @@ export default function EditCoursePage(props: EditCoursePageProps) {
         if (updatedModules[moduleIndex]) {
           updatedModules[moduleIndex].lessons.push(newLesson);
           setModulesState(updatedModules);
+          console.log(
+            "🔍 Debug - Nova lição criada com youtubeEmbedId:",
+            youtubeEmbedId,
+          );
         }
         lessonForm.reset();
         setShowLessonForm(null);
@@ -518,6 +576,65 @@ export default function EditCoursePage(props: EditCoursePageProps) {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Criar template de certificado
+  const handleCreateCertificateTemplate = async (
+    data: CertificateTemplateFormData,
+  ) => {
+    if (!courseId) return;
+
+    setIsLoading(true);
+    try {
+      // Converter arquivo PDF para base64 se existir
+      let templateUrl = "";
+      if (certificateFile) {
+        templateUrl = await convertFileToBase64(certificateFile);
+      }
+
+      const result = await createCertificateTemplate({
+        courseId,
+        title: data.title,
+        description: data.description,
+        templateUrl,
+      });
+
+      if (result.success) {
+        toast.success("Template de certificado criado com sucesso!");
+        setShowCertificateForm(false);
+        certificateTemplateForm.reset();
+        setCertificateFile(null);
+      } else {
+        toast.error(result.error || "Erro ao criar template de certificado");
+      }
+    } catch (error) {
+      toast.error("Erro ao criar template de certificado");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (courseData) {
+      certificateTemplateForm.setValue(
+        "title",
+        `Certificado - ${courseData.title}`,
+      );
+      certificateTemplateForm.setValue(
+        "description",
+        courseData.description || "",
+      );
+    }
+  }, [courseData]);
+
+  // Converter arquivo para base64
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
   };
 
   const getLessonTypeIcon = (type: string) => {
@@ -1709,6 +1826,197 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                 ))}
               </Accordion>
             )}
+
+            {/* Certificate Section */}
+            <div className="dark-glass dark-shadow-sm rounded-xl p-6">
+              <div className="flex items-center justify-between">
+                <h2 className="dark-text-primary flex items-center gap-2 text-xl font-bold">
+                  <Award className="dark-primary" size={24} />
+                  Template de Certificado
+                </h2>
+                <Button
+                  className="dark-btn-primary"
+                  onClick={() => setShowCertificateForm(!showCertificateForm)}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Adicionar Template
+                </Button>
+              </div>
+
+              {/* Certificate Form */}
+              {showCertificateForm && (
+                <div className="mt-6">
+                  <div className="dark-glass dark-shadow-sm rounded-xl p-6">
+                    <h3 className="dark-text-primary mb-6 text-xl font-bold">
+                      Configurar Template de Certificado
+                    </h3>
+                    <Form {...certificateTemplateForm}>
+                      <form
+                        onSubmit={certificateTemplateForm.handleSubmit(
+                          handleCreateCertificateTemplate,
+                        )}
+                        className="space-y-6"
+                      >
+                        <FormField
+                          control={certificateTemplateForm.control}
+                          name="title"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="dark-text-secondary text-sm font-medium">
+                                Título do Template *
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  placeholder={
+                                    courseTitle
+                                      ? `${courseTitle} - Certificado`
+                                      : "Ex: Fundamentos da Fé Cristã - Certificado"
+                                  }
+                                  className="dark-input"
+                                  value={
+                                    field.value ||
+                                    (courseTitle
+                                      ? `${courseTitle} - Certificado`
+                                      : "")
+                                  }
+                                  onChange={(e) => {
+                                    field.onChange(e.target.value);
+                                  }}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={certificateTemplateForm.control}
+                          name="description"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="dark-text-secondary text-sm font-medium">
+                                Descrição do Template *
+                              </FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  {...field}
+                                  placeholder={
+                                    courseDescription ||
+                                    "Certificado de conclusão do curso..."
+                                  }
+                                  className="dark-input min-h-[100px]"
+                                  value={field.value || courseDescription || ""}
+                                  onChange={(e) => {
+                                    field.onChange(e.target.value);
+                                  }}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        {/* File Upload Section */}
+                        <div className="dark-card dark-shadow-sm rounded-lg p-4">
+                          <h3 className="dark-text-primary mb-3 font-semibold">
+                            Template do Certificado (PDF)
+                          </h3>
+                          <div className="space-y-3">
+                            <div className="dark-bg-secondary rounded-lg border-2 border-dashed border-gray-600 p-6 text-center">
+                              <Upload className="dark-text-tertiary mx-auto mb-2 h-8 w-8" />
+                              <p className="dark-text-secondary text-sm">
+                                {certificateFile
+                                  ? certificateFile.name
+                                  : "Arraste o arquivo PDF aqui ou clique para selecionar"}
+                              </p>
+                              <p className="dark-text-tertiary text-xs">
+                                Apenas arquivos PDF (máx. 10MB)
+                              </p>
+                            </div>
+                            <input
+                              type="file"
+                              accept=".pdf"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  if (file.type === "application/pdf") {
+                                    setCertificateFile(file);
+                                  } else {
+                                    toast.error(
+                                      "Por favor, selecione apenas arquivos PDF",
+                                    );
+                                  }
+                                }
+                              }}
+                              className="hidden"
+                              id="certificate-upload"
+                            />
+                            <Button
+                              type="button"
+                              className="dark-glass dark-border hover:dark-border-hover w-full"
+                              variant="outline"
+                              onClick={() => {
+                                document
+                                  .getElementById("certificate-upload")
+                                  ?.click();
+                              }}
+                            >
+                              <Upload className="mr-2 h-4 w-4" />
+                              {certificateFile
+                                ? "Alterar Arquivo"
+                                : "Selecionar PDF"}
+                            </Button>
+                            {certificateFile && (
+                              <div className="flex items-center justify-between rounded-lg bg-green-900/20 p-3">
+                                <div className="flex items-center gap-2">
+                                  <FileText className="h-4 w-4 text-green-400" />
+                                  <span className="text-sm text-green-400">
+                                    {certificateFile.name}
+                                  </span>
+                                </div>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-red-400 hover:text-red-300"
+                                  onClick={() => setCertificateFile(null)}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex justify-end space-x-4 pt-6">
+                          <Button
+                            type="button"
+                            className="dark-glass dark-border hover:dark-border-hover"
+                            variant="outline"
+                            onClick={() => {
+                              setShowCertificateForm(false);
+                              certificateTemplateForm.reset();
+                              setCertificateFile(null);
+                            }}
+                          >
+                            Cancelar
+                          </Button>
+                          <Button
+                            type="submit"
+                            disabled={isLoading}
+                            className="dark-btn-primary"
+                          >
+                            <Award className="mr-2 h-4 w-4" />
+                            {isLoading ? "Criando..." : "Criar Template"}
+                          </Button>
+                        </div>
+                      </form>
+                    </Form>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         }
       </div>

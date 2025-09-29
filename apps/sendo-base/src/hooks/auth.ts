@@ -32,14 +32,12 @@ export const useAuth = create<UserStore>()(
       isAuthenticated: false,
       isLoading: false,
 
-      setUser: (user: User) => {
+      setUser: (user: User) =>
         set({
           user,
           isAuthenticated: true,
           isLoading: false,
-        });
-      },
-
+        }),
       clearUser: () => {
         set({
           user: null,
@@ -62,7 +60,7 @@ export const useAuth = create<UserStore>()(
       },
     }),
     {
-      name: "user-store", // nome da chave no localStorage
+      name: "@sendo-base:user",
     },
   ),
 );

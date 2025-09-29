@@ -10,7 +10,7 @@ import { Button } from "@base-church/ui/components/button";
 import { Input } from "@base-church/ui/components/input";
 import { Label } from "@base-church/ui/components/label";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Eye, EyeOff, Key, Mail, Save, Shield, X } from "lucide-react";
+import { Eye, EyeOff, Key, Save, Shield, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -142,124 +142,15 @@ export default function ProfileEditAccessPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="dark-glass dark-shadow-sm rounded-xl p-6">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h2 className="dark-text-primary mb-2 text-xl font-semibold">
-              Dados de acesso
-            </h2>
-            <p className="dark-text-secondary text-sm">
-              Altere seu email e senha de acesso à plataforma
-            </p>
-          </div>
-        </div>
-      </div>
 
-      {/* Email Section */}
-      <div className="dark-glass dark-shadow-sm rounded-xl p-6">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h3 className="dark-text-primary mb-2 flex items-center gap-2 font-semibold">
-              <Mail size={20} />
-              Email de acesso
-            </h3>
-            <p className="dark-text-secondary text-sm">
-              {isEditingEmail
-                ? "Digite seu novo email e confirme a alteração"
-                : "Altere o email usado para fazer login na plataforma"}
-            </p>
-          </div>
-          {!isEditingEmail && (
-            <Button
-              onClick={() => setIsEditingEmail(true)}
-              size="sm"
-              className="dark-btn-primary"
-            >
-              <Mail size={16} className="mr-1" />
-              Alterar
-            </Button>
-          )}
-        </div>
-
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="currentEmail" className="dark-text-secondary">
-              Email atual
-            </Label>
-            <Input
-              id="currentEmail"
-              value={emailData.currentEmail}
-              disabled
-              className="dark-input"
-            />
-          </div>
-
-          {isEditingEmail && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="newEmail" className="dark-text-secondary">
-                  Novo email *
-                </Label>
-                <Input
-                  id="newEmail"
-                  type="email"
-                  value={emailData.newEmail}
-                  onChange={(e) =>
-                    setEmailData((prev) => ({
-                      ...prev,
-                      newEmail: e.target.value,
-                    }))
-                  }
-                  className="dark-input"
-                  placeholder="seu.novo.email@exemplo.com"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="confirmEmail" className="dark-text-secondary">
-                  Confirmar novo email *
-                </Label>
-                <Input
-                  id="confirmEmail"
-                  type="email"
-                  value={emailData.confirmEmail}
-                  onChange={(e) =>
-                    setEmailData((prev) => ({
-                      ...prev,
-                      confirmEmail: e.target.value,
-                    }))
-                  }
-                  className="dark-input"
-                  placeholder="seu.novo.email@exemplo.com"
-                />
-              </div>
-
-              <div className="flex items-center justify-end space-x-3 pt-4">
-                <Button
-                  onClick={handleEmailCancel}
-                  variant="ghost"
-                  className="hover:dark-bg-tertiary"
-                >
-                  <X size={16} className="mr-1" />
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={handleEmailSave}
-                  className="dark-btn-primary"
-                  disabled={
-                    updateEmailMutation.isPending ||
-                    !emailData.newEmail ||
-                    !emailData.confirmEmail
-                  }
-                >
-                  <Save size={16} className="mr-1" />
-                  {updateEmailMutation.isPending
-                    ? "Salvando..."
-                    : "Salvar Email"}
-                </Button>
-              </div>
-            </>
-          )}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="dark-text-primary text-2xl font-bold">
+            Dados de acesso
+          </h1>
+          <p className="dark-text-secondary mt-1">
+            Altere sua senha de acesso à plataforma
+          </p>
         </div>
       </div>
 

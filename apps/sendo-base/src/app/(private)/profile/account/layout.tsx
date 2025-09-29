@@ -2,15 +2,9 @@
 
 import { useAuth } from "@/src/hooks";
 import { getUserProfile } from "@/src/lib/actions";
-import { getInitials } from "@/src/lib/get-initial-by-name";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@base-church/ui/components/avatar";
 import { Button } from "@base-church/ui/components/button";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Calendar, Key, Mail, Settings, User } from "lucide-react";
+import { ArrowLeft, Key, Settings, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -84,64 +78,28 @@ export default function ProfileEditLayout({
 
       <div className="relative mx-auto max-w-7xl space-y-6 p-6">
         {/* Header */}
-        <div className="dark-glass dark-shadow-md rounded-2xl p-6">
-          <div className="mb-6 flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button
-                asChild
-                variant="ghost"
-                size="sm"
-                className="hover:dark-bg-tertiary"
-              >
-                <Link href="/profile">
-                  <ArrowLeft size={16} className="mr-2" />
-                  Voltar ao Perfil
-                </Link>
-              </Button>
-              <div className="dark-bg-tertiary h-6 w-px" />
-              <h1 className="dark-text-primary text-2xl font-bold">
-                Minha conta
-              </h1>
-            </div>
-          </div>
 
-          {/* Profile Summary */}
-          <div className="flex items-start space-x-6">
-            <div className="dark-primary-subtle-bg h-20 min-h-20 w-20 min-w-20 overflow-hidden rounded-full">
-              <Avatar className="h-full w-full">
-                <AvatarImage
-                  src={userAuth?.image ?? ""}
-                  alt={userAuth?.name ?? ""}
-                  className="h-full w-full"
-                />
-                <AvatarFallback className="rounded-full">
-                  {getInitials(userAuth?.name ?? "")}
-                </AvatarFallback>
-              </Avatar>
-            </div>
-            <div>
-              <h2 className="dark-text-primary mb-1 text-xl font-semibold">
-                {userAuth?.name || "Usuário"}
-              </h2>
-              <p className="dark-text-secondary mb-2">
-                {currentSection?.description}
+        <div className="dark-glass dark-shadow-md rounded-2xl p-6">
+          <div className="flex items-center space-x-4">
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="hover:dark-bg-tertiary"
+            >
+              <Link href="/profile">
+                <ArrowLeft size={16} className="mr-2" />
+                Voltar ao Perfil
+              </Link>
+            </Button>
+
+            <div className="flex-1">
+              <h1 className="dark-text-primary text-3xl font-bold">
+                Minha Conta
+              </h1>
+              <p className="dark-text-secondary mt-2">
+                Gerencie as informações de conta e dados pessoais.
               </p>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-                {userAuth?.email && (
-                  <div className="flex items-center space-x-1">
-                    <Mail className="dark-text-tertiary" size={12} />
-                    <span className="dark-text-tertiary text-nowrap">
-                      {userAuth.email}
-                    </span>
-                  </div>
-                )}
-                <div className="flex items-center space-x-1">
-                  <Calendar className="dark-text-tertiary" size={12} />
-                  <span className="dark-text-tertiary text-nowrap">
-                    Desde {formatDate(userAuth?.joinDate ?? new Date())}
-                  </span>
-                </div>
-              </div>
             </div>
           </div>
         </div>

@@ -1,17 +1,17 @@
 "use client";
 
 import {
-    Award,
-    BarChart3,
-    BookOpen,
-    FileText,
-    HelpCircle,
-    Home,
-    LogOut,
-    Map,
-    MessageCircle,
-    User,
-    Users,
+  Award,
+  BarChart3,
+  BookOpen,
+  FileText,
+  HelpCircle,
+  Home,
+  LogOut,
+  Map,
+  MessageCircle,
+  User,
+  Users,
 } from "lucide-react";
 
 import Link from "next/link";
@@ -21,23 +21,23 @@ import * as React from "react";
 import { useAuth } from "@/src/hooks";
 import { getInitials } from "@/src/lib/get-initial-by-name";
 import {
-    Avatar,
-    AvatarFallback,
-    AvatarImage,
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
 } from "@base-church/ui/components/avatar";
 import { Separator } from "@base-church/ui/components/separator";
 import {
-    Sidebar,
-    SidebarContent,
-    SidebarFooter,
-    SidebarGroup,
-    SidebarGroupContent,
-    SidebarGroupLabel,
-    SidebarHeader,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
-    SidebarTrigger,
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarTrigger,
 } from "@base-church/ui/components/sidebar";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -65,6 +65,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               title: "Dashboard",
               url: "/dashboard",
               icon: BarChart3,
+              isExact: true,
             },
             {
               title: "Gestão de Alunos",
@@ -273,12 +274,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
                       tooltip={item.title}
-                      isActive={pathname.startsWith(item.url)}
+                      isActive={
+                        item.isExact
+                          ? pathname === item.url
+                          : pathname.startsWith(item.url)
+                      }
                       asChild
                       className={`h-10 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:!p-2 [&>span]:group-data-[collapsible=icon]:hidden [&>svg]:!size-5 ${
-                        pathname.startsWith(item.url)
-                          ? "dark-primary-subtle-bg dark-primary"
-                          : "dark-text-secondary hover:dark-text-primary hover:dark-bg-secondary"
+                        item.isExact
+                          ? pathname === item.url
+                          : pathname.startsWith(item.url)
+                            ? "dark-primary-subtle-bg dark-primary"
+                            : "dark-text-secondary hover:dark-text-primary hover:dark-bg-secondary"
                       }`}
                     >
                       <Link href={item.url} className="flex items-center gap-3">

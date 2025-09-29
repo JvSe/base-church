@@ -636,6 +636,7 @@ export async function createLesson(
     description: string;
     content?: string;
     videoUrl?: string;
+    youtubeEmbedId?: string;
     duration: number;
     order: number;
     type: string;
@@ -658,6 +659,7 @@ export async function createLesson(
         description: lessonData.description,
         content: lessonData.content || null,
         videoUrl: lessonData.videoUrl || null,
+        youtubeEmbedId: lessonData.youtubeEmbedId || null,
         duration: lessonData.duration,
         order: lessonData.order,
         type: lessonData.type as any,
@@ -683,6 +685,7 @@ export async function updateLesson(
     description: string;
     content?: string;
     videoUrl?: string;
+    youtubeEmbedId?: string;
     duration: number;
     order: number;
     type: string;
@@ -706,6 +709,7 @@ export async function updateLesson(
         description: lessonData.description,
         content: lessonData.content || null,
         videoUrl: lessonData.videoUrl || null,
+        youtubeEmbedId: lessonData.youtubeEmbedId || null,
         duration: lessonData.duration,
         order: lessonData.order,
         type: lessonData.type as any,
@@ -918,14 +922,37 @@ export async function updateLessonProgress(
               },
             });
 
-            // Create certificate if course has certificate enabled
-            if (lesson.module.course.certificate) {
-              await prisma.certificate.create({
-                data: {
+            // Check if course has certificate template
+            const courseWithTemplate = await prisma.course.findUnique({
+              where: { id: lesson.module.course.id },
+              include: {
+                certificateTemplate: true,
+              },
+            });
+
+            // Generate certificate if course has certificate template
+            if (courseWithTemplate?.certificateTemplate) {
+              // First, unlock the certificate module
+              const unlockResult = await unlockCertificateModule(
+                lesson.module.course.id,
+              );
+
+              if (unlockResult.success) {
+                console.log("🔓 Módulo de certificado liberado!");
+              }
+
+              // Then generate the certificate
+              const certificateResult =
+                await generateCertificateForCompletedCourse(
                   userId,
-                  courseId: lesson.module.course.id,
-                },
-              });
+                  lesson.module.course.id,
+                );
+
+              if (certificateResult.success) {
+                console.log(
+                  "🎉 Certificado gerado automaticamente para o curso completado!",
+                );
+              }
             }
           }
         }
@@ -960,5 +987,329 @@ export async function getUserProgress(userId: string) {
     return { success: true, progress };
   } catch (error) {
     return { success: false, error: "Failed to fetch progress" };
+  }
+}
+
+export async function getLessonWithProgress(lessonId: string, userId: string) {
+  try {
+    const lesson = await prisma.lesson.findUnique({
+      where: { id: lessonId },
+      include: {
+        module: {
+          include: {
+            course: {
+              include: {
+                modules: {
+                  include: {
+                    lessons: {
+                      orderBy: { order: "asc" },
+                    },
+                  },
+                  orderBy: { order: "asc" },
+                },
+                certificateTemplate: true,
+              },
+            },
+          },
+        },
+        progress: {
+          where: { userId },
+        },
+      },
+    });
+
+    if (!lesson) {
+      return { success: false, error: "Lição não encontrada" };
+    }
+
+    // Get user's progress for all lessons in the course
+    const courseProgress = await prisma.lessonProgress.findMany({
+      where: {
+        userId,
+        lesson: {
+          module: {
+            courseId: lesson.module.course.id,
+          },
+        },
+      },
+      include: {
+        lesson: {
+          select: {
+            id: true,
+            title: true,
+            duration: true,
+            order: true,
+            youtubeEmbedId: true,
+          },
+        },
+      },
+    });
+
+    // Create a map of lesson progress for easy lookup
+    const progressMap = new Map();
+    courseProgress.forEach((progress) => {
+      progressMap.set(progress.lessonId, {
+        isCompleted: progress.isCompleted,
+        isWatched: !!progress.watchedAt,
+      });
+    });
+
+    // Add progress info to all lessons and check certificate module status
+    const courseWithProgress = {
+      ...lesson.module.course,
+      modules: lesson.module.course.modules.map((module) => ({
+        ...module,
+        lessons: module.lessons.map((moduleLesson) => ({
+          ...moduleLesson,
+          ...(progressMap.get(moduleLesson.id) || {
+            isCompleted: false,
+            isWatched: false,
+          }),
+          // Add locked status for certificate lessons
+          isLocked:
+            moduleLesson.type === "certificate" && !moduleLesson.isPublished,
+        })),
+        // Add locked status for certificate modules
+        isLocked:
+          module.title === "Certificado de Conclusão" &&
+          module.lessons.some(
+            (l) => l.type === "certificate" && !l.isPublished,
+          ),
+      })),
+    };
+
+    // Check if user has a certificate for this course
+    const existingCertificate = await prisma.certificate.findFirst({
+      where: {
+        userId,
+        courseId: lesson.module.course.id,
+      },
+      include: {
+        template: true,
+      },
+    });
+
+    return {
+      success: true,
+      lesson: {
+        ...lesson,
+        isCompleted: lesson.progress[0]?.isCompleted || false,
+        isWatched: !!lesson.progress[0]?.watchedAt,
+      },
+      course: courseWithProgress,
+      certificate: existingCertificate,
+    };
+  } catch (error) {
+    console.error("Error fetching lesson with progress:", error);
+    return { success: false, error: "Erro interno do servidor" };
+  }
+}
+
+export async function createCertificateModule(courseId: string) {
+  try {
+    console.log("📜 Criando módulo de certificado para o curso:", courseId);
+
+    // Check if certificate module already exists
+    const existingModule = await prisma.module.findFirst({
+      where: {
+        courseId,
+        title: "Certificado de Conclusão",
+      },
+    });
+
+    if (existingModule) {
+      console.log("📜 Módulo de certificado já existe:", existingModule.id);
+      return { success: true, module: existingModule };
+    }
+
+    // Get the highest order number for modules in this course
+    const lastModule = await prisma.module.findFirst({
+      where: { courseId },
+      orderBy: { order: "desc" },
+      select: { order: true },
+    });
+
+    const nextOrder = (lastModule?.order || 0) + 1;
+
+    // Create certificate module
+    const certificateModule = await prisma.module.create({
+      data: {
+        courseId,
+        title: "Certificado de Conclusão",
+        description:
+          "Parabéns! Você concluiu o curso e pode baixar seu certificado.",
+        order: nextOrder,
+      },
+    });
+
+    // Create certificate lesson
+    const certificateLesson = await prisma.lesson.create({
+      data: {
+        moduleId: certificateModule.id,
+        title: "Baixar Certificado",
+        description:
+          "Clique aqui para visualizar e baixar seu certificado de conclusão.",
+        type: "certificate",
+        order: 1,
+        isPublished: false, // Will be published when course is completed
+        duration: 0, // No duration for certificate
+      },
+    });
+
+    console.log("✅ Módulo de certificado criado:", certificateModule.id);
+    console.log("✅ Lição de certificado criada:", certificateLesson.id);
+
+    return {
+      success: true,
+      module: certificateModule,
+      lesson: certificateLesson,
+    };
+  } catch (error) {
+    console.error("❌ Error creating certificate module:", error);
+    return { success: false, error: "Erro ao criar módulo de certificado" };
+  }
+}
+
+export async function unlockCertificateModule(courseId: string) {
+  try {
+    console.log("🔓 Liberando módulo de certificado para o curso:", courseId);
+
+    // Find certificate module
+    const certificateModule = await prisma.module.findFirst({
+      where: {
+        courseId,
+        title: "Certificado de Conclusão",
+      },
+      include: {
+        lessons: true,
+      },
+    });
+
+    if (!certificateModule) {
+      return { success: false, error: "Módulo de certificado não encontrado" };
+    }
+
+    // Publish certificate lesson
+    if (certificateModule.lessons.length > 0 && certificateModule.lessons[0]) {
+      await prisma.lesson.update({
+        where: { id: certificateModule.lessons[0].id },
+        data: { isPublished: true },
+      });
+    }
+
+    console.log("✅ Módulo de certificado liberado:", certificateModule.id);
+
+    return { success: true, module: certificateModule };
+  } catch (error) {
+    console.error("❌ Error unlocking certificate module:", error);
+    return { success: false, error: "Erro ao liberar módulo de certificado" };
+  }
+}
+
+export async function generateCertificateForCompletedCourse(
+  userId: string,
+  courseId: string,
+) {
+  try {
+    console.log("🎯 Iniciando geração de certificado para:", {
+      userId,
+      courseId,
+    });
+
+    // Check if course has certificate template
+    const course = await prisma.course.findUnique({
+      where: { id: courseId },
+      include: {
+        certificateTemplate: true,
+      },
+    });
+
+    console.log("📋 Curso encontrado:", !!course);
+    console.log("📋 Template de certificado:", !!course?.certificateTemplate);
+
+    if (!course || !course.certificateTemplate) {
+      return {
+        success: false,
+        error: "Curso não possui template de certificado",
+      };
+    }
+
+    // Check if user already has a certificate for this course
+    const existingCertificate = await prisma.certificate.findFirst({
+      where: {
+        userId,
+        courseId,
+      },
+      include: {
+        template: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        course: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+    });
+
+    if (existingCertificate) {
+      console.log("📜 Certificado já existe:", existingCertificate.id);
+      return { success: true, certificate: existingCertificate };
+    }
+
+    // Generate verification code
+    const verificationCode =
+      Math.random().toString(36).substring(2, 15) +
+      Math.random().toString(36).substring(2, 15);
+
+    console.log("🔑 Código de verificação gerado:", verificationCode);
+
+    // Create certificate
+    const certificate = await prisma.certificate.create({
+      data: {
+        userId,
+        courseId,
+        templateId: course.certificateTemplate.id,
+        verificationCode,
+        status: "ISSUED",
+        issuedAt: new Date(),
+      },
+      include: {
+        template: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        course: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+    });
+
+    console.log("✅ Certificado gerado automaticamente:", certificate.id);
+    console.log("📜 Dados do certificado:", {
+      id: certificate.id,
+      userId: certificate.userId,
+      courseId: certificate.courseId,
+      templateId: certificate.templateId,
+      status: certificate.status,
+    });
+
+    return { success: true, certificate };
+  } catch (error) {
+    console.error("❌ Error generating certificate:", error);
+    return { success: false, error: "Erro ao gerar certificado" };
   }
 }

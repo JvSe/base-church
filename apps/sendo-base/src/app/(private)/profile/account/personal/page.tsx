@@ -47,7 +47,9 @@ export default function ProfileEditPersonalPage() {
   const [isEditingAdditional, setIsEditingAdditional] = useState(false);
 
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+
+  const { user, updateUser } = useAuth();
+
   const { data: userAuth, isLoading } = useQuery({
     queryKey: ["user", user?.id],
     queryFn: () => getUserProfile(user!.id),
@@ -57,11 +59,23 @@ export default function ProfileEditPersonalPage() {
 
   const updateProfileMutation = useMutation({
     mutationFn: updateUserProfileData,
-    onSuccess: () => {
+    onSuccess: (data) => {
       console.log("Perfil atualizado com sucesso!");
-      queryClient.invalidateQueries({
-        queryKey: ["user", user?.id],
-      });
+
+      // Atualiza o cache da query com os novos dados
+      queryClient.setQueryData(["user", user?.id], (oldData: any) => ({
+        ...oldData,
+        user: { ...oldData?.user, ...data.user },
+      }));
+
+      // Atualiza o estado do useAuth com os dados atualizados
+      updateUser({
+        image: data.user?.image,
+        isPastor: data.user?.isPastor,
+        name: data.user?.name,
+        role: data.user?.role,
+      } as any);
+
       setIsEditingPersonal(false);
       setIsEditingAddress(false);
       setIsEditingAdditional(false);
