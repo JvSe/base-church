@@ -1,5 +1,6 @@
 "use client";
 
+import { PdfViewer } from "@/src/components/pdf-viewer";
 import {
   createLesson,
   createModule,
@@ -12,8 +13,12 @@ import {
   updateCourse,
   updateCourseStatus,
   updateLesson,
+  updateModule,
 } from "@/src/lib/actions";
-import { createCertificateTemplate } from "@/src/lib/actions/certificate";
+import {
+  createCertificateTemplate,
+  updateCertificateTemplate,
+} from "@/src/lib/actions/certificate";
 import { COURSE_CATEGORIES } from "@/src/lib/constants";
 import { extractYouTubeEmbedId } from "@/src/lib/helpers/youtube";
 import {
@@ -32,6 +37,7 @@ import {
   FormMessage,
 } from "@base-church/ui/components/form";
 import { Input } from "@base-church/ui/components/input";
+import { MoneyInput } from "@base-church/ui/components/money-input";
 import {
   Select,
   SelectContent,
@@ -146,7 +152,11 @@ export default function EditCoursePage(props: EditCoursePageProps) {
     moduleIndex: number;
     lessonIndex: number;
   } | null>(null);
+  const [editingModule, setEditingModule] = useState<number | null>(null);
   const [showCertificateForm, setShowCertificateForm] = useState(false);
+  const [openModules, setOpenModules] = useState<string[]>([]);
+  const [openLessons, setOpenLessons] = useState<string[]>([]);
+  const [isEditingCertificate, setIsEditingCertificate] = useState(false);
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
   const router = useRouter();
 
@@ -393,6 +403,20 @@ export default function EditCoursePage(props: EditCoursePageProps) {
     }
   };
 
+  // Editar módulo
+  const handleEditModule = (moduleIndex: number) => {
+    const module = modulesState[moduleIndex];
+    if (module) {
+      moduleForm.reset({
+        title: module.title,
+        description: module.description,
+      });
+      setEditingModule(moduleIndex);
+      // Abre o accordion do módulo para mostrar o formulário de edição
+      setOpenModules([...openModules, `module-${moduleIndex}`]);
+    }
+  };
+
   // Editar lição
   const handleEditLesson = (moduleIndex: number, lessonIndex: number) => {
     const lesson = modulesState[moduleIndex]?.lessons[lessonIndex];
@@ -406,6 +430,51 @@ export default function EditCoursePage(props: EditCoursePageProps) {
         type: lesson.type,
       });
       setEditingLesson({ moduleIndex, lessonIndex });
+      // Abre o accordion do módulo e da lição para mostrar o formulário de edição
+      setOpenModules([...openModules, `module-${moduleIndex}`]);
+      setOpenLessons([...openLessons, `lesson-${moduleIndex}-${lessonIndex}`]);
+    }
+  };
+
+  // Salvar edição de módulo
+  const handleSaveModuleEdit = async (
+    data: ModuleFormData,
+    moduleIndex: number,
+  ) => {
+    setIsLoading(true);
+    try {
+      const module = modulesState[moduleIndex];
+      if (!module) {
+        toast.error("Módulo não encontrado");
+        return;
+      }
+
+      const result = await updateModule(module.id, {
+        title: data.title,
+        description: data.description,
+        order: module.order,
+      });
+
+      if (result.success) {
+        // Atualizar o estado local
+        const updatedModules = [...modulesState];
+        if (updatedModules[moduleIndex]) {
+          updatedModules[moduleIndex].title = data.title;
+          updatedModules[moduleIndex].description = data.description;
+        }
+        setModulesState(updatedModules);
+        setEditingModule(null);
+        moduleForm.reset();
+        toast.success("Módulo atualizado com sucesso!");
+        refetchModules();
+      } else {
+        toast.error(result.error || "Erro ao atualizar módulo");
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar módulo:", error);
+      toast.error("Erro ao atualizar módulo");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -420,15 +489,6 @@ export default function EditCoursePage(props: EditCoursePageProps) {
 
     // Extrair YouTube Embed ID da URL fornecida
     const youtubeEmbedId = extractYouTubeEmbedId(data.videoUrl || "");
-
-    console.log("🔍 Debug - videoUrl:", data.videoUrl);
-    console.log("🔍 Debug - youtubeEmbedId extraído:", youtubeEmbedId);
-
-    if (youtubeEmbedId) {
-      toast.success(`YouTube ID extraído: ${youtubeEmbedId}`);
-    } else if (data.videoUrl) {
-      toast.error("Não foi possível extrair o YouTube ID da URL fornecida");
-    }
 
     setIsLoading(true);
     try {
@@ -602,6 +662,7 @@ export default function EditCoursePage(props: EditCoursePageProps) {
       if (result.success) {
         toast.success("Template de certificado criado com sucesso!");
         setShowCertificateForm(false);
+        setIsEditingCertificate(false);
         certificateTemplateForm.reset();
         setCertificateFile(null);
       } else {
@@ -614,16 +675,70 @@ export default function EditCoursePage(props: EditCoursePageProps) {
     }
   };
 
+  // Atualizar template de certificado
+  const handleUpdateCertificateTemplate = async (
+    data: CertificateTemplateFormData,
+  ) => {
+    if (!courseId || !courseData?.certificateTemplate) return;
+
+    setIsLoading(true);
+    try {
+      // Converter arquivo PDF para base64 se existir
+      let templateUrl = courseData.certificateTemplate.templateUrl || "";
+      if (certificateFile) {
+        templateUrl = await convertFileToBase64(certificateFile);
+      }
+
+      const result = await updateCertificateTemplate(
+        courseData.certificateTemplate.id,
+        {
+          title: data.title,
+          description: data.description,
+          templateUrl,
+          isActive: true,
+        },
+      );
+
+      if (result.success) {
+        toast.success("Template de certificado atualizado com sucesso!");
+        setShowCertificateForm(false);
+        setIsEditingCertificate(false);
+        setCertificateFile(null);
+      } else {
+        toast.error(
+          result.error || "Erro ao atualizar template de certificado",
+        );
+      }
+    } catch (error) {
+      toast.error("Erro ao atualizar template de certificado");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (courseData) {
-      certificateTemplateForm.setValue(
-        "title",
-        `Certificado - ${courseData.title}`,
-      );
-      certificateTemplateForm.setValue(
-        "description",
-        courseData.description || "",
-      );
+      if (courseData.certificateTemplate) {
+        // Carregar dados do template existente
+        certificateTemplateForm.setValue(
+          "title",
+          courseData.certificateTemplate.title,
+        );
+        certificateTemplateForm.setValue(
+          "description",
+          courseData.certificateTemplate.description || "",
+        );
+      } else {
+        // Valores padrão para novo template
+        certificateTemplateForm.setValue(
+          "title",
+          `Certificado - ${courseData.title}`,
+        );
+        certificateTemplateForm.setValue(
+          "description",
+          courseData.description || "",
+        );
+      }
     }
   }, [courseData]);
 
@@ -878,7 +993,6 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                         <FormControl>
                           <Input
                             {...field}
-                            type="number"
                             placeholder="60"
                             className="dark-input"
                             onChange={(e) =>
@@ -991,9 +1105,8 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                           Preço (R$)
                         </FormLabel>
                         <FormControl>
-                          <Input
+                          <MoneyInput
                             {...field}
-                            type="number"
                             placeholder="0"
                             className="dark-input"
                             onChange={(e) =>
@@ -1033,7 +1146,17 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                 </h2>
                 <Button
                   className="dark-btn-primary"
-                  onClick={() => setShowModuleForm(!showModuleForm)}
+                  onClick={() => {
+                    setShowModuleForm(!showModuleForm);
+                    // Abre o accordion do módulo que será criado
+                    if (!showModuleForm) {
+                      const newModuleIndex = modulesState.length;
+                      setOpenModules([
+                        ...openModules,
+                        `module-${newModuleIndex}`,
+                      ]);
+                    }
+                  }}
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   Adicionar Módulo
@@ -1122,7 +1245,12 @@ export default function EditCoursePage(props: EditCoursePageProps) {
 
             {/* Modules List */}
             {modulesState.length > 0 && (
-              <Accordion type="multiple" className="space-y-4">
+              <Accordion
+                type="multiple"
+                className="space-y-4"
+                value={openModules}
+                onValueChange={setOpenModules}
+              >
                 {modulesState.map((module, moduleIndex) => (
                   <AccordionItem
                     key={moduleIndex}
@@ -1154,9 +1282,24 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                             onClick={(e) => {
                               e.stopPropagation();
                               setShowLessonForm(moduleIndex);
+                              // Abre o accordion do módulo para mostrar o formulário de lição
+                              setOpenModules([
+                                ...openModules,
+                                `module-${moduleIndex}`,
+                              ]);
                             }}
                           >
                             <Plus className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="dark-glass dark-border hover:dark-border-hover"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditModule(moduleIndex);
+                            }}
+                          >
+                            <Edit className="h-3 w-3" />
                           </Button>
                           <Button
                             size="sm"
@@ -1172,6 +1315,90 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="dark-border">
+                      {/* Module Edit Form */}
+                      {editingModule === moduleIndex && (
+                        <div className="dark-border border-b p-6">
+                          <Form {...moduleForm}>
+                            <form
+                              onSubmit={moduleForm.handleSubmit((data) =>
+                                handleSaveModuleEdit(data, moduleIndex),
+                              )}
+                              className="space-y-6"
+                            >
+                              <h4 className="dark-text-primary mb-6 text-xl font-bold">
+                                Editar Módulo
+                              </h4>
+
+                              <div className="grid grid-cols-1 gap-4">
+                                <FormField
+                                  control={moduleForm.control}
+                                  name="title"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel className="dark-text-secondary text-sm font-medium">
+                                        Título do Módulo *
+                                      </FormLabel>
+                                      <FormControl>
+                                        <Input
+                                          {...field}
+                                          placeholder="Ex: Fundamentos da Fé"
+                                          className="dark-input"
+                                        />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+
+                                <FormField
+                                  control={moduleForm.control}
+                                  name="description"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel className="dark-text-secondary text-sm font-medium">
+                                        Descrição do Módulo *
+                                      </FormLabel>
+                                      <FormControl>
+                                        <Textarea
+                                          {...field}
+                                          placeholder="Descreva o que será abordado neste módulo..."
+                                          className="dark-input min-h-[100px]"
+                                        />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+
+                              <div className="flex justify-end space-x-4 pt-6">
+                                <Button
+                                  type="button"
+                                  className="dark-glass dark-border hover:dark-border-hover"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setEditingModule(null);
+                                    moduleForm.reset();
+                                  }}
+                                >
+                                  Cancelar
+                                </Button>
+                                <Button
+                                  type="submit"
+                                  disabled={isLoading}
+                                  className="dark-btn-primary"
+                                >
+                                  <CheckCircle className="mr-2 h-4 w-4" />
+                                  {isLoading
+                                    ? "Atualizando..."
+                                    : "Atualizar Módulo"}
+                                </Button>
+                              </div>
+                            </form>
+                          </Form>
+                        </div>
+                      )}
+
                       {/* Lesson Form */}
                       {showLessonForm === moduleIndex && (
                         <div className="dark-border border-b p-6">
@@ -1218,7 +1445,6 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                                       <FormControl>
                                         <Input
                                           {...field}
-                                          type="number"
                                           placeholder="15"
                                           className="dark-input"
                                           onChange={(e) =>
@@ -1416,7 +1642,20 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                           <h4 className="dark-text-primary mb-3 font-medium">
                             Lições ({module.lessons.length})
                           </h4>
-                          <Accordion type="multiple" className="space-y-3">
+                          <Accordion
+                            type="multiple"
+                            className="space-y-3"
+                            value={openLessons.filter((lesson) =>
+                              lesson.startsWith(`lesson-${moduleIndex}-`),
+                            )}
+                            onValueChange={(value) => {
+                              const otherLessons = openLessons.filter(
+                                (lesson) =>
+                                  !lesson.startsWith(`lesson-${moduleIndex}-`),
+                              );
+                              setOpenLessons([...otherLessons, ...value]);
+                            }}
+                          >
                             {module.lessons.map((lesson, lessonIndex) => (
                               <AccordionItem
                                 key={lessonIndex}
@@ -1540,7 +1779,6 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                                                 <FormControl>
                                                   <Input
                                                     {...field}
-                                                    type="number"
                                                     placeholder="15"
                                                     className="dark-input"
                                                     onChange={(e) =>
@@ -1834,26 +2072,106 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                   <Award className="dark-primary" size={24} />
                   Template de Certificado
                 </h2>
-                <Button
-                  className="dark-btn-primary"
-                  onClick={() => setShowCertificateForm(!showCertificateForm)}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Adicionar Template
-                </Button>
+                {courseData?.certificateTemplate ? (
+                  <div className="flex gap-2">
+                    <Button
+                      className="dark-glass dark-border hover:dark-border-hover"
+                      onClick={() => {
+                        setShowCertificateForm(true);
+                        setIsEditingCertificate(true);
+                      }}
+                    >
+                      <Edit className="mr-2 h-4 w-4" />
+                      Editar Template
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    className="dark-btn-primary"
+                    onClick={() => {
+                      setShowCertificateForm(true);
+                      setIsEditingCertificate(false);
+                    }}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Adicionar Template
+                  </Button>
+                )}
               </div>
+
+              {/* Mostrar template existente se não estiver editando */}
+              {courseData?.certificateTemplate && !showCertificateForm && (
+                <div className="mt-6">
+                  <div className="dark-card dark-shadow-sm rounded-xl p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="dark-text-primary mb-2 text-lg font-semibold">
+                          {courseData.certificateTemplate.title}
+                        </h3>
+                        <p className="dark-text-secondary mb-4 text-sm">
+                          {courseData.certificateTemplate.description}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={`rounded-full px-2 py-1 text-xs font-medium ${
+                              courseData.certificateTemplate.isActive
+                                ? "dark-success-bg dark-success"
+                                : "dark-warning-bg dark-warning"
+                            }`}
+                          >
+                            {courseData.certificateTemplate.isActive
+                              ? "Ativo"
+                              : "Inativo"}
+                          </div>
+                          {courseData.certificateTemplate.templateUrl && (
+                            <div className="dark-info-bg dark-info rounded-full px-2 py-1 text-xs font-medium">
+                              PDF Disponível
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {courseData.certificateTemplate.templateUrl && (
+                          <PdfViewer
+                            pdfBase64={
+                              courseData.certificateTemplate.templateUrl
+                            }
+                            certificateUrl={
+                              courseData.certificateTemplate.templateUrl
+                            }
+                            title={`Template: ${courseData.certificateTemplate.title}`}
+                            fileName={`template-${courseData.certificateTemplate.id}.pdf`}
+                          >
+                            <Button
+                              className="dark-glass dark-border hover:dark-border-hover"
+                              size="sm"
+                            >
+                              <FileText className="mr-1 h-3 w-3" />
+                              Ver PDF
+                            </Button>
+                          </PdfViewer>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Certificate Form */}
               {showCertificateForm && (
                 <div className="mt-6">
                   <div className="dark-glass dark-shadow-sm rounded-xl p-6">
                     <h3 className="dark-text-primary mb-6 text-xl font-bold">
-                      Configurar Template de Certificado
+                      {isEditingCertificate
+                        ? "Editar Template de Certificado"
+                        : "Configurar Template de Certificado"}
                     </h3>
                     <Form {...certificateTemplateForm}>
                       <form
                         onSubmit={certificateTemplateForm.handleSubmit(
-                          handleCreateCertificateTemplate,
+                          isEditingCertificate
+                            ? handleUpdateCertificateTemplate
+                            : handleCreateCertificateTemplate,
                         )}
                         className="space-y-6"
                       >
@@ -1996,6 +2314,7 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                             variant="outline"
                             onClick={() => {
                               setShowCertificateForm(false);
+                              setIsEditingCertificate(false);
                               certificateTemplateForm.reset();
                               setCertificateFile(null);
                             }}
@@ -2008,7 +2327,13 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                             className="dark-btn-primary"
                           >
                             <Award className="mr-2 h-4 w-4" />
-                            {isLoading ? "Criando..." : "Criar Template"}
+                            {isLoading
+                              ? isEditingCertificate
+                                ? "Atualizando..."
+                                : "Criando..."
+                              : isEditingCertificate
+                                ? "Atualizar Template"
+                                : "Criar Template"}
                           </Button>
                         </div>
                       </form>

@@ -1,22 +1,25 @@
 "use client";
 
 import { deleteCourse, getCourses } from "@/src/lib/actions";
+import { getCategoryInfo } from "@/src/lib/constants";
+import { formatDate } from "@/src/lib/formatters";
+import { getLevelFormatted } from "@/src/lib/helpers/level.helper";
 import { Button } from "@base-church/ui/components/button";
 import { Input } from "@base-church/ui/components/input";
 import { useQuery } from "@tanstack/react-query";
 import {
-    Award,
-    BookOpen,
-    CheckCircle,
-    Clock,
-    Edit,
-    FileText,
-    Plus,
-    Search,
-    Star,
-    Trash2,
-    TrendingUp,
-    Users,
+  Award,
+  BookOpen,
+  CheckCircle,
+  Clock,
+  Edit,
+  FileText,
+  Plus,
+  Search,
+  Star,
+  Trash2,
+  TrendingUp,
+  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -169,14 +172,6 @@ export default function CoursesPage() {
       return `${hours}h ${mins}min`;
     }
     return `${mins}min`;
-  };
-
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    }).format(date);
   };
 
   // Loading state
@@ -413,166 +408,169 @@ export default function CoursesPage() {
             Lista de Cursos ({filteredCourses.length})
           </h2>
 
-          <div className="space-y-4">
+          <div className="flex flex-col gap-4">
             {filteredCourses.length > 0 ? (
               filteredCourses.map((course) => (
-                <div
-                  key={course.id}
-                  className={`dark-card dark-shadow-sm rounded-xl p-4 ${
-                    course.status === "draft"
-                      ? "border-l-4 border-l-yellow-400"
-                      : course.status === "published"
-                        ? "border-l-4 border-l-green-400"
-                        : ""
-                  }`}
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="dark-primary-subtle-bg flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg">
-                      <BookOpen className="dark-primary" size={20} />
-                    </div>
-
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="dark-text-primary font-semibold">
-                            {course.title}
-                          </h3>
-                          <p className="dark-text-secondary mt-1 text-sm">
-                            {course.description}
-                          </p>
-                          <div className="mt-2 flex flex-wrap gap-1">
-                            {course.tags.slice(0, 3).map((tag, index) => (
-                              <span
-                                key={index}
-                                className="inline-flex items-center rounded-full bg-gray-700 px-2 py-1 text-xs text-gray-300"
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                            {course.tags.length > 3 && (
-                              <span className="inline-flex items-center rounded-full bg-gray-700 px-2 py-1 text-xs text-gray-300">
-                                +{course.tags.length - 3}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(course.status)}`}
-                          >
-                            {(() => {
-                              const StatusIcon = getStatusIcon(course.status);
-                              return <StatusIcon size={12} />;
-                            })()}
-                            {getStatusText(course.status)}
-                          </span>
-                          <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getLevelColor(course.level)}`}
-                          >
-                            {getLevelText(course.level)}
-                          </span>
-                          <div className="flex space-x-2">
-                            <Button
-                              size="sm"
-                              className="dark-glass dark-border hover:dark-border-hover"
-                              onClick={() =>
-                                router.push(
-                                  `/dashboard/courses/${course.id}/edit`,
-                                )
-                              }
-                              title="Editar curso"
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
-
-                            <Button
-                              size="sm"
-                              className="dark-glass dark-border hover:dark-border-hover"
-                              onClick={async () => {
-                                if (
-                                  confirm(
-                                    `Tem certeza que deseja excluir o curso "${course.title}"?`,
-                                  )
-                                ) {
-                                  try {
-                                    const result = await deleteCourse(
-                                      course.id,
-                                    );
-                                    if (result.success) {
-                                      toast.success(result.message);
-                                      refetchCourses(); // Recarregar dados do banco
-                                    } else {
-                                      toast.error(result.error);
-                                    }
-                                  } catch (error) {
-                                    toast.error("Erro ao excluir curso");
-                                  }
-                                }
-                              }}
-                              title="Excluir curso"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
+                <Link href={`/dashboard/courses/${course.id}/edit`}>
+                  <div
+                    key={course.id}
+                    className={`dark-card dark-shadow-sm rounded-xl p-4 ${
+                      course.status === "draft"
+                        ? "border-l-4 border-l-yellow-400"
+                        : course.status === "published"
+                          ? "border-l-4 border-l-green-400"
+                          : ""
+                    }`}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="dark-primary-subtle-bg flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg">
+                        <BookOpen className="dark-primary" size={20} />
                       </div>
 
-                      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-4">
-                        <div className="space-y-1">
-                          <div className="dark-text-secondary text-sm">
-                            <Clock className="mr-1 inline h-3 w-3" />
-                            Duração: {formatDuration(course.duration)}
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h3 className="dark-text-primary font-semibold">
+                              {course.title}
+                            </h3>
+                            <p className="dark-text-secondary mt-1 text-sm">
+                              {course.description}
+                            </p>
+                            <div className="mt-2 flex flex-wrap gap-1">
+                              {course.tags.slice(0, 3).map((tag, index) => (
+                                <span
+                                  key={index}
+                                  className="inline-flex items-center rounded-full bg-gray-700 px-2 py-1 text-xs text-gray-300"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                              {course.tags.length > 3 && (
+                                <span className="inline-flex items-center rounded-full bg-gray-700 px-2 py-1 text-xs text-gray-300">
+                                  +{course.tags.length - 3}
+                                </span>
+                              )}
+                            </div>
                           </div>
-                          <div className="dark-text-secondary text-sm">
-                            Instrutor: {course.instructor}
-                          </div>
-                        </div>
 
-                        <div className="space-y-1">
-                          <div className="dark-text-secondary text-sm">
-                            <Users className="mr-1 inline h-3 w-3" />
-                            Inscritos: {course.studentsEnrolled}
-                          </div>
-                          <div className="dark-text-secondary text-sm">
-                            <Award className="mr-1 inline h-3 w-3" />
-                            Completados: {course.studentsCompleted}
-                          </div>
-                        </div>
-
-                        <div className="space-y-1">
-                          <div className="dark-text-secondary text-sm">
-                            Taxa de conclusão:{" "}
-                            {course.studentsEnrolled > 0
-                              ? Math.round(
-                                  (course.studentsCompleted /
-                                    course.studentsEnrolled) *
-                                    100,
-                                )
-                              : 0}
-                            %
-                          </div>
-                          <div className="dark-text-secondary text-sm">
-                            Categoria: {course.category}
-                          </div>
-                        </div>
-
-                        <div className="space-y-1">
-                          <div className="flex items-center text-sm">
-                            <Star className="mr-1 h-3 w-3 fill-current text-yellow-400" />
-                            <span className="dark-text-secondary">
-                              {course.averageRating.toFixed(1)} (
-                              {course.totalRatings})
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(course.status)}`}
+                            >
+                              {(() => {
+                                const StatusIcon = getStatusIcon(course.status);
+                                return <StatusIcon size={12} />;
+                              })()}
+                              {getStatusText(course.status)}
                             </span>
+                            <span
+                              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getLevelFormatted(course.level).color}`}
+                            >
+                              {getLevelFormatted(course.level).text}
+                            </span>
+                            <div className="flex space-x-2">
+                              <Button
+                                size="sm"
+                                className="dark-glass dark-border hover:dark-border-hover"
+                                onClick={() =>
+                                  router.push(
+                                    `/dashboard/courses/${course.id}/edit`,
+                                  )
+                                }
+                                title="Editar curso"
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+
+                              <Button
+                                size="sm"
+                                className="dark-glass dark-border hover:dark-border-hover"
+                                onClick={async () => {
+                                  if (
+                                    confirm(
+                                      `Tem certeza que deseja excluir o curso "${course.title}"?`,
+                                    )
+                                  ) {
+                                    try {
+                                      const result = await deleteCourse(
+                                        course.id,
+                                      );
+                                      if (result.success) {
+                                        toast.success(result.message);
+                                        refetchCourses(); // Recarregar dados do banco
+                                      } else {
+                                        toast.error(result.error);
+                                      }
+                                    } catch (error) {
+                                      toast.error("Erro ao excluir curso");
+                                    }
+                                  }
+                                }}
+                                title="Excluir curso"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
                           </div>
-                          <div className="dark-text-secondary text-sm">
-                            Criado em {formatDate(course.createdAt)}
+                        </div>
+
+                        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-4">
+                          <div className="space-y-1">
+                            <div className="dark-text-secondary text-sm">
+                              <Clock className="mr-1 inline h-3 w-3" />
+                              Duração: {formatDuration(course.duration)}
+                            </div>
+                            <div className="dark-text-secondary text-sm">
+                              Instrutor: {course.instructor}
+                            </div>
+                          </div>
+
+                          <div className="space-y-1">
+                            <div className="dark-text-secondary text-sm">
+                              <Users className="mr-1 inline h-3 w-3" />
+                              Inscritos: {course.studentsEnrolled}
+                            </div>
+                            <div className="dark-text-secondary text-sm">
+                              <Award className="mr-1 inline h-3 w-3" />
+                              Completados: {course.studentsCompleted}
+                            </div>
+                          </div>
+
+                          <div className="space-y-1">
+                            <div className="dark-text-secondary text-sm">
+                              Taxa de conclusão:{" "}
+                              {course.studentsEnrolled > 0
+                                ? Math.round(
+                                    (course.studentsCompleted /
+                                      course.studentsEnrolled) *
+                                      100,
+                                  )
+                                : 0}
+                              %
+                            </div>
+                            <div className="dark-text-secondary text-sm">
+                              Categoria:{" "}
+                              {getCategoryInfo(course.category).label}
+                            </div>
+                          </div>
+
+                          <div className="space-y-1">
+                            <div className="flex items-center text-sm">
+                              <Star className="mr-1 h-3 w-3 fill-current text-yellow-400" />
+                              <span className="dark-text-secondary">
+                                {course.averageRating.toFixed(1)} (
+                                {course.totalRatings})
+                              </span>
+                            </div>
+                            <div className="dark-text-secondary text-sm">
+                              Criado em {formatDate(course.createdAt)}
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))
             ) : (
               <EmptyStateCard

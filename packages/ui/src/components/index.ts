@@ -86,3 +86,5 @@ export * from "./popover";
 
 // Calendar
 export * from "./calendar";
+
+export * from "./money-input";

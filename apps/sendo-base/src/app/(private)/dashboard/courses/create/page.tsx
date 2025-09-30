@@ -26,6 +26,7 @@ import {
   FormMessage,
 } from "@base-church/ui/components/form";
 import { Input } from "@base-church/ui/components/input";
+import { MoneyInput } from "@base-church/ui/components/money-input";
 import {
   Select,
   SelectContent,
@@ -615,7 +616,6 @@ export default function CreateCoursePage() {
                         <FormControl>
                           <Input
                             {...field}
-                            type="number"
                             placeholder="60"
                             className="dark-input"
                             onChange={(e) =>
@@ -728,9 +728,8 @@ export default function CreateCoursePage() {
                           Preço (R$)
                         </FormLabel>
                         <FormControl>
-                          <Input
+                          <MoneyInput
                             {...field}
-                            type="number"
                             placeholder="0"
                             className="dark-input"
                             onChange={(e) =>
@@ -961,7 +960,6 @@ export default function CreateCoursePage() {
                                       <FormControl>
                                         <Input
                                           {...field}
-                                          type="number"
                                           placeholder="15"
                                           className="dark-input"
                                           onChange={(e) =>
@@ -1287,7 +1285,6 @@ export default function CreateCoursePage() {
                                                 <FormControl>
                                                   <Input
                                                     {...field}
-                                                    type="number"
                                                     placeholder="15"
                                                     className="dark-input"
                                                     onChange={(e) =>

@@ -1,6 +1,6 @@
 "use client";
 
-import { formatDuration } from "@/src/lib/formatters";
+import { formatDate, formatDuration } from "@/src/lib/formatters";
 import { Button } from "@base-church/ui/components/button";
 import { cn } from "@base-church/ui/lib/utils";
 import {
@@ -14,6 +14,7 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
+import { getLevelFormatted } from "../lib/helpers/level.helper";
 
 interface Course {
   id: string;
@@ -45,14 +46,6 @@ export function DashboardCourseCard({
   variant = "catalog",
   disabled = false,
 }: DashboardCourseCardProps) {
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  };
-
   return (
     <Link
       href={
@@ -74,13 +67,12 @@ export function DashboardCourseCard({
           </div>
           <div className="absolute top-3 left-3">
             <span
-              className={`rounded-full px-3 py-1 text-xs font-medium backdrop-blur-sm ${
-                variant === "catalog"
-                  ? "dark-glass dark-primary-subtle-bg dark-primary"
-                  : "dark-glass dark-primary"
-              }`}
+              className={cn(
+                `rounded-full px-3 py-1 text-xs font-medium backdrop-blur-sm`,
+                getLevelFormatted(course.level).color,
+              )}
             >
-              {course.level}
+              {getLevelFormatted(course.level).text}
             </span>
           </div>
 
@@ -271,7 +263,8 @@ export function DashboardCourseCard({
           {variant === "contents" && course.lastAccessed && (
             <div className="dark-bg-secondary mt-3 rounded-lg px-3 py-2 text-xs">
               <span className="dark-text-tertiary">
-                Último acesso: {formatDate(course.lastAccessed)}
+                Último acesso:{" "}
+                {formatDate(course.lastAccessed as unknown as Date)}
               </span>
             </div>
           )}

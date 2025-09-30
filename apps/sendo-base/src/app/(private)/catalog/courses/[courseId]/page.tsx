@@ -700,7 +700,7 @@ export default function CoursePage({ params }: CoursePageProps) {
             </div>
 
             {/* Related Courses */}
-            <div className="dark-glass dark-shadow-sm rounded-xl p-6">
+            {/* <div className="dark-glass dark-shadow-sm rounded-xl p-6">
               <h3 className="dark-text-primary mb-4 font-semibold">
                 Cursos Relacionados
               </h3>
@@ -723,7 +723,7 @@ export default function CoursePage({ params }: CoursePageProps) {
                   </div>
                 ))}
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

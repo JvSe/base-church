@@ -67,8 +67,7 @@ export default function LessonPage(props: LessonPageProps) {
       return result;
     },
     enabled: !!user?.id && !!lessonId,
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    retry: 3,
+    refetchOnWindowFocus: true,
   });
 
   // Extrair dados da resposta
@@ -511,45 +510,46 @@ export default function LessonPage(props: LessonPageProps) {
             ))}
           </div>
 
-          <div className="dark-border mt-auto mb-6 border-t">
-            <div className="p-4 transition-all duration-300 hover:-translate-y-1">
-              <div className="mb-2 flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <h4 className="dark-text-primary font-medium">
-                    Certificado de Conclusão
-                  </h4>
-                  {certificate ? (
-                    <Award size={14} className="dark-success" />
-                  ) : (
-                    <Lock size={14} className="dark-text-tertiary" />
-                  )}
+          {course.certificateTemplate && (
+            <div className="dark-border mt-auto mb-6 border-t">
+              <div className="p-4 transition-all duration-300 hover:-translate-y-1">
+                <div className="mb-2 flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <h4 className="dark-text-primary font-medium">
+                      Certificado de Conclusão
+                    </h4>
+                    {certificate ? (
+                      <Award size={14} className="dark-success" />
+                    ) : (
+                      <Lock size={14} className="dark-text-tertiary" />
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              {certificate ? (
-                <PdfViewer
-                  pdfBase64={certificate.template?.templateUrl || undefined}
-                  certificateUrl={
-                    certificate.template?.templateUrl || undefined
-                  }
-                  title={`Certificado: ${course.title}`}
-                  fileName={`certificado-${course.title.replace(/\s+/g, "-").toLowerCase()}.pdf`}
-                >
-                  <div className="cursor-pointer space-y-3">
-                    <div className="rounded-lg bg-green-500/10 p-3">
-                      <div className="mb-2 flex items-center space-x-2">
-                        <CheckCircle size={16} className="dark-success" />
-                        <span className="dark-text-success text-sm font-medium">
-                          🎉 Certificado Disponível!
-                        </span>
+                {certificate ? (
+                  <PdfViewer
+                    pdfBase64={certificate.template?.templateUrl || undefined}
+                    certificateUrl={
+                      certificate.template?.templateUrl || undefined
+                    }
+                    title={`Certificado: ${course.title}`}
+                    fileName={`certificado-${course.title.replace(/\s+/g, "-").toLowerCase()}.pdf`}
+                  >
+                    <div className="cursor-pointer space-y-3">
+                      <div className="rounded-lg bg-green-500/10 p-3">
+                        <div className="mb-2 flex items-center space-x-2">
+                          <CheckCircle size={16} className="dark-success" />
+                          <span className="dark-text-success text-sm font-medium">
+                            🎉 Certificado Disponível!
+                          </span>
+                        </div>
+                        <p className="dark-text-secondary text-xs">
+                          Parabéns! Você concluiu o curso e pode baixar seu
+                          certificado.
+                        </p>
                       </div>
-                      <p className="dark-text-secondary text-xs">
-                        Parabéns! Você concluiu o curso e pode baixar seu
-                        certificado.
-                      </p>
-                    </div>
 
-                    {/* <div className="space-y-2">
+                      {/* <div className="space-y-2">
                         <div className="dark-glass dark-border rounded-lg p-3">
                           <div className="mb-1 flex items-center space-x-2">
                             <Award size={12} className="dark-text-secondary" />
@@ -565,26 +565,27 @@ export default function LessonPage(props: LessonPageProps) {
                           </p>
                         </div>
                       </div> */}
-                  </div>
-                </PdfViewer>
-              ) : (
-                <div className="space-y-3">
-                  <div className="rounded-lg bg-yellow-500/10 p-3">
-                    <div className="mb-2 flex items-center space-x-2">
-                      <Lock size={16} className="dark-text-yellow" />
-                      <span className="dark-text-yellow text-sm font-medium">
-                        🔒 Certificado Bloqueado
-                      </span>
                     </div>
-                    <p className="dark-text-secondary text-xs">
-                      Complete todas as aulas do curso para desbloquear seu
-                      certificado.
-                    </p>
+                  </PdfViewer>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="rounded-lg bg-yellow-500/10 p-3">
+                      <div className="mb-2 flex items-center space-x-2">
+                        <Lock size={16} className="dark-text-yellow" />
+                        <span className="dark-text-yellow text-sm font-medium">
+                          🔒 Certificado Bloqueado
+                        </span>
+                      </div>
+                      <p className="dark-text-secondary text-xs">
+                        Complete todas as aulas do curso para desbloquear seu
+                        certificado.
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
     </div>

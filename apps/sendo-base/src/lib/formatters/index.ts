@@ -1,3 +1,5 @@
+import { dayjs } from "../dayjs";
+
 const formatDuration = (minutes: number) => {
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
@@ -5,7 +7,7 @@ const formatDuration = (minutes: number) => {
 };
 
 const formatDate = (date: Date) => {
-  return date.toLocaleDateString("pt-BR");
+  return dayjs(date).format("DD/MM/YYYY");
 };
 
 const formatTime = (date: Date) => {

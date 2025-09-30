@@ -199,6 +199,7 @@ export async function getCourseById(courseId: string) {
             createdAt: "desc",
           },
         },
+        certificateTemplate: true,
         _count: {
           select: {
             enrollments: true,
