@@ -9,6 +9,7 @@ import {
   AvatarImage,
 } from "@base-church/ui/components/avatar";
 import { Button } from "@base-church/ui/components/button";
+import { cn } from "@base-church/ui/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import {
   BookOpen,
@@ -74,11 +75,11 @@ export default function ProfilePage() {
   const getEnrollmentStatusText = (status: string) => {
     switch (status) {
       case "pending":
-        return "Pendente";
+        return "Matrícula Pendente";
       case "approved":
-        return "Aprovado";
+        return "Matrícula Aprovada";
       case "rejected":
-        return "Rejeitado";
+        return "Matrícula Rejeitada";
       default:
         return "Desconhecido";
     }
@@ -284,13 +285,19 @@ export default function ProfilePage() {
               </div>
 
               {userAuth?.enrollments && userAuth.enrollments.length > 0 ? (
-                <div className="space-y-4">
+                <div className="flex flex-col gap-4">
                   {userAuth.enrollments.slice(0, 4).map((enrollment: any) => (
                     <Link
                       key={enrollment.id}
                       href={`/contents/course/${enrollment.course.id}`}
                     >
-                      <div className="dark-card dark-shadow-sm rounded-lg p-4 shadow-2xl transition-all duration-300">
+                      <div
+                        className={cn(
+                          "dark-card dark-shadow-sm rounded-lg p-4 shadow-2xl transition-all duration-300",
+                          enrollment.progress === 100 &&
+                            "border-l-4 border-l-green-400",
+                        )}
+                      >
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
                             <div className="mb-2 flex items-center gap-3">
@@ -324,36 +331,21 @@ export default function ProfilePage() {
 
                             {enrollment.status === "approved" && (
                               <div className="text-right">
-                                {enrollment.completedAt ? (
-                                  <div className="flex items-center gap-2">
-                                    <span className="dark-success text-sm font-medium">
-                                      Concluído
-                                    </span>
-                                    <Button
-                                      size="sm"
-                                      className="dark-glass dark-border hover:dark-border-hover"
-                                    >
-                                      <Download size={14} className="mr-1" />
-                                      Certificado
-                                    </Button>
-                                  </div>
-                                ) : (
-                                  <span className="dark-primary text-sm font-medium">
-                                    {Math.round(enrollment.progress || 0)}%
-                                    completo
-                                  </span>
-                                )}
+                                <span className="dark-primary text-sm font-medium">
+                                  {Math.round(enrollment.progress || 0)}%
+                                  completo
+                                </span>
                               </div>
                             )}
                           </div>
                         </div>
 
                         {enrollment.status === "approved" && (
-                          <div className="dark-bg-tertiary h-2 w-full rounded-full">
+                          <div className="dark-bg-tertiary mt-3 h-2 w-full rounded-full">
                             <div
                               className={`h-2 rounded-full transition-all duration-300 ${
                                 enrollment.progress === 100
-                                  ? "dark-gradient-secondary"
+                                  ? "bg-dark-success"
                                   : "dark-gradient-primary"
                               }`}
                               style={{ width: `${enrollment.progress || 0}%` }}

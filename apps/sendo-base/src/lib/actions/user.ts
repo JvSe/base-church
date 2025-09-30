@@ -33,6 +33,9 @@ export async function getUserProfile(userId: string) {
       where: { id: userId },
       include: {
         enrollments: {
+          where: {
+            status: "approved",
+          },
           include: {
             course: {
               include: {
@@ -445,29 +448,52 @@ export async function getAllStudents() {
     });
 
     // Transformar dados para o formato esperado pela interface
-    const transformedStudents = students.map((student) => ({
-      id: student.id,
-      name: student.name || "Nome não informado",
-      email: student.email || "Email não informado",
-      phone: student.phone,
-      cpf: student.cpf || "CPF não informado",
-      joinDate: student.joinDate,
-      role: student.role as "MEMBROS" | "LIDER",
-      isPastor: student.isPastor || false,
-      profileCompletion: student.profileCompletion || 0,
-      coursesEnrolled: student.enrollments?.length || 0,
-      coursesCompleted:
-        student.enrollments?.filter((e) => e.completedAt).length || 0,
-      certificatesEarned: student.certificates?.length || 0,
-      lastActivity: student.stats?.lastActivityAt || student.updatedAt,
-      status: student.stats?.lastActivityAt
-        ? new Date().getTime() -
-            new Date(student.stats.lastActivityAt).getTime() <
-          7 * 24 * 60 * 60 * 1000
-          ? "active"
-          : "inactive"
-        : ("inactive" as "active" | "inactive" | "suspended"),
-    }));
+    const transformedStudents = students.map((student) => {
+      // Determinar status baseado no approvalStatus e última atividade
+      let status: "active" | "inactive" | "suspended" = "active";
+
+      // Se o usuário não foi aprovado, não deve aparecer na lista de alunos
+      if (student.approvalStatus === "PENDING") {
+        status = "inactive"; // Ou podemos filtrar esses usuários
+      } else if (student.approvalStatus === "REJECTED") {
+        status = "suspended";
+      } else if (student.approvalStatus === "APPROVED") {
+        // Se aprovado, verificar atividade baseada na última atividade
+        if (student.stats?.lastActivityAt) {
+          const daysSinceLastActivity =
+            (new Date().getTime() -
+              new Date(student.stats.lastActivityAt).getTime()) /
+            (1000 * 60 * 60 * 24);
+
+          if (daysSinceLastActivity > 7) {
+            status = "inactive";
+          } else {
+            status = "active";
+          }
+        } else {
+          status = "inactive";
+        }
+      }
+
+      return {
+        id: student.id,
+        name: student.name || "Nome não informado",
+        email: student.email || "Email não informado",
+        phone: student.phone,
+        cpf: student.cpf || "CPF não informado",
+        joinDate: student.joinDate,
+        role: student.role as "MEMBROS" | "LIDER",
+        isPastor: student.isPastor || false,
+        profileCompletion: student.profileCompletion || 0,
+        coursesEnrolled: student.enrollments?.length || 0,
+        coursesCompleted:
+          student.enrollments?.filter((e) => e.completedAt).length || 0,
+        certificatesEarned: student.certificates?.length || 0,
+        lastActivity: student.stats?.lastActivityAt || student.updatedAt,
+        status,
+        approvalStatus: student.approvalStatus,
+      };
+    });
 
     return { success: true, students: transformedStudents };
   } catch (error) {
@@ -535,20 +561,23 @@ export async function getStudentById(studentId: string) {
 
 export async function updateStudentStatus(
   studentId: string,
-  status: "active" | "inactive" | "suspended",
+  status: "APPROVED" | "REJECTED",
 ) {
   try {
-    // Como não temos um campo status direto, vamos usar a última atividade
+    // Atualizar o status de aprovação do usuário
+    const user = await prisma.user.update({
+      where: { id: studentId },
+      data: {
+        approvalStatus: status,
+        ...(status === "REJECTED" && {
+          rejectionReason: "Conta suspensa pela administração",
+        }),
+      },
+    });
+
+    // Atualizar também a última atividade para controle de status
     const now = new Date();
     let lastActivityAt = now;
-
-    if (status === "inactive") {
-      // Definir como inativo há mais de 7 dias
-      lastActivityAt = new Date(now.getTime() - 8 * 24 * 60 * 60 * 1000);
-    } else if (status === "suspended") {
-      // Para suspenso, vamos usar uma data muito antiga
-      lastActivityAt = new Date(0);
-    }
 
     // Atualizar ou criar stats do usuário
     await prisma.userStats.upsert({
@@ -557,6 +586,31 @@ export async function updateStudentStatus(
       create: {
         userId: studentId,
         lastActivityAt,
+      },
+    });
+
+    // Criar notificação para o usuário
+    let notificationTitle = "";
+    let notificationMessage = "";
+    let notificationType = "info";
+
+    if (status === "REJECTED") {
+      notificationTitle = "Conta Suspensa";
+      notificationMessage =
+        "Sua conta foi suspensa pela administração. Entre em contato para mais informações.";
+      notificationType = "error";
+    } else {
+      notificationTitle = "Status Atualizado";
+      notificationMessage = "Seu status na plataforma foi atualizado.";
+      notificationType = "info";
+    }
+
+    await prisma.notification.create({
+      data: {
+        userId: studentId,
+        title: notificationTitle,
+        message: notificationMessage,
+        type: notificationType,
       },
     });
 
@@ -787,5 +841,169 @@ export async function getStudentStats() {
   } catch (error) {
     console.error("Error getting student stats:", error);
     return { success: false, error: "Erro ao buscar estatísticas" };
+  }
+}
+
+// ===== APROVAÇÃO DE USUÁRIOS =====
+
+export async function approveUser(userId: string, approverId: string) {
+  try {
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        approvalStatus: "APPROVED",
+        approvedAt: new Date(),
+        approvedBy: approverId,
+      },
+    });
+
+    // Criar notificação para o usuário
+    await prisma.notification.create({
+      data: {
+        userId: userId,
+        title: "Conta Aprovada",
+        message:
+          "Sua conta foi aprovada! Agora você pode acessar todos os recursos da plataforma.",
+        type: "success",
+      },
+    });
+
+    revalidatePath("/dashboard/students");
+    return {
+      success: true,
+      message: "Usuário aprovado com sucesso",
+      user,
+    };
+  } catch (error) {
+    console.error("Error approving user:", error);
+    return { success: false, error: "Erro ao aprovar usuário" };
+  }
+}
+
+export async function rejectUser(
+  userId: string,
+  approverId: string,
+  reason: string,
+) {
+  try {
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        approvalStatus: "REJECTED",
+        approvedAt: new Date(),
+        approvedBy: approverId,
+        rejectionReason: reason,
+      },
+    });
+
+    // Criar notificação para o usuário
+    await prisma.notification.create({
+      data: {
+        userId: userId,
+        title: "Conta Rejeitada",
+        message: `Sua conta foi rejeitada. Motivo: ${reason}`,
+        type: "error",
+      },
+    });
+
+    revalidatePath("/dashboard/students");
+    return {
+      success: true,
+      message: "Usuário rejeitado com sucesso",
+      user,
+    };
+  } catch (error) {
+    console.error("Error rejecting user:", error);
+    return { success: false, error: "Erro ao rejeitar usuário" };
+  }
+}
+
+export async function getPendingUsers() {
+  try {
+    const pendingUsers = await prisma.user.findMany({
+      where: {
+        approvalStatus: "PENDING",
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        cpf: true,
+        createdAt: true,
+        joinDate: true,
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+
+    return {
+      success: true,
+      users: pendingUsers,
+    };
+  } catch (error) {
+    console.error("Error getting pending users:", error);
+    return { success: false, error: "Erro ao obter usuários pendentes" };
+  }
+}
+
+export async function getApprovedUsers() {
+  try {
+    const approvedUsers = await prisma.user.findMany({
+      where: {
+        approvalStatus: "APPROVED",
+      },
+      include: {
+        stats: true,
+        enrollments: {
+          include: {
+            course: true,
+          },
+        },
+        certificates: true,
+      },
+      orderBy: {
+        joinDate: "desc",
+      },
+    });
+
+    return {
+      success: true,
+      users: approvedUsers,
+    };
+  } catch (error) {
+    console.error("Error getting approved users:", error);
+    return { success: false, error: "Erro ao obter usuários aprovados" };
+  }
+}
+
+export async function getRejectedUsers() {
+  try {
+    const rejectedUsers = await prisma.user.findMany({
+      where: {
+        approvalStatus: "REJECTED",
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        cpf: true,
+        createdAt: true,
+        joinDate: true,
+        rejectionReason: true,
+        approvedAt: true,
+      },
+      orderBy: {
+        approvedAt: "desc",
+      },
+    });
+
+    return {
+      success: true,
+      users: rejectedUsers,
+    };
+  } catch (error) {
+    console.error("Error getting rejected users:", error);
+    return { success: false, error: "Erro ao obter usuários rejeitados" };
   }
 }

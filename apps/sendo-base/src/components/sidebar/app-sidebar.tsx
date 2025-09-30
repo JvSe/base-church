@@ -20,6 +20,7 @@ import * as React from "react";
 
 import { useAuth } from "@/src/hooks";
 import { getInitials } from "@/src/lib/get-initial-by-name";
+import { getFirstName } from "@/src/lib/helpers";
 import {
   Avatar,
   AvatarFallback,
@@ -210,8 +211,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar className="rounded-xl" collapsible="icon" {...props}>
       {/* Header Simples */}
-      <SidebarHeader className="dark-border flex-row justify-between border-b pt-10 pb-5">
-        <Link href="/profile">
+      <SidebarHeader className="dark-border w-full flex-row justify-between border-b pt-10 pb-5">
+        <Link href="/profile" className="w-full max-w-4/5 flex-1">
           <div className="flex cursor-pointer items-center gap-3 overflow-hidden transition-[margin,opacity,width] duration-300 ease-in-out group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:opacity-0">
             <div className="dark-primary-subtle-bg flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full">
               <Avatar className="h-full w-full">
@@ -221,11 +222,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </AvatarFallback>
               </Avatar>
             </div>
-            <div className="flex-1">
-              <h3 className="dark-text-primary text-sm font-semibold text-nowrap">
-                {user?.name}
+            <div className="min-w-0 flex-1">
+              <h3 className="dark-text-primary truncate text-sm font-semibold">
+                {getFirstName(user?.name ?? "")}
               </h3>
-              <p className="dark-text-tertiary mt-0.5 text-xs">{user?.role}</p>
+              <p className="dark-text-tertiary mt-0.5 truncate text-xs">
+                {user?.role}
+              </p>
             </div>
           </div>
         </Link>

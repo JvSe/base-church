@@ -393,9 +393,11 @@ export default function DashboardPage() {
             </h2>
             <div className="space-y-4">
               {(statsData?.recentActivity?.length || 0) > 0 ? (
-                statsData?.recentActivity?.map((activity) => (
-                  <ActivityItem key={activity.id} activity={activity} />
-                ))
+                statsData?.recentActivity
+                  ?.splice(0, 4)
+                  .map((activity) => (
+                    <ActivityItem key={activity.id} activity={activity} />
+                  ))
               ) : (
                 <div className="dark-card dark-shadow-sm rounded-xl p-4">
                   <div className="flex items-center space-x-3">

@@ -5,21 +5,19 @@ import { getEvents, getUserProfile } from "@/src/lib/actions";
 import { Button } from "@base-church/ui/components/button";
 import { useQuery } from "@tanstack/react-query";
 import {
-    Activity,
-    Award,
-    Bell,
-    BookOpen,
-    Calendar,
-    Clock,
-    Flame,
-    Gift,
-    PlayCircle,
-    Plus,
-    Star,
-    Target,
-    TrendingUp,
-    User,
-    Users,
+  Activity,
+  Award,
+  Bell,
+  BookOpen,
+  Calendar,
+  Clock,
+  Flame,
+  PlayCircle,
+  Plus,
+  Star,
+  Target,
+  TrendingUp,
+  User,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -75,7 +73,7 @@ export default function DashboardPage() {
   // Calculate user stats
   const activeCourses =
     (userData as any)?.enrollments?.filter(
-      (e: any) => e.isActive && !e.completedAt,
+      (e: any) => e.isActive && !e.completedAt && e.status === "approved",
     )?.length || 0;
   const completedCourses =
     (userData as any)?.enrollments?.filter((e: any) => e.completedAt)?.length ||
@@ -102,7 +100,11 @@ export default function DashboardPage() {
   const activeEnrollments =
     (userData as any)?.enrollments
       ?.filter(
-        (e: any) => e.isActive && !e.completedAt && (e.progress || 0) > 0,
+        (e: any) =>
+          e.isActive &&
+          !e.completedAt &&
+          e.status === "approved" &&
+          (e.progress || 0) > 0,
       )
       .slice(0, 2) || [];
 
@@ -448,7 +450,11 @@ export default function DashboardPage() {
                 {(userData as any)?.enrollments &&
                 (userData as any).enrollments.length > 0 ? (
                   (userData as any).enrollments
-                    .filter((e: any) => e.lastAccessedAt || e.enrolledAt)
+                    .filter(
+                      (e: any) =>
+                        e.status === "approved" &&
+                        (e.lastAccessedAt || e.enrolledAt),
+                    )
                     .sort(
                       (a: any, b: any) =>
                         new Date(b.lastAccessedAt || b.enrolledAt).getTime() -
@@ -716,32 +722,6 @@ export default function DashboardPage() {
                     </div>
                   </>
                 )}
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="dark-glass dark-shadow-sm rounded-xl p-6">
-              <h3 className="dark-text-primary mb-4 font-semibold">
-                Ações Rápidas
-              </h3>
-
-              <div className="space-y-3">
-                <Button className="dark-glass dark-border hover:dark-border-hover w-full justify-start gap-3">
-                  <Gift className="dark-primary" size={16} />
-                  <span className="dark-text-primary">Indique e Ganhe</span>
-                </Button>
-                <Button className="dark-glass dark-border hover:dark-border-hover w-full justify-start gap-3">
-                  <Users className="dark-secondary" size={16} />
-                  <span className="dark-text-primary">Comunidade</span>
-                </Button>
-                <Button className="dark-glass dark-border hover:dark-border-hover w-full justify-start gap-3">
-                  <Award className="dark-warning" size={16} />
-                  <span className="dark-text-primary">Meus Certificados</span>
-                </Button>
-                <Button className="dark-btn-primary w-full justify-start gap-3">
-                  <Plus size={16} />
-                  <span>Explorar Cursos</span>
-                </Button>
               </div>
             </div>
           </div>

@@ -17,3 +17,12 @@ export const getInitialsOfName = (name: string) => {
 
   return `${firstInitial}${lastInitial}`;
 };
+
+export const getFirstName = (name: string) => {
+  if (!name) {
+    return "";
+  }
+
+  const nameFormatted = name?.split(" ");
+  return `${nameFormatted[0]} ${nameFormatted[1]}`;
+};

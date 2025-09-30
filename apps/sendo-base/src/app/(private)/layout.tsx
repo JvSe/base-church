@@ -1,5 +1,8 @@
 import { AppSidebar } from "@/src/components/sidebar/app-sidebar";
-import { SidebarInset, SidebarProvider } from "@base-church/ui/components/sidebar";
+import {
+  SidebarInset,
+  SidebarProvider,
+} from "@base-church/ui/components/sidebar";
 
 export default function DashboardLayout({
   children,
@@ -9,8 +12,6 @@ export default function DashboardLayout({
   return (
     <div className="[--header-height:calc(--spacing(14))]">
       <SidebarProvider className="flex flex-col">
-        {/* <SiteHeader /> */}
-
         <div className="flex flex-1">
           <AppSidebar variant="inset" />
 

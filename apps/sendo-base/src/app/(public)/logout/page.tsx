@@ -39,7 +39,7 @@ export default function LogoutPage() {
   }, [router]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
+    <div className="flex h-full items-center justify-center">
       <div className="text-center">
         <h1 className="dark-text-primary mb-4 text-xl font-semibold">
           Fazendo logout...

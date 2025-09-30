@@ -11,6 +11,7 @@ export interface User {
   role: "MEMBROS" | "LIDER";
   isPastor?: boolean;
   image?: string;
+  approvalStatus?: "PENDING" | "APPROVED" | "REJECTED";
 }
 
 interface UserStore {

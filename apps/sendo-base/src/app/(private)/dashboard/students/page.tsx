@@ -65,6 +65,7 @@ interface Student {
   certificatesEarned: number;
   lastActivity: Date;
   status: "active" | "inactive" | "suspended";
+  approvalStatus?: "PENDING" | "APPROVED" | "REJECTED";
 }
 
 interface Enrollment {
@@ -111,6 +112,8 @@ export default function StudentsPage() {
     queryFn: getAllStudents,
     select: (data) => data.students,
   });
+
+  console.log("studentsData", studentsData);
 
   // Buscar estatísticas dos alunos
   const {
@@ -164,9 +167,24 @@ export default function StudentsPage() {
           student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
           student.cpf.includes(searchTerm),
       );
-      setFilteredStudents(filtered);
+
+      // Ordenar alunos: primeiro os com matrículas pendentes, depois os demais
+      const sorted = filtered.sort((a, b) => {
+        const aHasPending = getStudentPendingEnrollments(a.id).length > 0;
+        const bHasPending = getStudentPendingEnrollments(b.id).length > 0;
+
+        // Se ambos têm ou não têm pendências, manter ordem alfabética
+        if (aHasPending === bHasPending) {
+          return a.name.localeCompare(b.name);
+        }
+
+        // Priorizar alunos com matrículas pendentes
+        return aHasPending ? -1 : 1;
+      });
+
+      setFilteredStudents(sorted);
     }
-  }, [searchTerm, studentsData]);
+  }, [searchTerm, studentsData, allEnrollmentsData]);
 
   const getStatusColor = (status: Student["status"]) => {
     switch (status) {
@@ -218,7 +236,7 @@ export default function StudentsPage() {
   // Funções para gerenciar alunos
   const handleUpdateStudentStatus = async (
     studentId: string,
-    status: "active" | "inactive" | "suspended",
+    status: "APPROVED" | "REJECTED",
   ) => {
     try {
       const result = await updateStudentStatus(studentId, status);
@@ -282,7 +300,7 @@ export default function StudentsPage() {
 
     try {
       // TODO: Obter ID do usuário atual (líder/pastor que está rejeitando)
-      const approverId = "current-user-id"; // Substituir por ID real do usuário logado
+      const approverId = user?.id || ""; // Substituir por ID real do usuário logado
 
       const result = await rejectEnrollment(
         enrollmentId,
@@ -582,480 +600,540 @@ export default function StudentsPage() {
 
         {/* Students List */}
         <div className="dark-glass dark-shadow-sm rounded-xl p-6">
-          <h2 className="dark-text-primary mb-6 flex items-center gap-2 text-xl font-bold">
-            <Users className="dark-primary" size={24} />
-            Lista de Alunos ({filteredStudents.length})
-          </h2>
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="dark-text-primary flex items-center gap-2 text-xl font-bold">
+              <Users className="dark-primary" size={24} />
+              Lista de Alunos ({filteredStudents.length})
+            </h2>
+            {filteredStudents.some(
+              (student) => getStudentPendingEnrollments(student.id).length > 0,
+            ) && (
+              <div className="dark-warning-bg flex items-center gap-2 rounded-lg px-3 py-2">
+                <Clock className="dark-warning h-4 w-4 animate-pulse" />
+                <span className="dark-warning text-sm font-medium">
+                  {
+                    filteredStudents.filter(
+                      (student) =>
+                        getStudentPendingEnrollments(student.id).length > 0,
+                    ).length
+                  }{" "}
+                  aluno(s) com matrículas pendentes
+                </span>
+              </div>
+            )}
+          </div>
 
           <div className="space-y-4">
             {filteredStudents.length > 0 ? (
               <Accordion type="multiple" className="space-y-4">
-                {filteredStudents.map((student) => (
-                  <AccordionItem
-                    key={student.id}
-                    value={`student-${student.id}`}
-                    className="dark-glass dark-shadow-sm rounded-xl"
-                  >
-                    <AccordionTrigger className="dark-card hover:dark-bg-secondary p-4 transition-all">
-                      <div className="flex w-full items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="dark-primary-subtle-bg rounded-xl p-2">
-                            <Users className="dark-primary" size={20} />
-                          </div>
-                          <div className="text-left">
-                            <h3 className="dark-text-primary font-semibold">
-                              {student.name}
-                            </h3>
-                            <p className="dark-text-secondary text-sm">
-                              {student.email}
-                            </p>
-                            <div className="mt-1 flex items-center gap-4">
-                              <span className="dark-text-tertiary text-xs">
-                                Função:{" "}
-                                {getRoleText(student.role, student.isPastor)}
-                              </span>
-                              <span className="dark-text-tertiary text-xs">
-                                Status: {getStatusText(student.status)}
-                              </span>
-                              <span className="dark-text-tertiary text-xs">
-                                Membro desde {formatDate(student.joinDate)}
-                              </span>
+                {filteredStudents.map((student) => {
+                  const hasPendingEnrollments =
+                    getStudentPendingEnrollments(student.id).length > 0;
+                  return (
+                    <AccordionItem
+                      key={student.id}
+                      value={`student-${student.id}`}
+                      className={`dark-glass dark-shadow-sm rounded-xl`}
+                    >
+                      <AccordionTrigger className="dark-card hover:dark-bg-secondary p-4 transition-all">
+                        <div className="flex w-full items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`rounded-xl p-2 ${
+                                hasPendingEnrollments
+                                  ? "dark-warning-bg"
+                                  : "dark-primary-subtle-bg"
+                              }`}
+                            >
+                              {hasPendingEnrollments ? (
+                                <Clock
+                                  className="dark-warning animate-pulse"
+                                  size={20}
+                                />
+                              ) : (
+                                <Users className="dark-primary" size={20} />
+                              )}
                             </div>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(student.status)}`}
-                          >
-                            {getStatusText(student.status)}
-                          </span>
-                        </div>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="dark-border">
-                      <div className="space-y-6 p-6">
-                        {/* Informações Básicas */}
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                          <div className="space-y-3">
-                            <h4 className="dark-text-primary font-semibold">
-                              Informações Pessoais
-                            </h4>
-                            <div className="space-y-2">
-                              <div className="flex items-center text-sm">
-                                <Mail className="dark-text-tertiary mr-2 h-3 w-3" />
-                                <span className="dark-text-secondary">
-                                  {student.email}
+                            <div className="text-left">
+                              <div className="flex items-center gap-2">
+                                <h3 className="dark-text-primary font-semibold">
+                                  {student.name}
+                                </h3>
+                                {hasPendingEnrollments && (
+                                  <div className="dark-warning-bg flex items-center gap-1 rounded-full px-2 py-0.5">
+                                    <Clock className="dark-warning h-3 w-3 animate-pulse" />
+                                    <span className="dark-warning text-xs font-medium">
+                                      {
+                                        getStudentPendingEnrollments(student.id)
+                                          .length
+                                      }{" "}
+                                      matrícula(s) pendente(s)
+                                      {getStudentPendingEnrollments(student.id)
+                                        .length !== 1
+                                        ? "s"
+                                        : ""}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                              <p className="dark-text-secondary text-sm">
+                                {student.email}
+                              </p>
+                              <div className="mt-1 flex items-center gap-4">
+                                <span className="dark-text-tertiary text-xs">
+                                  Função:{" "}
+                                  {getRoleText(student.role, student.isPastor)}
+                                </span>
+                                <span className="dark-text-tertiary text-xs">
+                                  Status: {getStatusText(student.status)}
+                                </span>
+                                <span className="dark-text-tertiary text-xs">
+                                  Membro desde {formatDate(student.joinDate)}
                                 </span>
                               </div>
-                              {student.phone && (
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <span
+                              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(student.status)}`}
+                            >
+                              {getStatusText(student.status)}
+                            </span>
+                          </div>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="dark-border">
+                        <div className="space-y-6 p-6">
+                          {/* Informações Básicas */}
+                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div className="space-y-3">
+                              <h4 className="dark-text-primary font-semibold">
+                                Informações Pessoais
+                              </h4>
+                              <div className="space-y-2">
                                 <div className="flex items-center text-sm">
-                                  <Phone className="dark-text-tertiary mr-2 h-3 w-3" />
+                                  <Mail className="dark-text-tertiary mr-2 h-3 w-3" />
                                   <span className="dark-text-secondary">
-                                    {student.phone}
+                                    {student.email}
                                   </span>
                                 </div>
-                              )}
-                              <div className="flex items-center text-sm">
-                                <Calendar className="dark-text-tertiary mr-2 h-3 w-3" />
-                                <span className="dark-text-secondary">
-                                  CPF: {student.cpf}
-                                </span>
+                                {student.phone && (
+                                  <div className="flex items-center text-sm">
+                                    <Phone className="dark-text-tertiary mr-2 h-3 w-3" />
+                                    <span className="dark-text-secondary">
+                                      {student.phone}
+                                    </span>
+                                  </div>
+                                )}
+                                <div className="flex items-center text-sm">
+                                  <Calendar className="dark-text-tertiary mr-2 h-3 w-3" />
+                                  <span className="dark-text-secondary">
+                                    CPF: {student.cpf}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="space-y-3">
+                              <h4 className="dark-text-primary font-semibold">
+                                Estatísticas
+                              </h4>
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between text-sm">
+                                  <span className="dark-text-secondary">
+                                    Progresso do Perfil
+                                  </span>
+                                  <span className="dark-text-primary font-semibold">
+                                    {student.profileCompletion}%
+                                  </span>
+                                </div>
+                                <div className="dark-bg-tertiary h-2 w-full rounded-full">
+                                  <div
+                                    className="dark-gradient-primary h-2 rounded-full transition-all duration-300"
+                                    style={{
+                                      width: `${student.profileCompletion}%`,
+                                    }}
+                                  />
+                                </div>
+                                <div className="dark-text-secondary text-sm">
+                                  <BookOpen className="mr-1 inline h-3 w-3" />
+                                  Cursos Inscritos: {student.coursesEnrolled}
+                                </div>
+                                <div className="dark-text-secondary text-sm">
+                                  <Award className="mr-1 inline h-3 w-3" />
+                                  Cursos Completados: {student.coursesCompleted}
+                                </div>
+                                <div className="dark-text-secondary text-sm">
+                                  <Award className="mr-1 inline h-3 w-3" />
+                                  Certificados: {student.certificatesEarned}
+                                </div>
+                                <div className="dark-text-secondary text-sm">
+                                  Última atividade:{" "}
+                                  {getTimeAgo(student.lastActivity)}
+                                </div>
                               </div>
                             </div>
                           </div>
 
+                          {/* Gerenciamento de Função */}
                           <div className="space-y-3">
                             <h4 className="dark-text-primary font-semibold">
-                              Estatísticas
+                              Gerenciar Função
                             </h4>
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between text-sm">
-                                <span className="dark-text-secondary">
-                                  Progresso do Perfil
+                            <div className="space-y-4">
+                              <div className="flex items-center gap-4">
+                                <span className="dark-text-secondary text-sm">
+                                  Função atual:
                                 </span>
-                                <span className="dark-text-primary font-semibold">
-                                  {student.profileCompletion}%
+                                <span
+                                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                    student.role === "LIDER"
+                                      ? "bg-blue-400/20 text-blue-400"
+                                      : "bg-gray-400/20 text-gray-400"
+                                  }`}
+                                >
+                                  {getRoleText(student.role, student.isPastor)}
                                 </span>
+                                <Select
+                                  value={student.role}
+                                  onValueChange={(value: "MEMBROS" | "LIDER") =>
+                                    handleUpdateUserRole(student.id, value)
+                                  }
+                                >
+                                  <SelectTrigger className="dark-input w-40">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="MEMBROS">
+                                      Membro
+                                    </SelectItem>
+                                    <SelectItem value="LIDER">Líder</SelectItem>
+                                  </SelectContent>
+                                </Select>
                               </div>
-                              <div className="dark-bg-tertiary h-2 w-full rounded-full">
-                                <div
-                                  className="dark-gradient-primary h-2 rounded-full transition-all duration-300"
-                                  style={{
-                                    width: `${student.profileCompletion}%`,
-                                  }}
-                                />
-                              </div>
-                              <div className="dark-text-secondary text-sm">
-                                <BookOpen className="mr-1 inline h-3 w-3" />
-                                Cursos Inscritos: {student.coursesEnrolled}
-                              </div>
-                              <div className="dark-text-secondary text-sm">
-                                <Award className="mr-1 inline h-3 w-3" />
-                                Cursos Completados: {student.coursesCompleted}
-                              </div>
-                              <div className="dark-text-secondary text-sm">
-                                <Award className="mr-1 inline h-3 w-3" />
-                                Certificados: {student.certificatesEarned}
-                              </div>
-                              <div className="dark-text-secondary text-sm">
-                                Última atividade:{" "}
-                                {getTimeAgo(student.lastActivity)}
+
+                              <div className="flex items-center gap-4">
+                                <span className="dark-text-secondary text-sm">
+                                  Status de Pastor:
+                                </span>
+                                <span
+                                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                    student.isPastor
+                                      ? "bg-purple-400/20 text-purple-400"
+                                      : "bg-gray-400/20 text-gray-400"
+                                  }`}
+                                >
+                                  {student.isPastor ? "Pastor" : "Não é Pastor"}
+                                </span>
+                                <Button
+                                  size="sm"
+                                  className={
+                                    student.isPastor
+                                      ? "dark-glass dark-border hover:dark-border-hover"
+                                      : "dark-btn-primary"
+                                  }
+                                  onClick={() =>
+                                    handleUpdateUserPastorStatus(
+                                      student.id,
+                                      !student.isPastor,
+                                    )
+                                  }
+                                >
+                                  {student.isPastor
+                                    ? "Remover Pastor"
+                                    : "Tornar Pastor"}
+                                </Button>
                               </div>
                             </div>
                           </div>
-                        </div>
 
-                        {/* Gerenciamento de Função */}
-                        <div className="space-y-3">
-                          <h4 className="dark-text-primary font-semibold">
-                            Gerenciar Função
-                          </h4>
-                          <div className="space-y-4">
-                            <div className="flex items-center gap-4">
-                              <span className="dark-text-secondary text-sm">
-                                Função atual:
-                              </span>
-                              <span
-                                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                  student.role === "LIDER"
-                                    ? "bg-blue-400/20 text-blue-400"
-                                    : "bg-gray-400/20 text-gray-400"
-                                }`}
-                              >
-                                {getRoleText(student.role, student.isPastor)}
-                              </span>
-                              <Select
-                                value={student.role}
-                                onValueChange={(value: "MEMBROS" | "LIDER") =>
-                                  handleUpdateUserRole(student.id, value)
-                                }
-                              >
-                                <SelectTrigger className="dark-input w-40">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="MEMBROS">
-                                    Membro
-                                  </SelectItem>
-                                  <SelectItem value="LIDER">Líder</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            <div className="flex items-center gap-4">
-                              <span className="dark-text-secondary text-sm">
-                                Status de Pastor:
-                              </span>
-                              <span
-                                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                  student.isPastor
-                                    ? "bg-purple-400/20 text-purple-400"
-                                    : "bg-gray-400/20 text-gray-400"
-                                }`}
-                              >
-                                {student.isPastor ? "Pastor" : "Não é Pastor"}
-                              </span>
+                          {/* Matrículas Pendentes */}
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <h4 className="dark-text-primary font-semibold">
+                                  Matrículas em Cursos
+                                </h4>
+                                {student.coursesEnrolled > 0 && (
+                                  <div className="flex items-center gap-2">
+                                    <div className="dark-bg-secondary dark-border dark-text-secondary rounded-full px-2 py-1 text-xs">
+                                      {student.coursesEnrolled} curso
+                                      {student.coursesEnrolled !== 1 ? "s" : ""}
+                                    </div>
+                                    {student.coursesEnrolled > 0 && (
+                                      <div className="flex items-center gap-1">
+                                        <div className="dark-bg-primary h-2 w-2 animate-pulse rounded-full"></div>
+                                        <span className="dark-text-tertiary text-xs">
+                                          Ativo
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                                {getStudentPendingEnrollments(student.id)
+                                  .length > 0 && (
+                                  <div className="dark-warning-bg flex items-center gap-1 rounded-full px-2 py-1">
+                                    <Clock className="dark-warning h-3 w-3 animate-pulse" />
+                                    <span className="dark-warning text-xs font-medium">
+                                      {
+                                        getStudentPendingEnrollments(student.id)
+                                          .length
+                                      }{" "}
+                                      pendente
+                                      {getStudentPendingEnrollments(student.id)
+                                        .length !== 1
+                                        ? "s"
+                                        : ""}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
                               <Button
                                 size="sm"
-                                className={
-                                  student.isPastor
-                                    ? "dark-glass dark-border hover:dark-border-hover"
-                                    : "dark-btn-primary"
-                                }
-                                onClick={() =>
-                                  handleUpdateUserPastorStatus(
-                                    student.id,
-                                    !student.isPastor,
-                                  )
-                                }
+                                className="dark-btn-primary"
+                                onClick={() => toggleEnrollments(student.id)}
                               >
-                                {student.isPastor
-                                  ? "Remover Pastor"
-                                  : "Tornar Pastor"}
+                                <Eye className="mr-2 h-3 w-3" />
+                                {showEnrollments[student.id]
+                                  ? "Ocultar Matrículas"
+                                  : "Ver Matrículas"}
                               </Button>
                             </div>
-                          </div>
-                        </div>
 
-                        {/* Matrículas Pendentes */}
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <h4 className="dark-text-primary font-semibold">
-                                Matrículas em Cursos
-                              </h4>
-                              {student.coursesEnrolled > 0 && (
-                                <div className="flex items-center gap-2">
-                                  <div className="dark-bg-secondary dark-border dark-text-secondary rounded-full px-2 py-1 text-xs">
-                                    {student.coursesEnrolled} curso
-                                    {student.coursesEnrolled !== 1 ? "s" : ""}
-                                  </div>
-                                  {student.coursesEnrolled > 0 && (
-                                    <div className="flex items-center gap-1">
-                                      <div className="dark-bg-primary h-2 w-2 animate-pulse rounded-full"></div>
-                                      <span className="dark-text-tertiary text-xs">
-                                        Ativo
-                                      </span>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                              {getStudentPendingEnrollments(student.id).length >
-                                0 && (
-                                <div className="dark-warning-bg flex items-center gap-1 rounded-full px-2 py-1">
-                                  <Clock className="dark-warning h-3 w-3 animate-pulse" />
-                                  <span className="dark-warning text-xs font-medium">
-                                    {
-                                      getStudentPendingEnrollments(student.id)
-                                        .length
-                                    }{" "}
-                                    pendente
-                                    {getStudentPendingEnrollments(student.id)
-                                      .length !== 1
-                                      ? "s"
-                                      : ""}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                            <Button
-                              size="sm"
-                              className="dark-btn-primary"
-                              onClick={() => toggleEnrollments(student.id)}
-                            >
-                              <Eye className="mr-2 h-3 w-3" />
-                              {showEnrollments[student.id]
-                                ? "Ocultar Matrículas"
-                                : "Ver Matrículas"}
-                            </Button>
-                          </div>
-
-                          {showEnrollments[student.id] && (
-                            <div className="space-y-3">
-                              {enrollmentsLoading ? (
-                                <div className="dark-card dark-shadow-sm rounded-lg p-6">
-                                  <div className="flex items-center justify-center gap-3">
-                                    <Loader2 className="dark-text-primary h-5 w-5 animate-spin" />
-                                    <div className="dark-text-secondary">
-                                      Carregando matrículas...
-                                    </div>
-                                  </div>
-                                  <div className="mt-4 space-y-3">
-                                    {[1, 2, 3].map((i) => (
-                                      <div key={i} className="animate-pulse">
-                                        <div className="dark-bg-tertiary h-16 rounded-lg"></div>
+                            {showEnrollments[student.id] && (
+                              <div className="space-y-3">
+                                {enrollmentsLoading ? (
+                                  <div className="dark-card dark-shadow-sm rounded-lg p-6">
+                                    <div className="flex items-center justify-center gap-3">
+                                      <Loader2 className="dark-text-primary h-5 w-5 animate-spin" />
+                                      <div className="dark-text-secondary">
+                                        Carregando matrículas...
                                       </div>
-                                    ))}
+                                    </div>
+                                    <div className="mt-4 space-y-3">
+                                      {[1, 2, 3].map((i) => (
+                                        <div key={i} className="animate-pulse">
+                                          <div className="dark-bg-tertiary h-16 rounded-lg"></div>
+                                        </div>
+                                      ))}
+                                    </div>
                                   </div>
-                                </div>
-                              ) : enrollmentsData &&
-                                enrollmentsData.length > 0 ? (
-                                <div className="space-y-4">
-                                  {enrollmentsData.map((enrollment) => (
-                                    <div
-                                      key={enrollment.id}
-                                      className={`dark-card dark-shadow-sm hover:dark-shadow-md rounded-lg p-5 transition-all duration-300 ${
-                                        enrollment.status === "pending"
-                                          ? "border-l-warning from-warning/5 border-l-4 bg-gradient-to-r to-transparent"
-                                          : ""
-                                      }`}
-                                    >
-                                      <div className="flex items-start justify-between">
-                                        <div className="flex-1 space-y-3">
-                                          <div className="flex items-center gap-3">
-                                            <div className="dark-bg-tertiary rounded-lg p-2">
-                                              <BookOpen className="dark-text-primary h-4 w-4" />
+                                ) : enrollmentsData &&
+                                  enrollmentsData.length > 0 ? (
+                                  <div className="space-y-4">
+                                    {enrollmentsData.map((enrollment) => (
+                                      <div
+                                        key={enrollment.id}
+                                        className={`dark-card dark-shadow-sm hover:dark-shadow-md rounded-lg p-5 transition-all duration-300 ${
+                                          enrollment.status === "pending"
+                                            ? "border-l-warning from-warning/5 border-l-4 bg-gradient-to-r to-transparent"
+                                            : ""
+                                        }`}
+                                      >
+                                        <div className="flex items-start justify-between">
+                                          <div className="flex-1 space-y-3">
+                                            <div className="flex items-center gap-3">
+                                              <div className="dark-bg-tertiary rounded-lg p-2">
+                                                <BookOpen className="dark-text-primary h-4 w-4" />
+                                              </div>
+                                              <div>
+                                                <h5 className="dark-text-primary text-lg font-semibold">
+                                                  {enrollment.course.title}
+                                                </h5>
+                                                <p className="dark-text-secondary text-sm">
+                                                  Instrutor:{" "}
+                                                  <span className="dark-text-primary font-medium">
+                                                    {enrollment.course
+                                                      .instructor?.name ||
+                                                      "Não informado"}
+                                                  </span>
+                                                </p>
+                                              </div>
                                             </div>
-                                            <div>
-                                              <h5 className="dark-text-primary text-lg font-semibold">
-                                                {enrollment.course.title}
-                                              </h5>
-                                              <p className="dark-text-secondary text-sm">
-                                                Instrutor:{" "}
-                                                <span className="dark-text-primary font-medium">
-                                                  {enrollment.course.instructor
-                                                    ?.name || "Não informado"}
+
+                                            <div className="grid grid-cols-1 gap-3 text-sm md:grid-cols-2">
+                                              <div className="flex items-center gap-2">
+                                                <Calendar className="dark-text-tertiary h-4 w-4" />
+                                                <span className="dark-text-tertiary">
+                                                  Solicitado em:{" "}
+                                                  <span className="dark-text-secondary font-medium">
+                                                    {formatDate(
+                                                      enrollment.enrolledAt,
+                                                    )}
+                                                  </span>
                                                 </span>
-                                              </p>
+                                              </div>
+
+                                              {enrollment.approvedAt && (
+                                                <div className="flex items-center gap-2">
+                                                  <CheckCircle className="dark-success h-4 w-4" />
+                                                  <span className="dark-text-tertiary">
+                                                    Aprovado em:{" "}
+                                                    <span className="dark-text-secondary font-medium">
+                                                      {formatDate(
+                                                        enrollment.approvedAt,
+                                                      )}
+                                                    </span>
+                                                    {enrollment.approver &&
+                                                      ` por ${enrollment.approver.name}`}
+                                                  </span>
+                                                </div>
+                                              )}
+
+                                              {enrollment.rejectionReason && (
+                                                <div className="flex items-center gap-2 md:col-span-2">
+                                                  <AlertCircle className="dark-error h-4 w-4" />
+                                                  <span className="dark-text-tertiary">
+                                                    Motivo da rejeição:{" "}
+                                                    <span className="dark-text-secondary font-medium">
+                                                      {
+                                                        enrollment.rejectionReason
+                                                      }
+                                                    </span>
+                                                  </span>
+                                                </div>
+                                              )}
                                             </div>
                                           </div>
 
-                                          <div className="grid grid-cols-1 gap-3 text-sm md:grid-cols-2">
+                                          <div className="flex flex-col items-end gap-3">
                                             <div className="flex items-center gap-2">
-                                              <Calendar className="dark-text-tertiary h-4 w-4" />
-                                              <span className="dark-text-tertiary">
-                                                Solicitado em:{" "}
-                                                <span className="dark-text-secondary font-medium">
-                                                  {formatDate(
-                                                    enrollment.enrolledAt,
-                                                  )}
-                                                </span>
+                                              <span
+                                                className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${getEnrollmentStatusColor(enrollment.status)}`}
+                                              >
+                                                {enrollment.status ===
+                                                  "pending" && (
+                                                  <Clock className="h-3 w-3 animate-pulse" />
+                                                )}
+                                                {enrollment.status ===
+                                                  "approved" && (
+                                                  <CheckCircle className="h-3 w-3" />
+                                                )}
+                                                {enrollment.status ===
+                                                  "rejected" && (
+                                                  <XCircle className="h-3 w-3" />
+                                                )}
+                                                {getEnrollmentStatusText(
+                                                  enrollment.status,
+                                                )}
                                               </span>
                                             </div>
 
-                                            {enrollment.approvedAt && (
-                                              <div className="flex items-center gap-2">
-                                                <CheckCircle className="dark-success h-4 w-4" />
-                                                <span className="dark-text-tertiary">
-                                                  Aprovado em:{" "}
-                                                  <span className="dark-text-secondary font-medium">
-                                                    {formatDate(
-                                                      enrollment.approvedAt,
-                                                    )}
-                                                  </span>
-                                                  {enrollment.approver &&
-                                                    ` por ${enrollment.approver.name}`}
-                                                </span>
-                                              </div>
-                                            )}
-
-                                            {enrollment.rejectionReason && (
-                                              <div className="flex items-center gap-2 md:col-span-2">
-                                                <AlertCircle className="dark-error h-4 w-4" />
-                                                <span className="dark-text-tertiary">
-                                                  Motivo da rejeição:{" "}
-                                                  <span className="dark-text-secondary font-medium">
-                                                    {enrollment.rejectionReason}
-                                                  </span>
-                                                </span>
+                                            {enrollment.status ===
+                                              "pending" && (
+                                              <div className="flex gap-2">
+                                                <Button
+                                                  size="sm"
+                                                  className="dark-success-bg dark-success hover:dark-success-bg transition-all duration-200 hover:scale-105"
+                                                  onClick={() =>
+                                                    handleApproveEnrollment(
+                                                      enrollment.id,
+                                                    )
+                                                  }
+                                                >
+                                                  <CheckCircle className="mr-1 h-3 w-3" />
+                                                  Aprovar
+                                                </Button>
+                                                <Button
+                                                  size="sm"
+                                                  className="dark-error-bg dark-error hover:dark-error-bg transition-all duration-200 hover:scale-105"
+                                                  onClick={() => {
+                                                    setCurrentEnrollment(
+                                                      enrollment,
+                                                    );
+                                                    setShowRejectModal(true);
+                                                  }}
+                                                >
+                                                  <XCircle className="mr-1 h-3 w-3" />
+                                                  Rejeitar
+                                                </Button>
                                               </div>
                                             )}
                                           </div>
                                         </div>
 
-                                        <div className="flex flex-col items-end gap-3">
-                                          <div className="flex items-center gap-2">
-                                            <span
-                                              className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${getEnrollmentStatusColor(enrollment.status)}`}
-                                            >
-                                              {enrollment.status ===
-                                                "pending" && (
-                                                <Clock className="h-3 w-3 animate-pulse" />
-                                              )}
-                                              {enrollment.status ===
-                                                "approved" && (
-                                                <CheckCircle className="h-3 w-3" />
-                                              )}
-                                              {enrollment.status ===
-                                                "rejected" && (
-                                                <XCircle className="h-3 w-3" />
-                                              )}
-                                              {getEnrollmentStatusText(
-                                                enrollment.status,
-                                              )}
-                                            </span>
-                                          </div>
-
-                                          {enrollment.status === "pending" && (
-                                            <div className="flex gap-2">
-                                              <Button
-                                                size="sm"
-                                                className="dark-success-bg dark-success hover:dark-success-bg transition-all duration-200 hover:scale-105"
-                                                onClick={() =>
-                                                  handleApproveEnrollment(
-                                                    enrollment.id,
-                                                  )
-                                                }
-                                              >
-                                                <CheckCircle className="mr-1 h-3 w-3" />
-                                                Aprovar
-                                              </Button>
-                                              <Button
-                                                size="sm"
-                                                className="dark-error-bg dark-error hover:dark-error-bg transition-all duration-200 hover:scale-105"
-                                                onClick={() => {
-                                                  setCurrentEnrollment(
-                                                    enrollment,
-                                                  );
-                                                  setShowRejectModal(true);
-                                                }}
-                                              >
-                                                <XCircle className="mr-1 h-3 w-3" />
-                                                Rejeitar
-                                              </Button>
+                                        {enrollment.status === "pending" && (
+                                          <div className="dark-bg-tertiary border-l-warning mt-4 rounded-lg border-l-4 p-3">
+                                            <div className="flex items-center gap-2">
+                                              <AlertCircle className="dark-warning h-4 w-4" />
+                                              <span className="dark-text-secondary text-sm font-medium">
+                                                Esta matrícula está aguardando
+                                                aprovação
+                                              </span>
                                             </div>
-                                          )}
-                                        </div>
-                                      </div>
-
-                                      {enrollment.status === "pending" && (
-                                        <div className="dark-bg-tertiary border-l-warning mt-4 rounded-lg border-l-4 p-3">
-                                          <div className="flex items-center gap-2">
-                                            <AlertCircle className="dark-warning h-4 w-4" />
-                                            <span className="dark-text-secondary text-sm font-medium">
-                                              Esta matrícula está aguardando
-                                              aprovação
-                                            </span>
                                           </div>
-                                        </div>
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
-                              ) : (
-                                <div className="dark-card dark-shadow-sm rounded-lg p-8 text-center">
-                                  <div className="flex flex-col items-center gap-4">
-                                    <div className="dark-bg-tertiary rounded-full p-4">
-                                      <BookOpen className="dark-text-tertiary h-8 w-8" />
-                                    </div>
-                                    <div>
-                                      <h4 className="dark-text-primary mb-2 font-semibold">
-                                        Nenhuma matrícula encontrada
-                                      </h4>
-                                      <p className="dark-text-secondary text-sm">
-                                        Este aluno ainda não possui matrículas
-                                        em cursos
-                                      </p>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div className="dark-card dark-shadow-sm rounded-lg p-8 text-center">
+                                    <div className="flex flex-col items-center gap-4">
+                                      <div className="dark-bg-tertiary rounded-full p-4">
+                                        <BookOpen className="dark-text-tertiary h-8 w-8" />
+                                      </div>
+                                      <div>
+                                        <h4 className="dark-text-primary mb-2 font-semibold">
+                                          Nenhuma matrícula encontrada
+                                        </h4>
+                                        <p className="dark-text-secondary text-sm">
+                                          Este aluno ainda não possui matrículas
+                                          em cursos
+                                        </p>
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
 
-                        {/* Ações */}
-                        <div className="dark-border flex justify-end gap-2 border-t pt-4">
-                          <Button
-                            size="sm"
-                            className="dark-glass dark-border hover:dark-border-hover"
-                            onClick={() => {
-                              // TODO: Implementar envio de email
-                              toast.info("Funcionalidade em desenvolvimento");
-                            }}
-                          >
-                            <Mail className="mr-2 h-3 w-3" />
-                            Enviar Email
-                          </Button>
-                          <Button
-                            size="sm"
-                            className="dark-glass dark-border hover:dark-border-hover"
-                            onClick={() => {
-                              const newStatus =
-                                student.status === "active"
-                                  ? "inactive"
-                                  : "active";
-                              handleUpdateStudentStatus(student.id, newStatus);
-                            }}
-                          >
-                            {student.status === "active"
-                              ? "Desativar"
-                              : "Ativar"}
-                          </Button>
-                          <Button
-                            size="sm"
-                            className="dark-error-bg dark-error hover:dark-error-bg"
-                            onClick={() =>
-                              handleDeleteStudent(student.id, student.name)
-                            }
-                          >
-                            Excluir
-                          </Button>
+                          {/* Ações */}
+                          <div className="dark-border flex justify-end gap-2 border-t pt-4">
+                            <Button
+                              size="sm"
+                              className="dark-glass dark-border hover:dark-border-hover"
+                              onClick={() => {
+                                // TODO: Implementar envio de email
+                                toast.info("Funcionalidade em desenvolvimento");
+                              }}
+                            >
+                              <Mail className="mr-2 h-3 w-3" />
+                              Enviar Email
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="dark-glass dark-border hover:dark-border-hover"
+                              onClick={() => {
+                                const newStatus =
+                                  student.approvalStatus === "APPROVED"
+                                    ? "REJECTED"
+                                    : "APPROVED";
+                                handleUpdateStudentStatus(
+                                  student.id,
+                                  newStatus,
+                                );
+                              }}
+                            >
+                              {student.status === "active"
+                                ? "Desativar"
+                                : "Ativar"}
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="dark-error-bg dark-error hover:dark-error-bg"
+                              onClick={() =>
+                                handleDeleteStudent(student.id, student.name)
+                              }
+                            >
+                              Excluir
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                })}
               </Accordion>
             ) : (
               <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">

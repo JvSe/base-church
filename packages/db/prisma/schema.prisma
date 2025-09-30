@@ -26,27 +26,37 @@ enum CertificateStatus {
   REVOKED // Certificado revogado
 }
 
+enum UserApprovalStatus {
+  PENDING // Usuário aguardando aprovação
+  APPROVED // Usuário aprovado
+  REJECTED // Usuário rejeitado
+}
+
 model User {
-  id                   String    @id @default(uuid())
+  id                   String             @id @default(uuid())
   name                 String?
-  email                String?   @unique
+  email                String?            @unique
   emailVerified        DateTime?
   image                String?
-  username             String?   @unique
-  role                 UserRole  @default(MEMBROS)
-  isPastor             Boolean   @default(false) // Se a pessoa é um pastor
+  username             String?            @unique
+  role                 UserRole           @default(MEMBROS)
+  isPastor             Boolean            @default(false) // Se a pessoa é um pastor
   bio                  String?
   phone                String?
-  cpf                  String?   @unique
+  cpf                  String?            @unique
   password             String? // Senha hasheada
   birthDate            DateTime?
-  joinDate             DateTime  @default(now())
-  profileCompletion    Int?      @default(0) // 0-100
-  currentStreak        Int?      @default(0)
-  totalPoints          Int?      @default(0)
-  level                Int?      @default(1)
-  experience           Int?      @default(0)
+  joinDate             DateTime           @default(now())
+  profileCompletion    Int?               @default(0) // 0-100
+  currentStreak        Int?               @default(0)
+  totalPoints          Int?               @default(0)
+  level                Int?               @default(1)
+  experience           Int?               @default(0)
   notificationSettings Json? // JSON object for notification preferences
+  approvalStatus       UserApprovalStatus @default(PENDING) // Status de aprovação do usuário
+  approvedAt           DateTime? // Data da aprovação
+  approvedBy           String? // ID do líder/pastor que aprovou
+  rejectionReason      String? // Motivo da rejeição se aplicável
 
   // Address fields
   cep          String? // CEP (postal code)

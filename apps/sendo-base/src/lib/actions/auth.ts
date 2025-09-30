@@ -79,6 +79,7 @@ export async function signUp(data: SignUpInput) {
       name: user.name!,
       role: user.role,
       email: user.email || undefined,
+      approvalStatus: user.approvalStatus,
     });
 
     // Dados do usuário formatados para o frontend
@@ -89,6 +90,7 @@ export async function signUp(data: SignUpInput) {
       email: user.email || undefined,
       role: user.role as "MEMBROS" | "LIDER",
       isPastor: user.isPastor || false,
+      approvalStatus: user.approvalStatus,
     };
 
     return { success: true, user: userData, sessionCookie };
@@ -129,6 +131,7 @@ export async function signIn(data: SignInInput) {
       name: user.name!,
       role: user.role,
       email: user.email || undefined,
+      approvalStatus: user.approvalStatus,
     });
 
     const userData = {
@@ -139,6 +142,7 @@ export async function signIn(data: SignInInput) {
       role: user.role as "MEMBROS" | "LIDER",
       isPastor: user.isPastor || false,
       image: user.image || undefined,
+      approvalStatus: user.approvalStatus,
     };
 
     return {
@@ -147,7 +151,7 @@ export async function signIn(data: SignInInput) {
       sessionCookie,
     };
   } catch (error) {
-    throw new Error("Erro interno do servidor: " + error);
+    throw new Error((error as any).message);
   }
 }
 

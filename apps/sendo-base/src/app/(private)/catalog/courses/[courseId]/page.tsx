@@ -258,6 +258,7 @@ export default function CoursePage({ params }: CoursePageProps) {
             </div>
 
             {/* Course Preview */}
+
             <div className="dark-card dark-shadow-sm rounded-xl p-6">
               <div className="dark-bg-tertiary mb-4 flex h-48 items-center justify-center rounded-lg">
                 <Play className="dark-text-tertiary" size={48} />

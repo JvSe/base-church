@@ -10,6 +10,7 @@ export interface SessionData {
   name: string;
   role: string;
   email?: string;
+  approvalStatus?: string;
 }
 
 /**
@@ -58,6 +59,7 @@ export async function getSession(): Promise<SessionData | null> {
       name: sessionData.name,
       role: sessionData.role,
       email: sessionData.email,
+      approvalStatus: sessionData.approvalStatus,
     };
   } catch (error) {
     console.error("Error getting session:", error);
@@ -95,6 +97,7 @@ export function getSessionFromRequest(
       name: sessionData.name,
       role: sessionData.role,
       email: sessionData.email,
+      approvalStatus: sessionData.approvalStatus,
     };
   } catch (error) {
     console.error("Error getting session from request:", error);

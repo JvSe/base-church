@@ -6,12 +6,12 @@ import { signIn } from "@/src/lib/actions";
 import { signInSchema, SignInScheme } from "@/src/lib/forms/auth/signin.scheme";
 import { Button } from "@base-church/ui/components/button";
 import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from "@base-church/ui/components/form";
 import { Input } from "@base-church/ui/components/input";
 import { formatDocument } from "@base-church/ui/helpers/format-document.helper";
@@ -46,13 +46,19 @@ export default function SignInPage() {
           document.cookie = result.sessionCookie;
         }
 
-        // Atualizar dados do usuário no store
         if (result.user) {
           setUser(result.user);
         }
 
-        toast.success("Login realizado com sucesso!");
-        router.push("/home");
+        console.log("result.user", result.user);
+
+        const userApprovalStatus = (result.user as any)?.approvalStatus;
+        if (userApprovalStatus === "APPROVED") {
+          toast.success("Login realizado com sucesso!");
+          router.push("/home");
+        } else {
+          router.push("/pending-approval");
+        }
       }
     } catch (error) {
       toast.error(

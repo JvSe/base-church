@@ -13,6 +13,7 @@ export function middleware(request: NextRequest) {
     "/",
     "/forgot-password",
     "/reset-password",
+    "/pending-approval",
   ];
   const isPublicRoute = publicRoutes.some((route) =>
     pathname.startsWith(route),
@@ -31,6 +32,12 @@ export function middleware(request: NextRequest) {
     const signInUrl = new URL("/signin", request.url);
     signInUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(signInUrl);
+  }
+
+  // Verificar se o usuário está aprovado
+  if (session.approvalStatus === "PENDING") {
+    // Redirecionar usuários não aprovados para página de aguardando aprovação
+    return NextResponse.redirect(new URL("/pending-approval", request.url));
   }
 
   // Verificar se é uma rota do dashboard (apenas para líderes)

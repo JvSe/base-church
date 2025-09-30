@@ -6,12 +6,12 @@ import { signUp } from "@/src/lib/actions";
 import { signUpSchema, SignUpScheme } from "@/src/lib/forms/auth/signup.scheme";
 import { Button } from "@base-church/ui/components/button";
 import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from "@base-church/ui/components/form";
 import { Input } from "@base-church/ui/components/input";
 import { formatDocument } from "@base-church/ui/helpers/format-document.helper";
@@ -47,12 +47,14 @@ export default function SignUpPage() {
       });
 
       if (result.success) {
-        toast.success("Conta criada com sucesso!");
+        toast.success(
+          "Conta criada com sucesso! Aguarde a aprovação da administração.",
+        );
 
         // Atualizar dados do usuário no store
         if (result.user) {
           setUser(result.user);
-          router.replace("/home");
+          router.replace("/pending-approval");
         }
       } else {
         toast.error(result.error || "Erro ao criar conta");
