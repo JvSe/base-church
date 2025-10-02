@@ -195,10 +195,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="flex items-center space-x-3">
-              <Button
-                asChild
-                className="dark-glass dark-border hover:dark-border-hover gap-2"
-              >
+              <Button asChild variant="info" className="gap-2">
                 <Link href="/profile/account">
                   <Edit size={16} />
                   Editar Perfil
@@ -458,19 +455,28 @@ export default function ProfilePage() {
 
               <div className="space-y-2">
                 {!userAuth?.image && (
-                  <Button className="dark-glass dark-border hover:dark-border-hover w-full justify-start text-sm">
+                  <Button
+                    variant="success"
+                    className="w-full justify-start text-sm"
+                  >
                     <Plus className="mr-2" size={14} />
                     Adicionar foto de perfil
                   </Button>
                 )}
                 {!userAuth?.bio && (
-                  <Button className="dark-glass dark-border hover:dark-border-hover w-full justify-start text-sm">
+                  <Button
+                    variant="success"
+                    className="w-full justify-start text-sm"
+                  >
                     <Plus className="mr-2" size={14} />
                     Adicionar biografia
                   </Button>
                 )}
                 {!userAuth?.phone && (
-                  <Button className="dark-glass dark-border hover:dark-border-hover w-full justify-start text-sm">
+                  <Button
+                    variant="success"
+                    className="w-full justify-start text-sm"
+                  >
                     <Plus className="mr-2" size={14} />
                     Adicionar telefone
                   </Button>

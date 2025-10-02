@@ -1,5 +1,6 @@
 "use client";
 
+import { VideoPlayer } from "@/src/components/video-player";
 import { Button } from "@base-church/ui/components/button";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -18,6 +19,7 @@ import {
   Star,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { use, useState } from "react";
 import { PdfViewer } from "../../../../../../../components/pdf-viewer";
 import { useAuth } from "../../../../../../../hooks/auth";
@@ -37,6 +39,7 @@ interface LessonPageProps {
 export default function LessonPage(props: LessonPageProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isUpdatingProgress, setIsUpdatingProgress] = useState(false);
@@ -75,7 +78,6 @@ export default function LessonPage(props: LessonPageProps) {
   const course = lessonData?.course;
   const certificate = lessonData?.certificate;
   const isCompleted = lesson?.isCompleted || false;
-  const isWatched = lesson?.isWatched || false;
 
   // Mutation para atualizar progresso da lição
   const updateProgressMutation = useMutation({
@@ -92,9 +94,50 @@ export default function LessonPage(props: LessonPageProps) {
           queryKey: ["lesson", lessonId, user?.id],
         });
 
-        // Verificar se é a última lição e gerar certificado se necessário
-        // TODO: Implementar verificação de última lição quando disponível na API
-        if (course?.certificateTemplate && user?.id) {
+        const updatedLesson = lessonData?.lesson;
+        const updatedCourse = lessonData?.course;
+
+        // Verificar se é a última lição do curso
+        const allLessons =
+          updatedCourse?.modules?.flatMap((module: any) =>
+            module.lessons.map((lesson: any) => ({
+              ...lesson,
+              moduleTitle: module.title,
+            })),
+          ) || [];
+
+        const currentLessonIndex = allLessons.findIndex(
+          (l: any) => l.id === updatedLesson?.id,
+        );
+
+        const isLastLesson = currentLessonIndex === allLessons.length - 1;
+
+        // Calcular progresso do curso baseado nas lições completadas
+        const completedLessons = allLessons.filter(
+          (l: any) => l.isCompleted,
+        ).length;
+        const totalLessons = allLessons.length;
+        const courseProgress =
+          totalLessons > 0
+            ? Math.round((completedLessons / totalLessons) * 100)
+            : 0;
+        const isCourseCompleted = courseProgress === 100;
+
+        console.log("📊 Status da lição:", {
+          isLastLesson,
+          courseProgress,
+          isCourseCompleted,
+          currentLessonIndex,
+          totalLessons: allLessons.length,
+        });
+
+        // Se for a última lição e o curso foi completado, gerar certificado
+        if (
+          isLastLesson &&
+          isCourseCompleted &&
+          updatedCourse?.certificateTemplate &&
+          user?.id
+        ) {
           try {
             await generateCertificateForCompletedCourse(user.id, courseId);
             setShowCertificateNotification(true);
@@ -102,6 +145,30 @@ export default function LessonPage(props: LessonPageProps) {
           } catch (error) {
             console.error("Erro ao gerar certificado:", error);
           }
+        }
+
+        // Navegar para a próxima lição disponível se não for a última
+        if (!isLastLesson) {
+          const nextAvailableLesson = allLessons
+            .slice(currentLessonIndex + 1)
+            .find((l: any) => !l.isLocked);
+
+          if (nextAvailableLesson) {
+            console.log(
+              "➡️ Navegando para próxima lição:",
+              nextAvailableLesson.title,
+            );
+            // Pequeno delay para mostrar o feedback de sucesso antes de navegar
+            setTimeout(() => {
+              router.push(
+                `/contents/course/${courseId}/lessons/${nextAvailableLesson.id}`,
+              );
+            }, 1500);
+          } else {
+            console.log("⚠️ Nenhuma próxima lição disponível encontrada");
+          }
+        } else {
+          console.log("🏁 Última lição do curso - não há próxima lição");
         }
 
         setShowSuccessFeedback(true);
@@ -186,11 +253,6 @@ export default function LessonPage(props: LessonPageProps) {
     l.title.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  console.log("lesson", lesson);
-  console.log(
-    `lesson - https://www.youtube.com/embed/${lesson.youtubeEmbedId}?autoplay=0&controls=1&modestbranding=1&rel=0&showinfo=0&fs=1&cc_load_policy=1&iv_load_policy=3&autohide=0&color=white&theme=dark`,
-  );
-
   return (
     <div className="dark-bg-primary flex h-screen">
       {/* Main Content */}
@@ -235,7 +297,7 @@ export default function LessonPage(props: LessonPageProps) {
         </div>
 
         <div className="flex-1 bg-black">
-          <iframe
+          {/* <iframe
             src={`https://www.youtube.com/embed/${lesson.youtubeEmbedId}?autoplay=0&controls=1&modestbranding=1&rel=0&showinfo=0&fs=1&cc_load_policy=1&iv_load_policy=3&autohide=0&color=white&theme=dark`}
             title={lesson.title}
             className="h-full w-full"
@@ -245,24 +307,19 @@ export default function LessonPage(props: LessonPageProps) {
               border: "none",
               background: "#000",
             }}
+          /> */}
+          <VideoPlayer
+            className="h-full w-full flex-1"
+            url={lesson.videoUrl || ""}
+            style={{
+              width: "100%",
+              height: "100%",
+            }}
+            onEnded={() => {
+              console.log("ended");
+              handleCompleteLesson();
+            }}
           />
-          <div className="flex h-full items-center justify-center">
-            <div className="dark-text-primary text-center">
-              <p className="mb-4">Vídeo não disponível</p>
-              {lesson.videoUrl && (
-                <Button asChild>
-                  <a
-                    href={lesson.videoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Abrir no YouTube
-                  </a>
-                </Button>
-              )}
-            </div>
-          </div>
-          )
         </div>
 
         {/* Lesson Info */}

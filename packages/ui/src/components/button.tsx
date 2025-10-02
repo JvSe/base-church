@@ -9,7 +9,8 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "dark-btn-primary shadow-lg btn-hover-lift",
-        destructive: "dark-btn-destructive shadow-lg btn-hover-lift",
+        destructive:
+          "bg-dark-error hover:dark-error border-dark-error text-white shadow-lg btn-hover-lift transition-all duration-200",
         outline: "dark-btn-outline shadow-sm btn-hover-lift",
         secondary: "dark-btn-secondary shadow-lg btn-hover-lift",
         ghost: "dark-btn-ghost transition-colors",
@@ -21,8 +22,10 @@ const buttonVariants = cva(
           "dark-gradient-secondary dark-text-primary shadow-lg btn-hover-lift",
         glass:
           "dark-glass dark-text-primary shadow-lg hover:dark-bg-tertiary btn-hover-lift",
-        success: "dark-btn-success shadow-lg btn-hover-lift",
+        success:
+          "bg-dark-success hover:dark-success border-dark-success text-white shadow-lg btn-hover-lift transition-all duration-200",
         warning: "dark-btn-warning shadow-lg btn-hover-lift",
+        info: "dark-info-bg hover:dark-info border-dark-info text-white shadow-lg btn-hover-lift transition-all duration-200",
       },
       size: {
         default: "h-11 px-4 py-2",

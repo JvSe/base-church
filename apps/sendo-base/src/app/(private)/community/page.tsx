@@ -4,22 +4,22 @@ import { getCommunityData } from "@/src/lib/actions";
 import { Button } from "@base-church/ui/components/button";
 import { useQuery } from "@tanstack/react-query";
 import {
-    Award,
-    Bookmark,
-    BookOpen,
-    Calendar,
-    Heart,
-    Image as ImageIcon,
-    MessageCircle,
-    MoreHorizontal,
-    Plus,
-    Send,
-    Share2,
-    Smile,
-    TrendingUp,
-    User,
-    Users,
-    Video,
+  Award,
+  Bookmark,
+  BookOpen,
+  Calendar,
+  Heart,
+  Image as ImageIcon,
+  MessageCircle,
+  MoreHorizontal,
+  Plus,
+  Send,
+  Share2,
+  Smile,
+  TrendingUp,
+  User,
+  Users,
+  Video,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -202,7 +202,7 @@ export default function ComunidadePage() {
                 Conecte-se, aprenda e cresça junto com nossa família ministerial
               </p>
             </div>
-            <Button className="dark-btn-primary gap-2">
+            <Button variant="success" className="gap-2">
               <Plus size={18} />
               Novo Post
             </Button>

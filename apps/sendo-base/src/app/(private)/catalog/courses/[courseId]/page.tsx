@@ -15,11 +15,8 @@ import {
   Clock,
   FileText,
   Globe,
-  Heart,
   Info,
-  MessageCircle,
   Play,
-  Share,
   Star,
   Target,
   User,
@@ -298,28 +295,6 @@ export default function CoursePage({ params }: CoursePageProps) {
                     </p>
                   </div>
                 ) : null}
-
-                <Button className="dark-glass dark-border hover:dark-border-hover w-full">
-                  <Heart className="mr-2" size={16} />
-                  Adicionar aos Favoritos
-                </Button>
-              </div>
-
-              <div className="mt-4 flex items-center justify-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="hover:dark-bg-tertiary"
-                >
-                  <Share className="dark-text-secondary" size={16} />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="hover:dark-bg-tertiary"
-                >
-                  <MessageCircle className="dark-text-secondary" size={16} />
-                </Button>
               </div>
             </div>
           </div>

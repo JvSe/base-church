@@ -127,11 +127,7 @@ export default function ProfileEditOverviewPage() {
               <User size={20} />
               Dados pessoais
             </h3>
-            <Button
-              asChild
-              size="sm"
-              className="dark-glass dark-border hover:dark-border-hover"
-            >
+            <Button asChild size="sm" variant="info">
               <Link href="/profile/account/personal">
                 <Edit size={14} className="mr-1" />
                 Alterar
@@ -212,11 +208,7 @@ export default function ProfileEditOverviewPage() {
               <Shield size={20} />
               Dados de acesso
             </h3>
-            <Button
-              asChild
-              size="sm"
-              className="dark-glass dark-border hover:dark-border-hover"
-            >
+            <Button asChild size="sm" variant="info">
               <Link href="/profile/account/access">
                 <Edit size={14} className="mr-1" />
                 Alterar
@@ -267,11 +259,7 @@ export default function ProfileEditOverviewPage() {
               <BookOpen size={20} />
               Cursos
             </h3>
-            <Button
-              asChild
-              size="sm"
-              className="dark-glass dark-border hover:dark-border-hover"
-            >
+            <Button asChild size="sm" variant="info">
               <Link href="/contents">Ver todos</Link>
             </Button>
           </div>
@@ -310,10 +298,7 @@ export default function ProfileEditOverviewPage() {
               Certificados
             </h3>
             {certificatesEarned > 0 && (
-              <Button
-                size="sm"
-                className="dark-glass dark-border hover:dark-border-hover"
-              >
+              <Button size="sm" variant="info">
                 <Download size={14} className="mr-1" />
                 Baixar
               </Button>
@@ -348,7 +333,7 @@ export default function ProfileEditOverviewPage() {
             <Button
               asChild
               size="sm"
-              className="dark-glass dark-border hover:dark-border-hover"
+              variant="info"
             >
               <Link href="/profile/account/notifications">
                 <Edit size={14} className="mr-1" />

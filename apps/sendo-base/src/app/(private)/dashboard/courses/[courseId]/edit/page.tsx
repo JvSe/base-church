@@ -47,7 +47,7 @@ import {
 } from "@base-church/ui/components/select";
 import { Textarea } from "@base-church/ui/components/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   Award,
@@ -159,6 +159,7 @@ export default function EditCoursePage(props: EditCoursePageProps) {
   const [isEditingCertificate, setIsEditingCertificate] = useState(false);
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const { courseId } = use(props.params);
 
@@ -565,15 +566,6 @@ export default function EditCoursePage(props: EditCoursePageProps) {
     // Extrair YouTube Embed ID da URL fornecida
     const youtubeEmbedId = extractYouTubeEmbedId(data.videoUrl || "");
 
-    console.log("🔍 Debug - videoUrl:", data.videoUrl);
-    console.log("🔍 Debug - youtubeEmbedId extraído:", youtubeEmbedId);
-
-    if (youtubeEmbedId) {
-      toast.success(`YouTube ID extraído: ${youtubeEmbedId}`);
-    } else if (data.videoUrl) {
-      toast.error("Não foi possível extrair o YouTube ID da URL fornecida");
-    }
-
     setIsLoading(true);
     try {
       const result = await createLesson(module.id, {
@@ -665,6 +657,12 @@ export default function EditCoursePage(props: EditCoursePageProps) {
         setIsEditingCertificate(false);
         certificateTemplateForm.reset();
         setCertificateFile(null);
+        queryClient.invalidateQueries({
+          queryKey: ["course", courseId],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["course-modules", courseId],
+        });
       } else {
         toast.error(result.error || "Erro ao criar template de certificado");
       }
@@ -868,12 +866,12 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                   disabled={isLoading}
                 >
                   <CheckCircle className="mr-2 h-4 w-4" />
-                  Finalizar Curso
+                  Publicar Curso
                 </Button>
               )}
               <Button
                 onClick={handleDeleteCourse}
-                className="dark-error-bg dark-error hover:dark-error-bg"
+                variant="destructive"
                 disabled={isDeleting}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
@@ -1145,7 +1143,7 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                   Módulos do Curso ({modulesState.length})
                 </h2>
                 <Button
-                  className="dark-btn-primary"
+                  variant="success"
                   onClick={() => {
                     setShowModuleForm(!showModuleForm);
                     // Abre o accordion do módulo que será criado
@@ -1230,7 +1228,7 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                           <Button
                             type="submit"
                             disabled={isLoading}
-                            className="dark-btn-primary"
+                            variant="success"
                           >
                             <Plus className="mr-2 h-4 w-4" />
                             {isLoading ? "Adicionando..." : "Adicionar Módulo"}
@@ -1257,7 +1255,10 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                     value={`module-${moduleIndex}`}
                     className="dark-glass dark-shadow-sm rounded-xl"
                   >
-                    <AccordionTrigger className="dark-card hover:dark-bg-secondary p-4 transition-all">
+                    <AccordionTrigger
+                      arrow={false}
+                      className="dark-card hover:dark-bg-secondary p-4 transition-all"
+                    >
                       <div className="flex w-full items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div className="dark-primary-subtle-bg rounded-xl p-2">
@@ -1278,7 +1279,8 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                         <div className="flex gap-2">
                           <Button
                             size="sm"
-                            className="dark-glass dark-border hover:dark-border-hover"
+                            variant="success"
+                            className="gap-1"
                             onClick={(e) => {
                               e.stopPropagation();
                               setShowLessonForm(moduleIndex);
@@ -1290,26 +1292,31 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                             }}
                           >
                             <Plus className="h-3 w-3" />
+                            Adicionar nova lição
                           </Button>
                           <Button
                             size="sm"
-                            className="dark-glass dark-border hover:dark-border-hover"
+                            variant="info"
+                            className="gap-1"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleEditModule(moduleIndex);
                             }}
                           >
                             <Edit className="h-3 w-3" />
+                            Editar módulo
                           </Button>
                           <Button
                             size="sm"
-                            className="dark-glass dark-border hover:dark-border-hover"
+                            variant="destructive"
+                            className="gap-1"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleDeleteModule(module.id);
                             }}
                           >
                             <Trash2 className="h-3 w-3" />
+                            Excluir módulo
                           </Button>
                         </div>
                       </div>
@@ -1594,6 +1601,7 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                                   </div>
                                   <Button
                                     type="button"
+                                    disabled
                                     className="dark-glass dark-border hover:dark-border-hover w-full"
                                     variant="outline"
                                     onClick={() => {
@@ -1623,7 +1631,7 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                                 <Button
                                   type="submit"
                                   disabled={isLoading}
-                                  className="dark-btn-primary"
+                                  variant="success"
                                 >
                                   <Plus className="mr-2 h-4 w-4" />
                                   {isLoading
@@ -1662,7 +1670,10 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                                 value={`lesson-${moduleIndex}-${lessonIndex}`}
                                 className="dark-card dark-shadow-sm rounded-lg"
                               >
-                                <AccordionTrigger className="hover:dark-bg-secondary p-4 transition-colors">
+                                <AccordionTrigger
+                                  arrow={false}
+                                  className="hover:dark-bg-secondary p-4 transition-colors"
+                                >
                                   <div className="flex w-full items-center justify-between">
                                     <div className="flex items-center gap-3">
                                       <div className="dark-secondary-subtle-bg rounded-lg p-2">
@@ -1699,7 +1710,8 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                                     <div className="flex gap-2">
                                       <Button
                                         size="sm"
-                                        className="dark-glass dark-border hover:dark-border-hover"
+                                        variant="info"
+                                        className="gap-1"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           handleEditLesson(
@@ -1709,10 +1721,12 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                                         }}
                                       >
                                         <Edit className="h-3 w-3" />
+                                        Editar Lição
                                       </Button>
                                       <Button
                                         size="sm"
-                                        className="dark-glass dark-border hover:dark-border-hover"
+                                        variant="destructive"
+                                        className="gap-1"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           handleDeleteLesson(
@@ -1723,6 +1737,7 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                                         }}
                                       >
                                         <Trash2 className="h-3 w-3" />
+                                        Excluir Lição
                                       </Button>
                                     </div>
                                   </div>
@@ -2075,7 +2090,7 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                 {courseData?.certificateTemplate ? (
                   <div className="flex gap-2">
                     <Button
-                      className="dark-glass dark-border hover:dark-border-hover"
+                      variant="info"
                       onClick={() => {
                         setShowCertificateForm(true);
                         setIsEditingCertificate(true);
@@ -2087,7 +2102,7 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                   </div>
                 ) : (
                   <Button
-                    className="dark-btn-primary"
+                    variant="success"
                     onClick={() => {
                       setShowCertificateForm(true);
                       setIsEditingCertificate(false);

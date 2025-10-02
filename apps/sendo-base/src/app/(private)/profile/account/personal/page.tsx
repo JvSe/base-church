@@ -276,7 +276,7 @@ export default function ProfileEditPersonalPage() {
             {!isEditingPersonal && (
               <Button
                 onClick={() => setIsEditingPersonal(true)}
-                className="dark-btn-primary"
+                variant="info"
                 size="sm"
               >
                 <Edit size={16} className="mr-2" />
@@ -418,7 +418,7 @@ export default function ProfileEditPersonalPage() {
             {!isEditingAddress && (
               <Button
                 onClick={() => setIsEditingAddress(true)}
-                className="dark-btn-primary"
+                variant="info"
                 size="sm"
               >
                 <Edit size={16} className="mr-2" />
@@ -652,7 +652,7 @@ export default function ProfileEditPersonalPage() {
             {!isEditingAdditional && (
               <Button
                 onClick={() => setIsEditingAdditional(true)}
-                className="dark-btn-primary"
+                variant="info"
                 size="sm"
               >
                 <Edit size={16} className="mr-2" />

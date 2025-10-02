@@ -246,7 +246,7 @@ export default function CertificatesPage() {
               </Button>
               <Button
                 onClick={() => router.push("/dashboard/courses")}
-                className="dark-bg-primary hover:dark-bg-primary/90"
+                variant="success"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Criar Template
@@ -436,16 +436,15 @@ export default function CertificatesPage() {
                                   `/dashboard/courses/${template.courseId}/edit`,
                                 )
                               }
-                              className="dark-border dark-text-tertiary hover:dark-bg-tertiary"
+                              variant="info"
                             >
                               <Edit className="h-3 w-3" />
                             </Button>
                             <Button
                               size="sm"
-                              variant="outline"
+                              variant="destructive"
                               onClick={() => handleDeleteTemplate(template.id)}
                               disabled={deleteTemplateMutation.isPending}
-                              className="dark-border dark-text-red-400 hover:dark-bg-red-500/20"
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>
@@ -500,7 +499,7 @@ export default function CertificatesPage() {
                 </p>
                 <Button
                   onClick={() => router.push("/dashboard/courses")}
-                  className="dark-btn-primary"
+                  variant="success"
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   Criar Template

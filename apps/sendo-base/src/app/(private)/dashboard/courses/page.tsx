@@ -284,7 +284,7 @@ export default function CoursesPage() {
               </p>
             </div>
             <Link href="/dashboard/courses/create">
-              <Button className="dark-btn-primary">
+              <Button variant="success">
                 <Plus className="mr-2 h-4 w-4" />
                 Criar Curso Completo
               </Button>
@@ -471,7 +471,7 @@ export default function CoursesPage() {
                             <div className="flex space-x-2">
                               <Button
                                 size="sm"
-                                className="dark-glass dark-border hover:dark-border-hover"
+                                variant="info"
                                 onClick={() =>
                                   router.push(
                                     `/dashboard/courses/${course.id}/edit`,
@@ -484,7 +484,7 @@ export default function CoursesPage() {
 
                               <Button
                                 size="sm"
-                                className="dark-glass dark-border hover:dark-border-hover"
+                                variant="destructive"
                                 onClick={async () => {
                                   if (
                                     confirm(

@@ -18,10 +18,7 @@ import {
   Download,
   FileText,
   Globe,
-  Heart,
-  MessageCircle,
   Play,
-  Share,
   Star,
   Target,
   User,
@@ -364,28 +361,6 @@ export default function CoursePage({ params }: CoursePageProps) {
                   <Button className="dark-glass dark-border hover:dark-border-hover w-full">
                     <Download className="mr-2" size={16} />
                     Baixar Recursos
-                  </Button>
-
-                  <Button className="dark-glass dark-border hover:dark-border-hover w-full">
-                    <Heart className="mr-2" size={16} />
-                    Adicionar aos Favoritos
-                  </Button>
-                </div>
-
-                <div className="mt-4 flex items-center justify-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="hover:dark-bg-tertiary"
-                  >
-                    <Share className="dark-text-secondary" size={16} />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="hover:dark-bg-tertiary"
-                  >
-                    <MessageCircle className="dark-text-secondary" size={16} />
                   </Button>
                 </div>
               </div>
@@ -798,32 +773,6 @@ export default function CoursePage({ params }: CoursePageProps) {
                     }
                   </span>
                 </div>
-              </div>
-            </div>
-
-            {/* Related Courses */}
-            <div className="dark-glass dark-shadow-sm rounded-xl p-6">
-              <h3 className="dark-text-primary mb-4 font-semibold">
-                Cursos Relacionados
-              </h3>
-              <div className="space-y-3">
-                {[
-                  { title: "Discipulado Avançado", rating: 4.7 },
-                  { title: "Liderança Ministerial", rating: 4.9 },
-                  { title: "Cultura da Igreja", rating: 4.6 },
-                ].map((related, index) => (
-                  <div key={index} className="dark-card rounded-lg p-3">
-                    <h4 className="dark-text-primary mb-1 text-sm font-medium">
-                      {related.title}
-                    </h4>
-                    <div className="flex items-center gap-1">
-                      <Star className="dark-warning fill-current" size={12} />
-                      <span className="dark-text-tertiary text-xs">
-                        {related.rating}
-                      </span>
-                    </div>
-                  </div>
-                ))}
               </div>
             </div>
           </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { NotificationsButton } from "@/src/components/notifications";
 import { useAuth } from "@/src/hooks";
 import { getEvents, getUserProfile } from "@/src/lib/actions";
 import { Button } from "@base-church/ui/components/button";
@@ -7,7 +8,6 @@ import { useQuery } from "@tanstack/react-query";
 import {
   Activity,
   Award,
-  Bell,
   BookOpen,
   Calendar,
   Clock,
@@ -133,12 +133,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="flex items-center gap-3">
-              <Button
-                className="dark-glass dark-border hover:dark-border-hover"
-                size="icon-lg"
-              >
-                <Bell className="dark-text-primary" size={20} />
-              </Button>
+              <NotificationsButton variant="modern" />
             </div>
           </div>
         </div>
@@ -649,7 +644,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                <Button className="dark-glass dark-border hover:dark-border-hover w-full text-sm">
+                <Button variant="success" className="w-full text-sm">
                   <Plus className="mr-1" size={14} />
                   Definir Nova Meta
                 </Button>
