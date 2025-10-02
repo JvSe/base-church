@@ -27,6 +27,9 @@ importers:
       '@base-church/typescript-config':
         specifier: workspace:*
         version: link:packages/typescript-config
+      '@types/minimatch':
+        specifier: ^6.0.0
+        version: 6.0.0
       prettier:
         specifier: ^3.5.1
         version: 3.6.2

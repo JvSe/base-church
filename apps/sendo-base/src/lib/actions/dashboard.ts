@@ -183,9 +183,9 @@ export async function getDashboardStats() {
       ...recentCertificates.map((certificate) => ({
         id: `certificate-${certificate.id}`,
         type: "certificate" as const,
-        studentName: certificate.user.name || "Usuário",
+        studentName: certificate.user?.name || "Usuário",
         courseName: certificate.course.title,
-        timestamp: certificate.issuedAt,
+        timestamp: certificate.issuedAt || new Date(),
       })),
     ]
       .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())

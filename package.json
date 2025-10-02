@@ -25,6 +25,7 @@
   "devDependencies": {
     "@base-church/eslint-config": "workspace:*",
     "@base-church/typescript-config": "workspace:*",
+    "@types/minimatch": "^6.0.0",
     "prettier": "^3.5.1",
     "prisma": "latest",
     "tsx": "4.19.1",

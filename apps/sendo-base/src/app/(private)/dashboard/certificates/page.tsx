@@ -436,7 +436,6 @@ export default function CertificatesPage() {
                                   `/dashboard/courses/${template.courseId}/edit`,
                                 )
                               }
-                              variant="info"
                             >
                               <Edit className="h-3 w-3" />
                             </Button>
