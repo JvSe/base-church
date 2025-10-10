@@ -158,7 +158,7 @@ export default function CoursePage({ params }: CoursePageProps) {
   return (
     <div className="dark-bg-primary min-h-screen">
       {/* Background Pattern */}
-      <div className="fixed inset-0 opacity-3">
+      <div className="opacity-3 fixed inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
       </div>
 
@@ -199,10 +199,10 @@ export default function CoursePage({ params }: CoursePageProps) {
                       {course.instructor?.name || "Instrutor não informado"}
                     </div>
                     <div className="dark-text-tertiary text-xs">
-                      {course.instructor?.role === "LIDER"
+                      {course.instructor?.role === "ADMIN"
                         ? course.instructor?.isPastor
-                          ? "Líder (Pastor)"
-                          : "Líder"
+                          ? "Administrador (Pastor)"
+                          : "Administrador"
                         : course.instructor?.isPastor
                           ? "Membro (Pastor)"
                           : "Membro"}
@@ -521,10 +521,10 @@ export default function CoursePage({ params }: CoursePageProps) {
                       {course.instructor?.name || "Instrutor não informado"}
                     </h3>
                     <p className="dark-text-secondary mb-2">
-                      {course.instructor?.role === "LIDER"
+                      {course.instructor?.role === "ADMIN"
                         ? course.instructor?.isPastor
-                          ? "Líder (Pastor)"
-                          : "Líder"
+                          ? "Administrador (Pastor)"
+                          : "Administrador"
                         : course.instructor?.isPastor
                           ? "Membro (Pastor)"
                           : "Membro"}
@@ -569,10 +569,10 @@ export default function CoursePage({ params }: CoursePageProps) {
                                   {review.user?.name || "Usuário"}
                                 </div>
                                 <div className="dark-text-tertiary text-xs">
-                                  {review.user?.role === "LIDER"
+                                  {review.user?.role === "ADMIN"
                                     ? review.user?.isPastor
-                                      ? "Líder (Pastor)"
-                                      : "Líder"
+                                      ? "Administrador (Pastor)"
+                                      : "Administrador"
                                     : review.user?.isPastor
                                       ? "Membro (Pastor)"
                                       : "Membro"}

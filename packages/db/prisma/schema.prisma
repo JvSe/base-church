@@ -12,6 +12,7 @@ datasource db {
 enum UserRole {
   MEMBROS
   LIDER
+  ADMIN
 }
 
 enum CourseCategory {
@@ -40,14 +41,14 @@ model User {
   image                String?
   username             String?            @unique
   role                 UserRole           @default(MEMBROS)
-  isPastor             Boolean            @default(false) // Se a pessoa é um pastor
+  isPastor             Boolean            @default(false)
   bio                  String?
   phone                String?
   cpf                  String?            @unique
-  password             String? // Senha hasheada
+  password             String?
   birthDate            DateTime?
   joinDate             DateTime           @default(now())
-  profileCompletion    Int?               @default(0) // 0-100
+  profileCompletion    Int?               @default(0)
   currentStreak        Int?               @default(0)
   totalPoints          Int?               @default(0)
   level                Int?               @default(1)

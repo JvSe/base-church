@@ -40,10 +40,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/pending-approval", request.url));
   }
 
-  // Verificar se é uma rota do dashboard (apenas para líderes)
+  // Verificar se é uma rota do dashboard (apenas para admins)
   const isDashboardRoute = pathname.startsWith("/dashboard");
-  if (isDashboardRoute && session.role !== "LIDER") {
-    // Redirecionar usuários não-líderes para home
+  if (isDashboardRoute && session.role !== "ADMIN") {
+    // Redirecionar usuários não-admins para home
     return NextResponse.redirect(new URL("/home", request.url));
   }
 

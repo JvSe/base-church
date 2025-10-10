@@ -3,25 +3,25 @@
 import { formatTime } from "@/src/lib/formatters";
 import { Button } from "@base-church/ui/components/button";
 import {
-    BookOpen,
-    Calendar,
-    CheckCircle,
-    Clock,
-    Download,
-    ExternalLink,
-    Globe,
-    Heart,
-    MapPin,
-    MessageCircle,
-    Play,
-    Share,
-    Star,
-    Target,
-    User,
-    Users,
-    Video,
-    X,
-    Zap,
+  BookOpen,
+  Calendar,
+  CheckCircle,
+  Clock,
+  Download,
+  ExternalLink,
+  Globe,
+  Heart,
+  MapPin,
+  MessageCircle,
+  Play,
+  Share,
+  Star,
+  Target,
+  User,
+  Users,
+  Video,
+  X,
+  Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -220,7 +220,7 @@ export default function EventPage() {
   return (
     <div className="dark-bg-primary min-h-screen">
       {/* Background Pattern */}
-      <div className="fixed inset-0 opacity-3">
+      <div className="opacity-3 fixed inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
       </div>
 
@@ -624,7 +624,9 @@ export default function EventPage() {
                             {speaker.name}
                           </h3>
                           <p className="dark-text-secondary mb-2">
-                            {speaker.role === "LIDER" ? "Líder" : "Membro"}
+                            {speaker.role === "ADMIN"
+                              ? "Administrador"
+                              : "Membro"}
                           </p>
                           <p className="dark-text-tertiary mb-4 text-sm">
                             {speaker.experience}
@@ -693,7 +695,9 @@ export default function EventPage() {
                                 {review.author}
                               </div>
                               <div className="dark-text-tertiary text-xs">
-                                {review.role === "LIDER" ? "Líder" : "Membro"}
+                                {review.role === "ADMIN"
+                                  ? "Administrador"
+                                  : "Membro"}
                               </div>
                             </div>
                             <div className="flex items-center gap-1">

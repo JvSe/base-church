@@ -141,7 +141,7 @@ export default function ProfilePage() {
   return (
     <div className="dark-bg-primary min-h-screen">
       {/* Background Pattern */}
-      <div className="fixed inset-0 opacity-3">
+      <div className="opacity-3 fixed inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
       </div>
 
@@ -168,7 +168,7 @@ export default function ProfilePage() {
                   {userAuth?.name}
                 </h1>
                 <p className="dark-text-secondary mb-2 text-lg">
-                  {userAuth?.role === "LIDER" ? "Líder" : "Membro"}
+                  {userAuth?.role === "ADMIN" ? "Administrador" : "Membro"}
                 </p>
                 <p className="dark-text-tertiary mb-4 max-w-2xl">
                   {userAuth?.bio ||

@@ -203,7 +203,7 @@ export default function JornadaPage() {
   if (!userData || !coursesData) {
     return (
       <div className="dark-bg-primary min-h-screen">
-        <div className="fixed inset-0 opacity-3">
+        <div className="opacity-3 fixed inset-0">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
         </div>
         <div className="relative mx-auto max-w-7xl space-y-6 p-6">
@@ -226,7 +226,7 @@ export default function JornadaPage() {
   return (
     <div className="dark-bg-primary min-h-screen">
       {/* Background Pattern */}
-      <div className="fixed inset-0 opacity-3">
+      <div className="opacity-3 fixed inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
       </div>
 
@@ -251,7 +251,7 @@ export default function JornadaPage() {
                 Nível {userData?.level || 1}
               </div>
               <div className="dark-text-tertiary text-sm">
-                {userData?.role === "LIDER" ? "Líder" : "Membro"}
+                {userData?.role === "ADMIN" ? "Administrador" : "Membro"}
               </div>
             </div>
           </div>

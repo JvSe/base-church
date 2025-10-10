@@ -64,7 +64,7 @@ function MeuComponente() {
 
 ### Helpers
 
-- `isAdmin`: Boolean - se o usuário é líder
+- `isAdmin`: Boolean - se o usuário é administrador
 - `isMember`: Boolean - se o usuário é membro
 - `isPastor`: Boolean - se o usuário é pastor
 - `userName`: String - nome do usuário
@@ -79,7 +79,7 @@ interface User {
   name: string;
   cpf: string;
   email?: string;
-  role: "MEMBROS" | "LIDER";
+  role: "MEMBROS" | "ADMIN";
   isPastor?: boolean;
 }
 ```
@@ -133,13 +133,13 @@ function PaginaProtegida() {
   }
 
   // Verificar permissões
-  if (user?.role !== "LIDER") {
+  if (user?.role !== "ADMIN") {
     return <div>Acesso negado</div>;
   }
 
   return (
     <div>
-      <h1>Área de Líderes</h1>
+      <h1>Área de Administradores</h1>
       <p>Bem-vindo, {user.name}!</p>
     </div>
   );

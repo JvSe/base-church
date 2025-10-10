@@ -13,7 +13,7 @@
 
 ### **Estrutura de Dados (Prisma Schema):**
 
-- ✅ **User**: Completo com roles (MEMBROS/LIDER), perfil, endereço
+- ✅ **User**: Completo com roles (MEMBROS/ADMIN), perfil, endereço
 - ✅ **Course**: Completo com módulos, lições, instrutores
 - ✅ **Enrollment**: Sistema de matrículas
 - ✅ **Certificate**: Sistema de certificados
@@ -39,9 +39,9 @@
 - Recuperação de senha
 - Verificação de email
 - Onboarding pós-registro
-- Perfil de convite (convites de líderes)
+- Perfil de convite (convites de administradores)
 
-### **2. 📚 GESTÃO DE CURSOS (LÍDER)**
+### **2. 📚 GESTÃO DE CURSOS (ADMINISTRADOR)**
 
 **✅ Implementado:**
 

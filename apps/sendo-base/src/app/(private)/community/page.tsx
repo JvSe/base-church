@@ -82,7 +82,7 @@ export default function ComunidadePage() {
       id: post.id,
       author: {
         name: post.user.name || "Usuário",
-        role: post.user.role === "LIDER" ? "Líder" : "Membro",
+        role: post.user.role === "ADMIN" ? "Administrador" : "Membro",
         avatar: post.user.image,
       },
       content: post.content,
@@ -99,7 +99,7 @@ export default function ComunidadePage() {
   const activeMembers =
     communityData?.activeUsers?.map((user: any) => ({
       name: user.name || "Usuário",
-      role: user.role === "LIDER" ? "Líder" : "Membro",
+      role: user.role === "ADMIN" ? "Administrador" : "Membro",
       online: true, // TODO: Implement online status
     })) || [];
 
@@ -133,7 +133,7 @@ export default function ComunidadePage() {
   if (isLoading) {
     return (
       <div className="dark-bg-primary min-h-screen">
-        <div className="fixed inset-0 opacity-3">
+        <div className="opacity-3 fixed inset-0">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
         </div>
         <div className="relative mx-auto max-w-7xl space-y-6 p-6">
@@ -157,7 +157,7 @@ export default function ComunidadePage() {
   if (error) {
     return (
       <div className="dark-bg-primary min-h-screen">
-        <div className="fixed inset-0 opacity-3">
+        <div className="opacity-3 fixed inset-0">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
         </div>
         <div className="relative mx-auto max-w-7xl space-y-6 p-6">
@@ -186,7 +186,7 @@ export default function ComunidadePage() {
   return (
     <div className="dark-bg-primary min-h-screen">
       {/* Background Pattern */}
-      <div className="fixed inset-0 opacity-3">
+      <div className="opacity-3 fixed inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
       </div>
 
@@ -322,8 +322,8 @@ export default function ComunidadePage() {
                           </h3>
                           <div className="flex items-center space-x-2 text-sm">
                             <span className="dark-text-tertiary">
-                              {post.author.role === "LIDER"
-                                ? "Líder"
+                              {post.author.role === "ADMIN"
+                                ? "Administrador"
                                 : "Membro"}
                             </span>
                             <span className="dark-text-tertiary">•</span>
@@ -436,7 +436,7 @@ export default function ComunidadePage() {
                           <User className="dark-primary" size={16} />
                         </div>
                         <div
-                          className={`absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2 border-white ${
+                          className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white ${
                             member.online
                               ? "dark-success-bg"
                               : "dark-text-disabled"
@@ -448,7 +448,7 @@ export default function ComunidadePage() {
                           {member.name}
                         </p>
                         <p className="dark-text-tertiary text-xs">
-                          {member.role === "LIDER" ? "Líder" : "Membro"}
+                          {member.role === "ADMIN" ? "Administrador" : "Membro"}
                         </p>
                       </div>
                     </div>

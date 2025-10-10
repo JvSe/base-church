@@ -88,7 +88,7 @@ export async function signUp(data: SignUpInput) {
       name: user.name!,
       cpf: user.cpf!,
       email: user.email || undefined,
-      role: user.role as "MEMBROS" | "LIDER",
+      role: user.role as "MEMBROS" | "ADMIN",
       isPastor: user.isPastor || false,
       approvalStatus: user.approvalStatus,
     };
@@ -139,7 +139,7 @@ export async function signIn(data: SignInInput) {
       name: user.name!,
       cpf: user.cpf!,
       email: user.email || undefined,
-      role: user.role as "MEMBROS" | "LIDER",
+      role: user.role as "MEMBROS" | "ADMIN",
       isPastor: user.isPastor || false,
       image: user.image || undefined,
       approvalStatus: user.approvalStatus,

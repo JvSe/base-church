@@ -8,7 +8,7 @@ export interface User {
   name: string;
   cpf: string;
   email?: string;
-  role: "MEMBROS" | "LIDER";
+  role: "MEMBROS" | "ADMIN";
   isPastor?: boolean;
   image?: string;
   approvalStatus?: "PENDING" | "APPROVED" | "REJECTED";

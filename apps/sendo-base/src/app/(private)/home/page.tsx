@@ -111,7 +111,7 @@ export default function DashboardPage() {
   return (
     <div className="dark-bg-primary min-h-screen">
       {/* Background Pattern */}
-      <div className="fixed inset-0 opacity-3">
+      <div className="opacity-3 fixed inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
       </div>
 
@@ -534,10 +534,10 @@ export default function DashboardPage() {
                 {user?.name || (userData as any)?.name || "Usuário"}
               </h3>
               <p className="dark-text-secondary mb-4 text-sm">
-                {user?.role === "LIDER"
-                  ? "Líder"
-                  : (userData as any)?.role === "LIDER"
-                    ? "Líder"
+                {user?.role === "ADMIN"
+                  ? "Administrador"
+                  : (userData as any)?.role === "ADMIN"
+                    ? "Administrador"
                     : "Membro"}
               </p>
               <div className="mb-4 flex items-center justify-center gap-4 text-sm">

@@ -57,7 +57,7 @@ interface Student {
   phone?: string | null;
   cpf: string;
   joinDate: Date;
-  role: "MEMBROS" | "LIDER";
+  role: "MEMBROS" | "ADMIN";
   isPastor: boolean;
   profileCompletion: number;
   coursesEnrolled: number;
@@ -186,26 +186,26 @@ export default function StudentsPage() {
     }
   }, [searchTerm, studentsData, allEnrollmentsData]);
 
-  const getStatusColor = (status: Student["status"]) => {
+  const getStatusColor = (status: Student["approvalStatus"]) => {
     switch (status) {
-      case "active":
+      case "APPROVED":
         return "text-green-400 bg-green-400/20";
-      case "inactive":
+      case "PENDING":
         return "text-yellow-400 bg-yellow-400/20";
-      case "suspended":
+      case "REJECTED":
         return "text-red-400 bg-red-400/20";
       default:
         return "text-gray-400 bg-gray-400/20";
     }
   };
 
-  const getStatusText = (status: Student["status"]) => {
+  const getStatusText = (status: Student["approvalStatus"]) => {
     switch (status) {
-      case "active":
+      case "APPROVED":
         return "Ativo";
-      case "inactive":
+      case "PENDING":
         return "Inativo";
-      case "suspended":
+      case "REJECTED":
         return "Suspenso";
       default:
         return "Desconhecido";
@@ -323,7 +323,7 @@ export default function StudentsPage() {
 
   const handleUpdateUserRole = async (
     userId: string,
-    role: "MEMBROS" | "LIDER",
+    role: "MEMBROS" | "ADMIN" | "LIDER",
   ) => {
     try {
       const result = await updateUserRole(userId, role);
@@ -685,7 +685,8 @@ export default function StudentsPage() {
                                   {getRoleText(student.role, student.isPastor)}
                                 </span>
                                 <span className="dark-text-tertiary text-xs">
-                                  Status: {getStatusText(student.status)}
+                                  Status:{" "}
+                                  {getStatusText(student.approvalStatus)}
                                 </span>
                                 <span className="dark-text-tertiary text-xs">
                                   Membro desde {formatDate(student.joinDate)}
@@ -695,9 +696,9 @@ export default function StudentsPage() {
                           </div>
                           <div className="flex gap-2">
                             <span
-                              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(student.status)}`}
+                              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(student.approvalStatus)}`}
                             >
-                              {getStatusText(student.status)}
+                              {getStatusText(student.approvalStatus)}
                             </span>
                           </div>
                         </div>
@@ -787,7 +788,7 @@ export default function StudentsPage() {
                                 </span>
                                 <span
                                   className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                    student.role === "LIDER"
+                                    student.role === "ADMIN"
                                       ? "bg-blue-400/20 text-blue-400"
                                       : "bg-gray-400/20 text-gray-400"
                                   }`}
@@ -796,9 +797,9 @@ export default function StudentsPage() {
                                 </span>
                                 <Select
                                   value={student.role}
-                                  onValueChange={(value: "MEMBROS" | "LIDER") =>
-                                    handleUpdateUserRole(student.id, value)
-                                  }
+                                  onValueChange={(
+                                    value: "MEMBROS" | "ADMIN" | "LIDER",
+                                  ) => handleUpdateUserRole(student.id, value)}
                                 >
                                   <SelectTrigger className="dark-input w-40">
                                     <SelectValue />
@@ -806,6 +807,9 @@ export default function StudentsPage() {
                                   <SelectContent>
                                     <SelectItem value="MEMBROS">
                                       Membro
+                                    </SelectItem>
+                                    <SelectItem value="ADMIN">
+                                      Administrador
                                     </SelectItem>
                                     <SelectItem value="LIDER">Líder</SelectItem>
                                   </SelectContent>

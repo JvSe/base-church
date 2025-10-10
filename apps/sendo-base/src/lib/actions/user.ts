@@ -346,7 +346,7 @@ export async function getCurrentUser({ userID }: { userID: string }): Promise<{
       name: user.name!,
       cpf: user.cpf!,
       email: user.email || undefined,
-      role: user.role as "MEMBROS" | "LIDER",
+      role: user.role as "MEMBROS" | "ADMIN",
       isPastor: user.isPastor || false,
       phone: user.phone || undefined,
       createdAt: user.createdAt,
@@ -405,7 +405,7 @@ export async function getLeaders() {
   try {
     const leaders = await prisma.user.findMany({
       where: {
-        role: "LIDER",
+        role: "ADMIN",
       },
       select: {
         id: true,
@@ -421,7 +421,7 @@ export async function getLeaders() {
     return { success: true, leaders };
   } catch (error) {
     console.error("Error getting leaders:", error);
-    return { success: false, error: "Erro ao buscar líderes" };
+    return { success: false, error: "Erro ao buscar administradores" };
   }
 }
 
@@ -482,7 +482,7 @@ export async function getAllStudents() {
         phone: student.phone,
         cpf: student.cpf || "CPF não informado",
         joinDate: student.joinDate,
-        role: student.role as "MEMBROS" | "LIDER",
+        role: student.role as "MEMBROS" | "ADMIN",
         isPastor: student.isPastor || false,
         profileCompletion: student.profileCompletion || 0,
         coursesEnrolled: student.enrollments?.length || 0,
@@ -751,7 +751,7 @@ export async function deleteStudent(studentId: string) {
 
 export async function updateUserRole(
   userId: string,
-  role: "MEMBROS" | "LIDER",
+  role: "MEMBROS" | "ADMIN" | "LIDER",
 ) {
   try {
     const user = await prisma.user.update({
@@ -764,7 +764,7 @@ export async function updateUserRole(
       data: {
         userId: userId,
         title: "Função Atualizada",
-        message: `Sua função foi alterada para ${role === "MEMBROS" ? "Membro" : "Líder"}`,
+        message: `Sua função foi alterada para ${role === "MEMBROS" ? "Membro" : "Administrador"}`,
         type: "info",
       },
     });
