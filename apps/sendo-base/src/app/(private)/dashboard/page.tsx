@@ -1,5 +1,9 @@
 "use client";
 
+import { ErrorState } from "@/src/components/common/feedback/error-state";
+import { LoadingState } from "@/src/components/common/feedback/loading-state";
+import { PageHeader } from "@/src/components/common/layout/page-header";
+import { PageLayout } from "@/src/components/common/layout/page-layout";
 import { useQuery } from "@tanstack/react-query";
 import {
   Award,
@@ -90,41 +94,26 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="dark-bg-primary min-h-screen">
-        <div className="flex min-h-screen items-center justify-center">
-          <div className="text-center">
-            <div className="dark-text-primary mb-4 text-xl font-semibold">
-              Carregando Dashboard...
-            </div>
-            <div className="dark-text-secondary">
-              Aguarde enquanto carregamos os dados.
-            </div>
-          </div>
-        </div>
-      </div>
+      <PageLayout>
+        <LoadingState
+          icon={BarChart3}
+          title="Carregando Dashboard..."
+          description="Aguarde enquanto carregamos os dados."
+        />
+      </PageLayout>
     );
   }
 
   if (error || !statsData) {
     return (
-      <div className="dark-bg-primary min-h-screen">
-        <div className="flex min-h-screen items-center justify-center">
-          <div className="text-center">
-            <div className="dark-text-primary mb-4 text-xl font-semibold">
-              Erro ao carregar dashboard
-            </div>
-            <div className="dark-text-secondary mb-4">
-              {error?.message || "Tente novamente mais tarde."}
-            </div>
-            <button
-              onClick={() => window.location.reload()}
-              className="dark-primary-bg dark-primary-text hover:dark-primary-bg-hover rounded-lg px-4 py-2 font-medium transition-colors"
-            >
-              Recarregar
-            </button>
-          </div>
-        </div>
-      </div>
+      <PageLayout>
+        <ErrorState
+          icon={BarChart3}
+          title="Erro ao carregar dashboard"
+          description={error?.message || "Tente novamente mais tarde."}
+          onRetry={() => window.location.reload()}
+        />
+      </PageLayout>
     );
   }
 
@@ -190,318 +179,301 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="dark-bg-primary min-h-screen">
-      {/* Background Pattern */}
-      <div className="fixed inset-0 opacity-3">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
-      </div>
+    <PageLayout spacing="relaxed">
+      <PageHeader
+        title="Dashboard Administrativo 📊"
+        description="Gerencie sua plataforma de cursos e acompanhe o progresso dos alunos"
+      />
 
-      <div className="relative mx-auto max-w-7xl space-y-8 p-6">
-        {/* Header */}
-        <div className="dark-glass dark-shadow-md rounded-2xl p-6">
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="dark-card dark-shadow-sm rounded-xl p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="dark-text-primary mb-2 text-3xl font-bold">
-                Dashboard Administrativo 📊
-              </h1>
-              <p className="dark-text-secondary">
-                Gerencie sua plataforma de cursos e acompanhe o progresso dos
-                alunos
+              <p className="dark-text-tertiary text-sm font-medium">
+                Total de Alunos
+              </p>
+              <p className="dark-text-primary text-2xl font-bold">
+                {(statsData?.totalStudents || 0).toLocaleString()}
               </p>
             </div>
+            <div className="dark-primary-subtle-bg rounded-xl p-3">
+              <Users className="dark-primary" size={24} />
+            </div>
+          </div>
+          <div className="mt-4 flex items-center text-sm">
+            <TrendingUp className="dark-success mr-1" size={16} />
+            <span className="dark-success font-medium">
+              {(statsData?.monthlyGrowth || 0) > 0 ? "+" : ""}
+              {statsData?.monthlyGrowth || 0}% este mês
+            </span>
           </div>
         </div>
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <div className="dark-card dark-shadow-sm rounded-xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="dark-text-tertiary text-sm font-medium">
-                  Total de Alunos
-                </p>
-                <p className="dark-text-primary text-2xl font-bold">
-                  {(statsData?.totalStudents || 0).toLocaleString()}
-                </p>
-              </div>
-              <div className="dark-primary-subtle-bg rounded-xl p-3">
-                <Users className="dark-primary" size={24} />
-              </div>
+        <div className="dark-card dark-shadow-sm rounded-xl p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="dark-text-tertiary text-sm font-medium">
+                Cursos Ativos
+              </p>
+              <p className="dark-text-primary text-2xl font-bold">
+                {statsData?.totalCourses || 0}
+              </p>
             </div>
-            <div className="mt-4 flex items-center text-sm">
-              <TrendingUp className="dark-success mr-1" size={16} />
-              <span className="dark-success font-medium">
-                {(statsData?.monthlyGrowth || 0) > 0 ? "+" : ""}
-                {statsData?.monthlyGrowth || 0}% este mês
-              </span>
+            <div className="dark-secondary-subtle-bg rounded-xl p-3">
+              <BookOpen className="dark-secondary" size={24} />
             </div>
           </div>
-
-          <div className="dark-card dark-shadow-sm rounded-xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="dark-text-tertiary text-sm font-medium">
-                  Cursos Ativos
-                </p>
-                <p className="dark-text-primary text-2xl font-bold">
-                  {statsData?.totalCourses || 0}
-                </p>
-              </div>
-              <div className="dark-secondary-subtle-bg rounded-xl p-3">
-                <BookOpen className="dark-secondary" size={24} />
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-sm">
-              <TrendingUp className="dark-success mr-1" size={16} />
-              <span className="dark-success font-medium">
-                {(statsData?.totalCourses || 0) > 0
-                  ? `${statsData?.totalCourses} cursos ativos`
-                  : "Nenhum curso ativo"}
-              </span>
-            </div>
-          </div>
-
-          <div className="dark-card dark-shadow-sm rounded-xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="dark-text-tertiary text-sm font-medium">
-                  Certificados Emitidos
-                </p>
-                <p className="dark-text-primary text-2xl font-bold">
-                  {(statsData?.totalCertificates || 0).toLocaleString()}
-                </p>
-              </div>
-              <div className="dark-warning-bg rounded-xl p-3">
-                <Award className="dark-warning" size={24} />
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-sm">
-              <TrendingUp className="dark-success mr-1" size={16} />
-              <span className="dark-success font-medium">
-                {(statsData?.totalCertificates || 0) > 0
-                  ? `${statsData?.totalCertificates} certificados emitidos`
-                  : "Nenhum certificado emitido"}
-              </span>
-            </div>
-          </div>
-
-          <div className="dark-card dark-shadow-sm rounded-xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="dark-text-tertiary text-sm font-medium">
-                  Avaliação Média
-                </p>
-                <p className="dark-text-primary text-2xl font-bold">
-                  {statsData?.averageRating}/5
-                </p>
-              </div>
-              <div className="dark-info-bg rounded-xl p-3">
-                <Star className="dark-info" size={24} />
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-sm">
-              <TrendingUp className="dark-success mr-1" size={16} />
-              <span className="dark-success font-medium">
-                {(statsData?.averageRating || 0) > 0
-                  ? `${statsData?.averageRating}/5 avaliação média`
-                  : "Sem avaliações"}
-              </span>
-            </div>
+          <div className="mt-4 flex items-center text-sm">
+            <TrendingUp className="dark-success mr-1" size={16} />
+            <span className="dark-success font-medium">
+              {(statsData?.totalCourses || 0) > 0
+                ? `${statsData?.totalCourses} cursos ativos`
+                : "Nenhum curso ativo"}
+            </span>
           </div>
         </div>
 
-        {/* Additional Stats */}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          <div className="dark-card dark-shadow-sm rounded-xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="dark-text-tertiary text-sm font-medium">
-                  Alunos Ativos
-                </p>
-                <p className="dark-text-primary text-2xl font-bold">
-                  {(statsData?.activeStudents || 0).toLocaleString()}
-                </p>
-              </div>
-              <div className="dark-success-bg rounded-xl p-3">
-                <TrendingUp className="dark-success" size={24} />
-              </div>
+        <div className="dark-card dark-shadow-sm rounded-xl p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="dark-text-tertiary text-sm font-medium">
+                Certificados Emitidos
+              </p>
+              <p className="dark-text-primary text-2xl font-bold">
+                {(statsData?.totalCertificates || 0).toLocaleString()}
+              </p>
             </div>
-            <div className="mt-4 flex items-center text-sm">
-              <TrendingUp className="dark-success mr-1" size={16} />
-              <span className="dark-success font-medium">
-                {(statsData?.activeStudents || 0) > 0
-                  ? `${statsData?.activeStudents} alunos ativos`
-                  : "Nenhum aluno ativo"}
-              </span>
+            <div className="dark-warning-bg rounded-xl p-3">
+              <Award className="dark-warning" size={24} />
             </div>
           </div>
-
-          <div className="dark-card dark-shadow-sm rounded-xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="dark-text-tertiary text-sm font-medium">
-                  Cursos Completados
-                </p>
-                <p className="dark-text-primary text-2xl font-bold">
-                  {(statsData?.completedCourses || 0).toLocaleString()}
-                </p>
-              </div>
-              <div className="dark-primary-subtle-bg rounded-xl p-3">
-                <GraduationCap className="dark-primary" size={24} />
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-sm">
-              <TrendingUp className="dark-success mr-1" size={16} />
-              <span className="dark-success font-medium">
-                {(statsData?.completedCourses || 0) > 0
-                  ? `${statsData?.completedCourses} cursos completados`
-                  : "Nenhum curso completado"}
-              </span>
-            </div>
-          </div>
-
-          <div className="dark-card dark-shadow-sm rounded-xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="dark-text-tertiary text-sm font-medium">
-                  Crescimento Mensal
-                </p>
-                <p className="dark-text-primary text-2xl font-bold">
-                  {statsData?.monthlyGrowth || 0}%
-                </p>
-              </div>
-              <div className="dark-secondary-subtle-bg rounded-xl p-3">
-                <BarChart3 className="dark-secondary" size={24} />
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-sm">
-              <TrendingUp className="dark-success mr-1" size={16} />
-              <span className="dark-success font-medium">
-                {(statsData?.monthlyGrowth || 0) > 0 ? "+" : ""}
-                {statsData?.monthlyGrowth || 0}% vs mês anterior
-              </span>
-            </div>
+          <div className="mt-4 flex items-center text-sm">
+            <TrendingUp className="dark-success mr-1" size={16} />
+            <span className="dark-success font-medium">
+              {(statsData?.totalCertificates || 0) > 0
+                ? `${statsData?.totalCertificates} certificados emitidos`
+                : "Nenhum certificado emitido"}
+            </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          {/* Recent Activity */}
-          <div className="dark-glass dark-shadow-sm rounded-xl p-6">
-            <h2 className="dark-text-primary mb-6 flex items-center gap-2 text-xl font-bold">
-              <Clock className="dark-info" size={24} />
-              Atividade Recente
-            </h2>
-            <div className="space-y-4">
-              {(statsData?.recentActivity?.length || 0) > 0 ? (
-                statsData?.recentActivity
-                  ?.splice(0, 4)
-                  .map((activity) => (
-                    <ActivityItem key={activity.id} activity={activity} />
-                  ))
-              ) : (
-                <div className="dark-card dark-shadow-sm rounded-xl p-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="dark-primary-subtle-bg rounded-lg p-2">
-                      <Clock className="dark-text-tertiary h-4 w-4" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="dark-text-primary text-sm font-medium">
-                        Nenhuma atividade recente
-                      </p>
-                      <p className="dark-text-tertiary text-xs">
-                        As atividades aparecerão aqui quando houver movimentação
-                      </p>
-                    </div>
+        <div className="dark-card dark-shadow-sm rounded-xl p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="dark-text-tertiary text-sm font-medium">
+                Avaliação Média
+              </p>
+              <p className="dark-text-primary text-2xl font-bold">
+                {statsData?.averageRating}/5
+              </p>
+            </div>
+            <div className="dark-info-bg rounded-xl p-3">
+              <Star className="dark-info" size={24} />
+            </div>
+          </div>
+          <div className="mt-4 flex items-center text-sm">
+            <TrendingUp className="dark-success mr-1" size={16} />
+            <span className="dark-success font-medium">
+              {(statsData?.averageRating || 0) > 0
+                ? `${statsData?.averageRating}/5 avaliação média`
+                : "Sem avaliações"}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Additional Stats */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="dark-card dark-shadow-sm rounded-xl p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="dark-text-tertiary text-sm font-medium">
+                Alunos Ativos
+              </p>
+              <p className="dark-text-primary text-2xl font-bold">
+                {(statsData?.activeStudents || 0).toLocaleString()}
+              </p>
+            </div>
+            <div className="dark-success-bg rounded-xl p-3">
+              <TrendingUp className="dark-success" size={24} />
+            </div>
+          </div>
+          <div className="mt-4 flex items-center text-sm">
+            <TrendingUp className="dark-success mr-1" size={16} />
+            <span className="dark-success font-medium">
+              {(statsData?.activeStudents || 0) > 0
+                ? `${statsData?.activeStudents} alunos ativos`
+                : "Nenhum aluno ativo"}
+            </span>
+          </div>
+        </div>
+
+        <div className="dark-card dark-shadow-sm rounded-xl p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="dark-text-tertiary text-sm font-medium">
+                Cursos Completados
+              </p>
+              <p className="dark-text-primary text-2xl font-bold">
+                {(statsData?.completedCourses || 0).toLocaleString()}
+              </p>
+            </div>
+            <div className="dark-primary-subtle-bg rounded-xl p-3">
+              <GraduationCap className="dark-primary" size={24} />
+            </div>
+          </div>
+          <div className="mt-4 flex items-center text-sm">
+            <TrendingUp className="dark-success mr-1" size={16} />
+            <span className="dark-success font-medium">
+              {(statsData?.completedCourses || 0) > 0
+                ? `${statsData?.completedCourses} cursos completados`
+                : "Nenhum curso completado"}
+            </span>
+          </div>
+        </div>
+
+        <div className="dark-card dark-shadow-sm rounded-xl p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="dark-text-tertiary text-sm font-medium">
+                Crescimento Mensal
+              </p>
+              <p className="dark-text-primary text-2xl font-bold">
+                {statsData?.monthlyGrowth || 0}%
+              </p>
+            </div>
+            <div className="dark-secondary-subtle-bg rounded-xl p-3">
+              <BarChart3 className="dark-secondary" size={24} />
+            </div>
+          </div>
+          <div className="mt-4 flex items-center text-sm">
+            <TrendingUp className="dark-success mr-1" size={16} />
+            <span className="dark-success font-medium">
+              {(statsData?.monthlyGrowth || 0) > 0 ? "+" : ""}
+              {statsData?.monthlyGrowth || 0}% vs mês anterior
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+        {/* Recent Activity */}
+        <div className="dark-glass dark-shadow-sm rounded-xl p-6">
+          <h2 className="dark-text-primary mb-6 flex items-center gap-2 text-xl font-bold">
+            <Clock className="dark-info" size={24} />
+            Atividade Recente
+          </h2>
+          <div className="space-y-4">
+            {(statsData?.recentActivity?.length || 0) > 0 ? (
+              statsData?.recentActivity
+                ?.splice(0, 4)
+                .map((activity) => (
+                  <ActivityItem key={activity.id} activity={activity} />
+                ))
+            ) : (
+              <div className="dark-card dark-shadow-sm rounded-xl p-4">
+                <div className="flex items-center space-x-3">
+                  <div className="dark-primary-subtle-bg rounded-lg p-2">
+                    <Clock className="dark-text-tertiary h-4 w-4" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="dark-text-primary text-sm font-medium">
+                      Nenhuma atividade recente
+                    </p>
+                    <p className="dark-text-tertiary text-xs">
+                      As atividades aparecerão aqui quando houver movimentação
+                    </p>
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
+        </div>
 
-          {/* Quick Analytics */}
-          <div className="dark-glass dark-shadow-sm rounded-xl p-6">
-            <h2 className="dark-text-primary mb-6 flex items-center gap-2 text-xl font-bold">
-              <BarChart3 className="dark-secondary" size={24} />
-              Análise Rápida
-            </h2>
-            <div className="space-y-6">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="dark-text-secondary text-sm font-medium">
-                    Taxa de Conclusão
-                  </span>
-                  <span className="dark-text-primary font-semibold">
-                    {analyticsData?.completionRate || 0}%
-                  </span>
-                </div>
-                <div className="dark-bg-tertiary h-2 w-full rounded-full">
-                  <div
-                    className="dark-gradient-primary h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${analyticsData?.completionRate || 0}%` }}
-                  />
-                </div>
+        {/* Quick Analytics */}
+        <div className="dark-glass dark-shadow-sm rounded-xl p-6">
+          <h2 className="dark-text-primary mb-6 flex items-center gap-2 text-xl font-bold">
+            <BarChart3 className="dark-secondary" size={24} />
+            Análise Rápida
+          </h2>
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="dark-text-secondary text-sm font-medium">
+                  Taxa de Conclusão
+                </span>
+                <span className="dark-text-primary font-semibold">
+                  {analyticsData?.completionRate || 0}%
+                </span>
               </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="dark-text-secondary text-sm font-medium">
-                    Tempo Médio de Curso
-                  </span>
-                  <span className="dark-text-primary font-semibold">
-                    {analyticsData?.averageCourseDuration || 0}h
-                  </span>
-                </div>
-                <div className="dark-bg-tertiary h-2 w-full rounded-full">
-                  <div
-                    className="dark-gradient-secondary h-2 rounded-full transition-all duration-300"
-                    style={{
-                      width: `${Math.min((analyticsData?.averageCourseDuration || 0) * 20, 100)}%`,
-                    }}
-                  />
-                </div>
+              <div className="dark-bg-tertiary h-2 w-full rounded-full">
+                <div
+                  className="dark-gradient-primary h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${analyticsData?.completionRate || 0}%` }}
+                />
               </div>
+            </div>
 
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="dark-text-secondary text-sm font-medium">
-                    Satisfação dos Alunos
-                  </span>
-                  <span className="dark-text-primary font-semibold">
-                    {analyticsData?.studentSatisfaction || 0}%
-                  </span>
-                </div>
-                <div className="dark-bg-tertiary h-2 w-full rounded-full">
-                  <div
-                    className="dark-gradient-primary h-2 rounded-full transition-all duration-300"
-                    style={{
-                      width: `${analyticsData?.studentSatisfaction || 0}%`,
-                    }}
-                  />
-                </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="dark-text-secondary text-sm font-medium">
+                  Tempo Médio de Curso
+                </span>
+                <span className="dark-text-primary font-semibold">
+                  {analyticsData?.averageCourseDuration || 0}h
+                </span>
               </div>
+              <div className="dark-bg-tertiary h-2 w-full rounded-full">
+                <div
+                  className="dark-gradient-secondary h-2 rounded-full transition-all duration-300"
+                  style={{
+                    width: `${Math.min((analyticsData?.averageCourseDuration || 0) * 20, 100)}%`,
+                  }}
+                />
+              </div>
+            </div>
 
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="dark-text-secondary text-sm font-medium">
-                    Retenção Mensal
-                  </span>
-                  <span className="dark-text-primary font-semibold">
-                    {analyticsData?.monthlyRetention || 0}%
-                  </span>
-                </div>
-                <div className="dark-bg-tertiary h-2 w-full rounded-full">
-                  <div
-                    className="dark-gradient-secondary h-2 rounded-full transition-all duration-300"
-                    style={{
-                      width: `${analyticsData?.monthlyRetention || 0}%`,
-                    }}
-                  />
-                </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="dark-text-secondary text-sm font-medium">
+                  Satisfação dos Alunos
+                </span>
+                <span className="dark-text-primary font-semibold">
+                  {analyticsData?.studentSatisfaction || 0}%
+                </span>
+              </div>
+              <div className="dark-bg-tertiary h-2 w-full rounded-full">
+                <div
+                  className="dark-gradient-primary h-2 rounded-full transition-all duration-300"
+                  style={{
+                    width: `${analyticsData?.studentSatisfaction || 0}%`,
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="dark-text-secondary text-sm font-medium">
+                  Retenção Mensal
+                </span>
+                <span className="dark-text-primary font-semibold">
+                  {analyticsData?.monthlyRetention || 0}%
+                </span>
+              </div>
+              <div className="dark-bg-tertiary h-2 w-full rounded-full">
+                <div
+                  className="dark-gradient-secondary h-2 rounded-full transition-all duration-300"
+                  style={{
+                    width: `${analyticsData?.monthlyRetention || 0}%`,
+                  }}
+                />
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </PageLayout>
   );
 }

@@ -73,7 +73,7 @@ export function NotificationsDropdownVariants({
   onClearAll,
   variant = "modern",
 }: NotificationsDropdownVariantsProps) {
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
   const recentNotifications = notifications.slice(0, 5);
   const styles = notificationStyles[variant];
 
@@ -121,10 +121,10 @@ export function NotificationsDropdownVariants({
               <DropdownMenuItem
                 key={notification.id}
                 className={`${styles.card} ${
-                  !notification.isRead ? styles.unreadCard : ""
+                  !notification.read ? styles.unreadCard : ""
                 }`}
                 onClick={() => {
-                  if (!notification.isRead) {
+                  if (!notification.read) {
                     onMarkAsRead(notification.id);
                   }
                   if (notification.actionUrl) {
@@ -142,9 +142,7 @@ export function NotificationsDropdownVariants({
                     >
                       {getNotificationIcon(notification.type)}
                     </div>
-                    {!notification.isRead && (
-                      <div className={styles.unreadDot} />
-                    )}
+                    {!notification.read && <div className={styles.unreadDot} />}
                   </div>
 
                   <div className={styles.content}>
@@ -197,12 +195,12 @@ export function NotificationsDropdownVariants({
                     {/* Footer */}
                     <div className={styles.footer}>
                       <div className="flex items-center gap-2">
-                        {!notification.isRead && (
+                        {!notification.read && (
                           <span className={styles.newLabel}>Nova</span>
                         )}
                       </div>
 
-                      {!notification.isRead && (
+                      {!notification.read && (
                         <Button
                           size="sm"
                           variant="ghost"

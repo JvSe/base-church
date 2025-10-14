@@ -2,9 +2,14 @@
 
 import { prisma } from "@base-church/db";
 import { revalidatePath } from "next/cache";
+import type { CourseFormData, LessonFormData } from "../types/index";
 
 // Alias para o banco de dados
 const db = prisma;
+
+type CourseWhereClause = {
+  isPublished?: boolean;
+};
 
 // Course Actions
 export async function getCourses({
@@ -14,7 +19,7 @@ export async function getCourses({
 } = {}) {
   try {
     // Construir o filtro baseado no parâmetro
-    let whereClause: any = {};
+    const whereClause: CourseWhereClause = {};
 
     if (filter === "published") {
       whereClause.isPublished = true;
@@ -253,17 +258,7 @@ export async function getCourseById(courseId: string) {
 }
 
 // CRUD de Cursos
-export async function createCourse(courseData: {
-  title: string;
-  description: string;
-  instructorId: string;
-  duration: number;
-  level: string;
-  status: string;
-  price: number;
-  category: string;
-  tags: string;
-}) {
+export async function createCourse(courseData: CourseFormData) {
   try {
     // Validar dados obrigatórios
     if (
@@ -299,7 +294,7 @@ export async function createCourse(courseData: {
         slug: slug,
         instructorId: courseData.instructorId,
         duration: courseData.duration,
-        level: courseData.level as any,
+        level: courseData.level,
         price: courseData.price,
         category: courseData.category,
         tags: tagsArray,
@@ -343,17 +338,7 @@ export async function updateCourseStatus(
 
 export async function updateCourse(
   courseId: string,
-  courseData: {
-    title: string;
-    description: string;
-    instructorId: string;
-    duration: number;
-    level: string;
-    status: string;
-    price: number;
-    category: any;
-    tags: string;
-  },
+  courseData: CourseFormData,
 ) {
   try {
     // Verificar se o curso existe
@@ -381,7 +366,7 @@ export async function updateCourse(
         description: courseData.description,
         instructorId: courseData.instructorId,
         duration: courseData.duration,
-        level: courseData.level as any,
+        level: courseData.level,
         price: courseData.price,
         category: courseData.category,
         tags: tagsArray,
@@ -632,17 +617,7 @@ export async function deleteModule(moduleId: string) {
 
 export async function createLesson(
   moduleId: string,
-  lessonData: {
-    title: string;
-    description: string;
-    content?: string;
-    videoUrl?: string;
-    youtubeEmbedId?: string;
-    duration: number;
-    order: number;
-    type: string;
-    isActivity?: boolean;
-  },
+  lessonData: LessonFormData,
 ) {
   try {
     // Verificar se o módulo existe
@@ -664,7 +639,7 @@ export async function createLesson(
         youtubeEmbedId: lessonData.youtubeEmbedId || null,
         duration: lessonData.duration,
         order: lessonData.order,
-        type: lessonData.type as any,
+        type: lessonData.type,
         moduleId: moduleId,
         isActivity: lessonData.isActivity || false,
       },
@@ -683,16 +658,7 @@ export async function createLesson(
 
 export async function updateLesson(
   lessonId: string,
-  lessonData: {
-    title: string;
-    description: string;
-    content?: string;
-    videoUrl?: string;
-    youtubeEmbedId?: string;
-    duration: number;
-    order: number;
-    type: "VIDEO" | "TEXT" | "OBJECTIVE_QUIZ" | "SUBJECTIVE_QUIZ";
-  },
+  lessonData: LessonFormData,
 ) {
   try {
     // Verificar se a lição existe
@@ -715,7 +681,7 @@ export async function updateLesson(
         youtubeEmbedId: lessonData.youtubeEmbedId || null,
         duration: lessonData.duration,
         order: lessonData.order,
-        type: lessonData.type as any,
+        type: lessonData.type,
       },
     });
 

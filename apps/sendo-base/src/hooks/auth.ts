@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export interface User {
+export type User = {
   id: string;
   name: string;
   cpf: string;
@@ -12,9 +12,9 @@ export interface User {
   isPastor?: boolean;
   image?: string;
   approvalStatus?: "PENDING" | "APPROVED" | "REJECTED";
-}
+};
 
-interface UserStore {
+type UserStore = {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -24,7 +24,7 @@ interface UserStore {
   clearUser: () => void;
   setLoading: (loading: boolean) => void;
   updateUser: (updates: Partial<User>) => void;
-}
+};
 
 export const useAuth = create<UserStore>()(
   persist(

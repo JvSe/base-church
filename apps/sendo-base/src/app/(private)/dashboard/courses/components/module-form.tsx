@@ -1,5 +1,6 @@
 "use client";
 
+import { FormSection } from "@/src/components/common/forms/form-section";
 import { Button } from "@base-church/ui/components/button";
 import {
   Form,
@@ -11,7 +12,7 @@ import {
 } from "@base-church/ui/components/form";
 import { Input } from "@base-church/ui/components/input";
 import { Textarea } from "@base-church/ui/components/textarea";
-import { Plus } from "lucide-react";
+import { Layers, Plus } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 
 interface ModuleFormProps {
@@ -29,10 +30,7 @@ export function ModuleForm({
 }: ModuleFormProps) {
   return (
     <div className="mt-6">
-      <div className="dark-glass dark-shadow-sm rounded-xl p-6">
-        <h3 className="dark-text-primary mb-6 text-xl font-bold">
-          Adicionar Novo Módulo
-        </h3>
+      <FormSection title="Adicionar Novo Módulo" icon={Layers}>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
@@ -91,7 +89,7 @@ export function ModuleForm({
             </div>
           </form>
         </Form>
-      </div>
+      </FormSection>
     </div>
   );
 }

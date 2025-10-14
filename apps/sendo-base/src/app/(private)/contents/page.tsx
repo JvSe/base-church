@@ -1,17 +1,21 @@
 "use client";
 
-import { DashboardCourseCard } from "@/src/components/dashboard-course-card";
-import { DashboardCourseListCard } from "@/src/components/dashboard-course-list-card";
+import { CourseCard } from "@/src/components/common/data-display/course-card";
+import { EmptyState } from "@/src/components/common/feedback/empty-state";
+import { PageHeader } from "@/src/components/common/layout/page-header";
+import { PageLayout } from "@/src/components/common/layout/page-layout";
 import { useAuth } from "@/src/hooks";
 
+import { ErrorState } from "@/src/components/common/feedback/error-state";
+import { LoadingState } from "@/src/components/common/feedback/loading-state";
 import { getUserEnrollments } from "@/src/lib/actions";
 import { Button } from "@base-church/ui/components/button";
 import { Input } from "@base-church/ui/components/input";
 import {
-    Tabs,
-    TabsContent,
-    TabsList,
-    TabsTrigger,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
 } from "@base-church/ui/components/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { Filter, Grid, List, Search } from "lucide-react";
@@ -119,360 +123,310 @@ export default function ContentsPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="dark-bg-primary min-h-screen">
-        <div className="fixed inset-0 opacity-3">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
-        </div>
-        <div className="relative mx-auto max-w-7xl space-y-6 p-6">
-          <div className="dark-glass dark-shadow-md rounded-2xl p-8 text-center">
-            <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-              <Search className="dark-text-tertiary" size={32} />
-            </div>
-            <h1 className="dark-text-primary mb-2 text-2xl font-bold">
-              Carregando seus conteúdos...
-            </h1>
-            <p className="dark-text-secondary">
-              Buscando seus cursos e progresso de aprendizado
-            </p>
-          </div>
-        </div>
-      </div>
+      <PageLayout>
+        <LoadingState
+          icon={Search}
+          title="Carregando seus conteúdos..."
+          description="Buscando seus cursos e progresso de aprendizado"
+        />
+      </PageLayout>
     );
   }
 
   // Error state
   if (error) {
     return (
-      <div className="dark-bg-primary min-h-screen">
-        <div className="fixed inset-0 opacity-3">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
-        </div>
-        <div className="relative mx-auto max-w-7xl space-y-6 p-6">
-          <div className="dark-glass dark-shadow-md rounded-2xl p-8 text-center">
-            <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-              <Search className="dark-text-tertiary" size={32} />
-            </div>
-            <h1 className="dark-text-primary mb-2 text-2xl font-bold">
-              Erro ao carregar conteúdos
-            </h1>
-            <p className="dark-text-secondary mb-4">
-              Não foi possível carregar seus cursos. Tente novamente.
-            </p>
-            <Button
-              className="dark-btn-primary"
-              onClick={() => window.location.reload()}
-            >
-              Tentar Novamente
-            </Button>
-          </div>
-        </div>
-      </div>
+      <PageLayout>
+        <ErrorState
+          icon={Search}
+          title="Erro ao carregar conteúdos"
+          description="Não foi possível carregar seus cursos. Tente novamente."
+          onRetry={() => window.location.reload()}
+        />
+      </PageLayout>
     );
   }
 
   return (
-    <div className="dark-bg-primary min-h-screen">
-      {/* Background Pattern */}
-      <div className="fixed inset-0 opacity-3">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
-      </div>
-
-      <div className="relative mx-auto max-w-7xl space-y-6 p-6">
-        {/* Header */}
-        <div className="dark-glass dark-shadow-md rounded-2xl p-6">
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h1 className="dark-text-primary mb-2 text-3xl font-bold">
-                Biblioteca de Conteúdos
-              </h1>
-              <p className="dark-text-secondary">
-                Continue de onde parou e acompanhe seu progresso de aprendizado
-                ministerial
-              </p>
-            </div>
-
-            <div className="flex items-center space-x-3">
-              <Button className="dark-glass dark-border hover:dark-border-hover gap-2">
-                <Filter size={16} />
-                Filtrar
-              </Button>
-              <div className="dark-bg-secondary flex items-center rounded-lg p-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setViewMode("grid")}
-                  className={
-                    viewMode === "grid"
-                      ? "dark-btn-primary"
-                      : "dark-text-secondary hover:dark-text-primary"
-                  }
-                >
-                  <Grid size={16} />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setViewMode("list")}
-                  className={
-                    viewMode === "list"
-                      ? "dark-btn-primary"
-                      : "dark-text-secondary hover:dark-text-primary"
-                  }
-                >
-                  <List size={16} />
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Progress Stats */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-            <div className="dark-bg-secondary rounded-lg p-4 text-center">
-              <div className="dark-text-primary mb-1 text-2xl font-bold">
-                {courses.length}
-              </div>
-              <div className="dark-text-tertiary text-sm">
-                Cursos Matriculados
-              </div>
-            </div>
-
-            <div className="dark-bg-secondary rounded-lg p-4 text-center">
-              <div className="dark-text-primary mb-1 text-2xl font-bold">
-                {
-                  courses.filter((c) => c.progress > 0 && c.progress < 100)
-                    .length
-                }
-              </div>
-              <div className="dark-text-tertiary text-sm">Em Andamento</div>
-            </div>
-
-            <div className="dark-bg-secondary rounded-lg p-4 text-center">
-              <div className="dark-text-primary mb-1 text-2xl font-bold">
-                {courses.filter((c) => c.progress === 100).length}
-              </div>
-              <div className="dark-text-tertiary text-sm">Concluídos</div>
-            </div>
-
-            <div className="dark-bg-secondary rounded-lg p-4 text-center">
-              <div className="dark-text-primary mb-1 text-2xl font-bold">
-                {courses.length > 0
-                  ? Math.round(
-                      courses.reduce((acc, c) => acc + c.progress, 0) /
-                        courses.length,
-                    )
-                  : 0}
-                %
-              </div>
-              <div className="dark-text-tertiary text-sm">Progresso Médio</div>
-            </div>
+    <PageLayout>
+      <PageHeader
+        title="Biblioteca de Conteúdos"
+        description="Continue de onde parou e acompanhe seu progresso de aprendizado ministerial"
+        actions={[
+          {
+            label: "Filtrar",
+            icon: Filter,
+            className: "dark-glass dark-border hover:dark-border-hover",
+          },
+        ]}
+      >
+        {/* View Mode Toggle */}
+        <div className="flex items-center justify-end">
+          <div className="dark-bg-secondary flex items-center rounded-lg p-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setViewMode("grid")}
+              className={
+                viewMode === "grid"
+                  ? "dark-btn-primary"
+                  : "dark-text-secondary hover:dark-text-primary"
+              }
+            >
+              <Grid size={16} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setViewMode("list")}
+              className={
+                viewMode === "list"
+                  ? "dark-btn-primary"
+                  : "dark-text-secondary hover:dark-text-primary"
+              }
+            >
+              <List size={16} />
+            </Button>
           </div>
         </div>
 
-        {/* Search */}
-        <div className="dark-glass dark-shadow-sm rounded-xl p-4">
-          <div className="relative">
-            <Search
-              className="dark-text-tertiary absolute top-1/2 left-4 -translate-y-1/2 transform"
-              size={20}
-            />
-            <Input
-              placeholder="Buscar por cursos, aulas ou instrutores..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="dark-input h-12 pl-12 text-base"
-            />
+        {/* Progress Stats */}
+        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-4">
+          <div className="dark-bg-secondary rounded-lg p-4 text-center">
+            <div className="dark-text-primary mb-1 text-2xl font-bold">
+              {courses.length}
+            </div>
+            <div className="dark-text-tertiary text-sm">
+              Cursos Matriculados
+            </div>
+          </div>
+
+          <div className="dark-bg-secondary rounded-lg p-4 text-center">
+            <div className="dark-text-primary mb-1 text-2xl font-bold">
+              {courses.filter((c) => c.progress > 0 && c.progress < 100).length}
+            </div>
+            <div className="dark-text-tertiary text-sm">Em Andamento</div>
+          </div>
+
+          <div className="dark-bg-secondary rounded-lg p-4 text-center">
+            <div className="dark-text-primary mb-1 text-2xl font-bold">
+              {courses.filter((c) => c.progress === 100).length}
+            </div>
+            <div className="dark-text-tertiary text-sm">Concluídos</div>
+          </div>
+
+          <div className="dark-bg-secondary rounded-lg p-4 text-center">
+            <div className="dark-text-primary mb-1 text-2xl font-bold">
+              {courses.length > 0
+                ? Math.round(
+                    courses.reduce((acc, c) => acc + c.progress, 0) /
+                      courses.length,
+                  )
+                : 0}
+              %
+            </div>
+            <div className="dark-text-tertiary text-sm">Progresso Médio</div>
           </div>
         </div>
+      </PageHeader>
 
-        {/* Tabs */}
-        <div className="dark-shadow-sm rounded-xl p-1">
-          <Tabs defaultValue="all" className="w-full">
-            <TabsList className="dark-bg-secondary grid h-12 w-full grid-cols-4">
-              <TabsTrigger
-                value="all"
-                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
-              >
-                Todos ({courses.length})
-              </TabsTrigger>
-              <TabsTrigger
-                value="in-progress"
-                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
-              >
-                Em Andamento (
-                {
-                  courses.filter((c) => c.progress > 0 && c.progress < 100)
-                    .length
-                }
-                )
-              </TabsTrigger>
-              <TabsTrigger
-                value="completed"
-                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
-              >
-                Concluídos ({courses.filter((c) => c.progress === 100).length})
-              </TabsTrigger>
-              <TabsTrigger
-                value="pending-approval"
-                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
-              >
-                Aguardando Autorização ({pendingCourses.length})
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="all" className="mt-6">
-              {filteredEnrollments.length > 0 ? (
-                viewMode === "grid" ? (
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {filteredEnrollments.map((course) => (
-                      <DashboardCourseCard
-                        key={course.id}
-                        course={course}
-                        variant="contents"
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {filteredEnrollments.map((course) => (
-                      <DashboardCourseListCard
-                        key={course.id}
-                        course={course}
-                      />
-                    ))}
-                  </div>
-                )
-              ) : (
-                <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
-                  <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-                    <Search className="dark-text-tertiary" size={24} />
-                  </div>
-                  <h3 className="dark-text-primary mb-2 font-semibold">
-                    {searchQuery
-                      ? "Nenhum curso encontrado"
-                      : "Nenhum curso matriculado"}
-                  </h3>
-                  <p className="dark-text-tertiary mb-4 text-sm">
-                    {searchQuery
-                      ? "Tente ajustar sua busca ou explore nosso catálogo de cursos"
-                      : "Comece sua jornada de aprendizado explorando nossos cursos disponíveis"}
-                  </p>
-                  <Button className="dark-btn-primary">
-                    {searchQuery ? "Limpar Busca" : "Explorar Cursos"}
-                  </Button>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="in-progress" className="mt-6">
-              {(() => {
-                const inProgressCourses = filteredEnrollments.filter(
-                  (e) => e.progress > 0 && e.progress < 100,
-                );
-                return inProgressCourses.length > 0 ? (
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {inProgressCourses.map((course) => (
-                      <DashboardCourseCard
-                        key={course.id}
-                        course={course}
-                        variant="contents"
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
-                    <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-                      <Search className="dark-text-tertiary" size={24} />
-                    </div>
-                    <h3 className="dark-text-primary mb-2 font-semibold">
-                      Nenhum curso em andamento
-                    </h3>
-                    <p className="dark-text-tertiary mb-4 text-sm">
-                      Comece um curso para vê-lo aparecer aqui
-                    </p>
-                    <Button className="dark-btn-primary">
-                      Explorar Cursos
-                    </Button>
-                  </div>
-                );
-              })()}
-            </TabsContent>
-
-            <TabsContent value="completed" className="mt-6">
-              {(() => {
-                const completedCourses = filteredEnrollments.filter(
-                  (c) => c.progress === 100,
-                );
-                return completedCourses.length > 0 ? (
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {completedCourses.map((course) => (
-                      <DashboardCourseCard
-                        key={course.id}
-                        course={course}
-                        variant="contents"
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
-                    <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-                      <Search className="dark-text-tertiary" size={24} />
-                    </div>
-                    <h3 className="dark-text-primary mb-2 font-semibold">
-                      Nenhum curso concluído
-                    </h3>
-                    <p className="dark-text-tertiary mb-4 text-sm">
-                      Complete seus cursos para vê-los aparecer aqui
-                    </p>
-                    <Button className="dark-btn-primary">
-                      Continuar Aprendendo
-                    </Button>
-                  </div>
-                );
-              })()}
-            </TabsContent>
-
-            <TabsContent value="pending-approval" className="mt-6">
-              {filteredPendingCourses.length > 0 ? (
-                viewMode === "grid" ? (
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {filteredPendingCourses.map((course) => (
-                      <DashboardCourseCard
-                        key={course.id}
-                        course={course}
-                        variant="contents"
-                        disabled={course.status === "pending"}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {filteredPendingCourses.map((course) => (
-                      <DashboardCourseListCard
-                        key={course.id}
-                        course={course}
-                        disabled={course.status === "pending"}
-                      />
-                    ))}
-                  </div>
-                )
-              ) : (
-                <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
-                  <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-                    <Search className="dark-text-tertiary" size={24} />
-                  </div>
-                  <h3 className="dark-text-primary mb-2 font-semibold">
-                    Nenhuma solicitação pendente
-                  </h3>
-                  <p className="dark-text-tertiary mb-4 text-sm">
-                    Você não possui cursos aguardando aprovação dos líderes
-                  </p>
-                  <Button className="dark-btn-primary">Explorar Cursos</Button>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
+      {/* Search */}
+      <div className="dark-glass dark-shadow-sm rounded-xl p-4">
+        <div className="relative">
+          <Search
+            className="dark-text-tertiary absolute top-1/2 left-4 -translate-y-1/2 transform"
+            size={20}
+          />
+          <Input
+            placeholder="Buscar por cursos, aulas ou instrutores..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="dark-input h-12 pl-12 text-base"
+          />
         </div>
       </div>
-    </div>
+
+      {/* Tabs */}
+      <div className="dark-shadow-sm rounded-xl p-1">
+        <Tabs defaultValue="all" className="w-full">
+          <TabsList className="dark-bg-secondary grid h-12 w-full grid-cols-4">
+            <TabsTrigger
+              value="all"
+              className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+            >
+              Todos ({courses.length})
+            </TabsTrigger>
+            <TabsTrigger
+              value="in-progress"
+              className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+            >
+              Em Andamento (
+              {courses.filter((c) => c.progress > 0 && c.progress < 100).length}
+              )
+            </TabsTrigger>
+            <TabsTrigger
+              value="completed"
+              className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+            >
+              Concluídos ({courses.filter((c) => c.progress === 100).length})
+            </TabsTrigger>
+            <TabsTrigger
+              value="pending-approval"
+              className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+            >
+              Aguardando Autorização ({pendingCourses.length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="all" className="mt-6">
+            {filteredEnrollments.length > 0 ? (
+              viewMode === "grid" ? (
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {filteredEnrollments.map((course) => (
+                    <CourseCard
+                      key={course.id}
+                      course={course}
+                      layout="grid"
+                      variant="contents"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filteredEnrollments.map((course) => (
+                    <CourseCard
+                      key={course.id}
+                      course={course}
+                      layout="list"
+                      variant="contents"
+                    />
+                  ))}
+                </div>
+              )
+            ) : (
+              <EmptyState
+                icon={Search}
+                title={
+                  searchQuery
+                    ? "Nenhum curso encontrado"
+                    : "Nenhum curso matriculado"
+                }
+                description={
+                  searchQuery
+                    ? "Tente ajustar sua busca ou explore nosso catálogo de cursos"
+                    : "Comece sua jornada de aprendizado explorando nossos cursos disponíveis"
+                }
+                action={{
+                  label: searchQuery ? "Limpar Busca" : "Explorar Cursos",
+                  onClick: searchQuery
+                    ? () => setSearchQuery("")
+                    : () => (window.location.href = "/catalog"),
+                }}
+              />
+            )}
+          </TabsContent>
+
+          <TabsContent value="in-progress" className="mt-6">
+            {(() => {
+              const inProgressCourses = filteredEnrollments.filter(
+                (e) => e.progress > 0 && e.progress < 100,
+              );
+              return inProgressCourses.length > 0 ? (
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {inProgressCourses.map((course) => (
+                    <CourseCard
+                      key={course.id}
+                      course={course}
+                      layout="grid"
+                      variant="contents"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  icon={Search}
+                  title="Nenhum curso em andamento"
+                  description="Comece um curso para vê-lo aparecer aqui"
+                  action={{
+                    label: "Explorar Cursos",
+                    onClick: () => (window.location.href = "/catalog"),
+                  }}
+                />
+              );
+            })()}
+          </TabsContent>
+
+          <TabsContent value="completed" className="mt-6">
+            {(() => {
+              const completedCourses = filteredEnrollments.filter(
+                (c) => c.progress === 100,
+              );
+              return completedCourses.length > 0 ? (
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {completedCourses.map((course) => (
+                    <CourseCard
+                      key={course.id}
+                      course={course}
+                      layout="grid"
+                      variant="contents"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  icon={Search}
+                  title="Nenhum curso concluído"
+                  description="Complete seus cursos para vê-los aparecer aqui"
+                  action={{
+                    label: "Continuar Aprendendo",
+                    onClick: () => (window.location.href = "/contents"),
+                  }}
+                />
+              );
+            })()}
+          </TabsContent>
+
+          <TabsContent value="pending-approval" className="mt-6">
+            {filteredPendingCourses.length > 0 ? (
+              viewMode === "grid" ? (
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {filteredPendingCourses.map((course) => (
+                    <CourseCard
+                      key={course.id}
+                      course={course}
+                      layout="grid"
+                      variant="contents"
+                      disabled={course.status === "pending"}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filteredPendingCourses.map((course) => (
+                    <CourseCard
+                      key={course.id}
+                      course={course}
+                      layout="list"
+                      variant="contents"
+                      disabled={course.status === "pending"}
+                    />
+                  ))}
+                </div>
+              )
+            ) : (
+              <EmptyState
+                icon={Search}
+                title="Nenhuma solicitação pendente"
+                description="Você não possui cursos aguardando aprovação dos líderes"
+                action={{
+                  label: "Explorar Cursos",
+                  onClick: () => (window.location.href = "/catalog"),
+                }}
+              />
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
+    </PageLayout>
   );
 }

@@ -114,7 +114,7 @@ export const useNotifications = () => {
   });
 
   return {
-    notifications: notifications as Notification[],
+    notifications: notifications as unknown as Notification[],
     isLoading,
     error,
     markAsRead: markAsReadMutation.mutate,

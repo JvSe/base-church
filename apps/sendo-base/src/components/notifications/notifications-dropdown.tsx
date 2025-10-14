@@ -33,7 +33,7 @@ export interface Notification {
   title: string;
   message: string;
   createdAt: Date;
-  isRead: boolean;
+  read: boolean;
   actionUrl?: string;
   metadata?: {
     courseName?: string;
@@ -90,7 +90,7 @@ export function NotificationsDropdown({
   onMarkAllAsRead,
   onClearAll,
 }: NotificationsDropdownProps) {
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
   const recentNotifications = notifications.slice(0, 5); // Mostra apenas as 5 mais recentes
 
   return (
@@ -137,12 +137,12 @@ export function NotificationsDropdown({
               <DropdownMenuItem
                 key={notification.id}
                 className={`group relative cursor-pointer border-b border-transparent p-0 transition-all duration-200 hover:border-blue-500/20 ${
-                  !notification.isRead
+                  !notification.read
                     ? "bg-gradient-to-r from-blue-500/5 to-purple-500/5"
                     : ""
                 }`}
                 onClick={() => {
-                  if (!notification.isRead) {
+                  if (!notification.read) {
                     onMarkAsRead(notification.id);
                   }
                   if (notification.actionUrl) {
@@ -168,7 +168,7 @@ export function NotificationsDropdown({
                     >
                       {getNotificationIcon(notification.type)}
                     </div>
-                    {!notification.isRead && (
+                    {!notification.read && (
                       <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-blue-500 ring-2 ring-white dark:ring-gray-900" />
                     )}
                   </div>
@@ -235,14 +235,14 @@ export function NotificationsDropdown({
                     {/* Footer com ação */}
                     <div className="flex items-center justify-between pt-1">
                       <div className="flex items-center gap-2">
-                        {!notification.isRead && (
+                        {!notification.read && (
                           <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
                             Nova
                           </span>
                         )}
                       </div>
 
-                      {!notification.isRead && (
+                      {!notification.read && (
                         <Button
                           size="sm"
                           variant="ghost"

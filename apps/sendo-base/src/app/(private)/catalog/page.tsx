@@ -1,7 +1,10 @@
 "use client";
 
-import { DashboardCourseCard } from "@/src/components/dashboard-course-card";
-import { DashboardCourseListCard } from "@/src/components/dashboard-course-list-card";
+import { CourseCard } from "@/src/components/common/data-display/course-card";
+import { ErrorState } from "@/src/components/common/feedback/error-state";
+import { LoadingState } from "@/src/components/common/feedback/loading-state";
+import { PageHeader } from "@/src/components/common/layout/page-header";
+import { PageLayout } from "@/src/components/common/layout/page-layout";
 import { useAuth } from "@/src/hooks";
 import { getCourses, getUserEnrollments } from "@/src/lib/actions";
 import { Button } from "@base-church/ui/components/button";
@@ -123,335 +126,297 @@ export default function CatalogPage() {
   // Loading state
   if (coursesLoading) {
     return (
-      <div className="dark-bg-primary min-h-screen">
-        <div className="fixed inset-0 opacity-3">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
-        </div>
-        <div className="relative mx-auto max-w-7xl space-y-6 p-6">
-          <div className="dark-glass dark-shadow-md rounded-2xl p-8 text-center">
-            <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-              <Search className="dark-text-tertiary" size={32} />
-            </div>
-            <h1 className="dark-text-primary mb-2 text-2xl font-bold">
-              Carregando catálogo...
-            </h1>
-            <p className="dark-text-secondary">
-              Buscando cursos disponíveis para você
-            </p>
-          </div>
-        </div>
-      </div>
+      <PageLayout>
+        <LoadingState
+          icon={Search}
+          title="Carregando catálogo..."
+          description="Buscando cursos disponíveis para você"
+        />
+      </PageLayout>
     );
   }
 
   // Error state
   if (coursesError) {
     return (
-      <div className="dark-bg-primary min-h-screen">
-        <div className="fixed inset-0 opacity-3">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
-        </div>
-        <div className="relative mx-auto max-w-7xl space-y-6 p-6">
-          <div className="dark-glass dark-shadow-md rounded-2xl p-8 text-center">
-            <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-              <Search className="dark-text-tertiary" size={32} />
-            </div>
-            <h1 className="dark-text-primary mb-2 text-2xl font-bold">
-              Erro ao carregar catálogo
-            </h1>
-            <p className="dark-text-secondary mb-4">
-              Não foi possível carregar os cursos. Tente novamente.
-            </p>
-            <Button
-              className="dark-btn-primary"
-              onClick={() => window.location.reload()}
-            >
-              Tentar Novamente
-            </Button>
-          </div>
-        </div>
-      </div>
+      <PageLayout>
+        <ErrorState
+          icon={Search}
+          title="Erro ao carregar catálogo"
+          description="Não foi possível carregar os cursos. Tente novamente."
+          onRetry={() => window.location.reload()}
+        />
+      </PageLayout>
     );
   }
 
   return (
-    <div className="dark-bg-primary min-h-screen">
-      {/* Background Pattern */}
-      <div className="fixed inset-0 opacity-3">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
+    <PageLayout spacing="normal">
+      <PageHeader
+        title="Catálogo de Cursos"
+        description="Explore milhares de cursos e encontre o que você precisa para evoluir"
+      >
+        {/* View Mode Toggle */}
+        <div className="mt-4 flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <Button className="dark-glass dark-border hover:dark-border-hover gap-2">
+              <Filter size={16} />
+              Filtros avançados
+            </Button>
+            <div className="dark-bg-secondary flex items-center rounded-lg p-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setViewMode("grid")}
+                className={
+                  viewMode === "grid"
+                    ? "dark-btn-primary"
+                    : "dark-text-secondary hover:dark-text-primary"
+                }
+              >
+                <Grid size={16} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setViewMode("list")}
+                className={
+                  viewMode === "list"
+                    ? "dark-btn-primary"
+                    : "dark-text-secondary hover:dark-text-primary"
+                }
+              >
+                <List size={16} />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </PageHeader>
+
+      {/* Search and Filters */}
+      <div className="dark-glass dark-shadow-sm rounded-xl p-4">
+        <div className="flex items-center space-x-4">
+          <div className="relative flex-1">
+            <Search
+              className="dark-text-tertiary absolute top-1/2 left-4 -translate-y-1/2 transform"
+              size={20}
+            />
+            <Input
+              placeholder="Buscar por cursos, instrutores ou temas ministeriais..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="dark-input h-12 pl-12 text-base"
+            />
+          </div>
+
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="dark-input h-12 w-48">
+              <SelectValue placeholder="Categoria" />
+            </SelectTrigger>
+            <SelectContent className="dark-bg-secondary dark-border">
+              {categories.map((category) => (
+                <SelectItem
+                  key={category.id}
+                  value={category.id}
+                  className="dark-text-primary hover:dark-bg-tertiary"
+                >
+                  <div className="flex items-center space-x-2">
+                    <category.icon size={16} />
+                    <span>{category.name}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+            <SelectTrigger className="dark-input h-12 w-48">
+              <SelectValue placeholder="Nível" />
+            </SelectTrigger>
+            <SelectContent className="dark-bg-secondary dark-border">
+              {levels.map((level) => (
+                <SelectItem
+                  key={level.id}
+                  value={level.id}
+                  className="dark-text-primary hover:dark-bg-tertiary"
+                >
+                  {level.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <div className="relative mx-auto max-w-7xl space-y-6 p-6">
-        {/* Header */}
-        <div className="dark-glass dark-shadow-md rounded-2xl p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="dark-text-primary mb-2 text-3xl font-bold">
-                Catálogo de Cursos
-              </h1>
-              <p className="dark-text-secondary">
-                Explore milhares de cursos e encontre o que você precisa para
-                evoluir
-              </p>
-            </div>
+      {/* Tabs */}
+      <div className="dark-shadow-sm rounded-xl p-1">
+        <Tabs defaultValue="all" className="w-full">
+          <TabsList className="dark-bg-secondary grid h-12 w-full grid-cols-4">
+            <TabsTrigger
+              value="all"
+              className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary"
+            >
+              Todos ({courses.length})
+            </TabsTrigger>
+            <TabsTrigger
+              value="featured"
+              className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary"
+            >
+              <TrendingUp size={16} className="mr-2" />
+              Em Destaque ({featuredCourses.length})
+            </TabsTrigger>
+            <TabsTrigger
+              value="enrolled"
+              className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary"
+            >
+              <Zap size={16} className="mr-2" />
+              Matriculados ({enrolledCourses.length})
+            </TabsTrigger>
+            <TabsTrigger
+              value="recommended"
+              className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary"
+            >
+              <Target size={16} className="mr-2" />
+              Recomendados
+            </TabsTrigger>
+          </TabsList>
 
-            <div className="flex items-center space-x-3">
-              <Button className="dark-glass dark-border hover:dark-border-hover gap-2">
-                <Filter size={16} />
-                Filtros avançados
-              </Button>
-              <div className="dark-bg-secondary flex items-center rounded-lg p-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setViewMode("grid")}
-                  className={
-                    viewMode === "grid"
-                      ? "dark-btn-primary"
-                      : "dark-text-secondary hover:dark-text-primary"
-                  }
-                >
-                  <Grid size={16} />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setViewMode("list")}
-                  className={
-                    viewMode === "list"
-                      ? "dark-btn-primary"
-                      : "dark-text-secondary hover:dark-text-primary"
-                  }
-                >
-                  <List size={16} />
+          <TabsContent value="all" className="mt-6">
+            {filteredCourses.length > 0 ? (
+              viewMode === "grid" ? (
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {filteredCourses.map((course) => (
+                    <CourseCard
+                      key={course.id}
+                      course={course}
+                      layout="grid"
+                      variant="catalog"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filteredCourses.map((course) => (
+                    <CourseCard
+                      key={course.id}
+                      course={course}
+                      layout="list"
+                      variant="catalog"
+                    />
+                  ))}
+                </div>
+              )
+            ) : (
+              <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
+                <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                  <Search className="dark-text-tertiary" size={24} />
+                </div>
+                <h3 className="dark-text-primary mb-2 font-semibold">
+                  {searchQuery
+                    ? "Nenhum curso encontrado"
+                    : "Nenhum curso disponível"}
+                </h3>
+                <p className="dark-text-tertiary mb-4 text-sm">
+                  {searchQuery
+                    ? "Tente ajustar sua busca ou filtros"
+                    : "Não há cursos disponíveis no momento"}
+                </p>
+                <Button className="dark-btn-primary">
+                  {searchQuery ? "Limpar Busca" : "Explorar Cursos"}
                 </Button>
               </div>
-            </div>
-          </div>
-        </div>
+            )}
+          </TabsContent>
 
-        {/* Search and Filters */}
-        <div className="dark-glass dark-shadow-sm rounded-xl p-4">
-          <div className="flex items-center space-x-4">
-            <div className="relative flex-1">
-              <Search
-                className="dark-text-tertiary absolute top-1/2 left-4 -translate-y-1/2 transform"
-                size={20}
-              />
-              <Input
-                placeholder="Buscar por cursos, instrutores ou temas ministeriais..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="dark-input h-12 pl-12 text-base"
-              />
-            </div>
-
-            <Select
-              value={selectedCategory}
-              onValueChange={setSelectedCategory}
-            >
-              <SelectTrigger className="dark-input h-12 w-48">
-                <SelectValue placeholder="Categoria" />
-              </SelectTrigger>
-              <SelectContent className="dark-bg-secondary dark-border">
-                {categories.map((category) => (
-                  <SelectItem
-                    key={category.id}
-                    value={category.id}
-                    className="dark-text-primary hover:dark-bg-tertiary"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <category.icon size={16} />
-                      <span>{category.name}</span>
-                    </div>
-                  </SelectItem>
+          <TabsContent value="featured" className="mt-6">
+            {featuredCourses.length > 0 ? (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {featuredCourses.map((course) => (
+                  <CourseCard
+                    key={course.id}
+                    course={course}
+                    layout="grid"
+                    variant="catalog"
+                  />
                 ))}
-              </SelectContent>
-            </Select>
+              </div>
+            ) : (
+              <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
+                <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                  <TrendingUp className="dark-text-tertiary" size={24} />
+                </div>
+                <h3 className="dark-text-primary mb-2 font-semibold">
+                  Nenhum curso em destaque
+                </h3>
+                <p className="dark-text-tertiary mb-4 text-sm">
+                  Não há cursos em destaque no momento
+                </p>
+                <Button className="dark-btn-primary">
+                  Ver Todos os Cursos
+                </Button>
+              </div>
+            )}
+          </TabsContent>
 
-            <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-              <SelectTrigger className="dark-input h-12 w-48">
-                <SelectValue placeholder="Nível" />
-              </SelectTrigger>
-              <SelectContent className="dark-bg-secondary dark-border">
-                {levels.map((level) => (
-                  <SelectItem
-                    key={level.id}
-                    value={level.id}
-                    className="dark-text-primary hover:dark-bg-tertiary"
-                  >
-                    {level.name}
-                  </SelectItem>
+          <TabsContent value="enrolled" className="mt-6">
+            {enrolledCourses.length > 0 ? (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {enrolledCourses.map((course) => (
+                  <CourseCard
+                    key={course.id}
+                    course={course}
+                    layout="grid"
+                    variant="catalog"
+                  />
                 ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+              </div>
+            ) : (
+              <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
+                <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                  <Zap className="dark-text-tertiary" size={24} />
+                </div>
+                <h3 className="dark-text-primary mb-2 font-semibold">
+                  Nenhum curso matriculado
+                </h3>
+                <p className="dark-text-tertiary mb-4 text-sm">
+                  Você ainda não se matriculou em nenhum curso
+                </p>
+                <Button className="dark-btn-primary">Explorar Cursos</Button>
+              </div>
+            )}
+          </TabsContent>
 
-        {/* Tabs */}
-        <div className="dark-shadow-sm rounded-xl p-1">
-          <Tabs defaultValue="all" className="w-full">
-            <TabsList className="dark-bg-secondary grid h-12 w-full grid-cols-4">
-              <TabsTrigger
-                value="all"
-                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary"
-              >
-                Todos ({courses.length})
-              </TabsTrigger>
-              <TabsTrigger
-                value="featured"
-                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary"
-              >
-                <TrendingUp size={16} className="mr-2" />
-                Em Destaque ({featuredCourses.length})
-              </TabsTrigger>
-              <TabsTrigger
-                value="enrolled"
-                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary"
-              >
-                <Zap size={16} className="mr-2" />
-                Matriculados ({enrolledCourses.length})
-              </TabsTrigger>
-              <TabsTrigger
-                value="recommended"
-                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary"
-              >
-                <Target size={16} className="mr-2" />
-                Recomendados
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="all" className="mt-6">
-              {filteredCourses.length > 0 ? (
-                viewMode === "grid" ? (
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {filteredCourses.map((course) => (
-                      <DashboardCourseCard
-                        key={course.id}
-                        course={course}
-                        variant="catalog"
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {filteredCourses.map((course) => (
-                      <DashboardCourseListCard
-                        key={course.id}
-                        course={course}
-                      />
-                    ))}
-                  </div>
-                )
-              ) : (
-                <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
-                  <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-                    <Search className="dark-text-tertiary" size={24} />
-                  </div>
-                  <h3 className="dark-text-primary mb-2 font-semibold">
-                    {searchQuery
-                      ? "Nenhum curso encontrado"
-                      : "Nenhum curso disponível"}
-                  </h3>
-                  <p className="dark-text-tertiary mb-4 text-sm">
-                    {searchQuery
-                      ? "Tente ajustar sua busca ou filtros"
-                      : "Não há cursos disponíveis no momento"}
-                  </p>
-                  <Button className="dark-btn-primary">
-                    {searchQuery ? "Limpar Busca" : "Explorar Cursos"}
-                  </Button>
+          <TabsContent value="recommended" className="mt-6">
+            {filteredCourses.length > 0 ? (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {filteredCourses.slice(0, 6).map((course) => (
+                  <CourseCard
+                    key={course.id}
+                    course={course}
+                    layout="grid"
+                    variant="catalog"
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
+                <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                  <Target className="dark-text-tertiary" size={24} />
                 </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="featured" className="mt-6">
-              {featuredCourses.length > 0 ? (
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {featuredCourses.map((course) => (
-                    <DashboardCourseCard
-                      key={course.id}
-                      course={course}
-                      variant="catalog"
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
-                  <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-                    <TrendingUp className="dark-text-tertiary" size={24} />
-                  </div>
-                  <h3 className="dark-text-primary mb-2 font-semibold">
-                    Nenhum curso em destaque
-                  </h3>
-                  <p className="dark-text-tertiary mb-4 text-sm">
-                    Não há cursos em destaque no momento
-                  </p>
-                  <Button className="dark-btn-primary">
-                    Ver Todos os Cursos
-                  </Button>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="enrolled" className="mt-6">
-              {enrolledCourses.length > 0 ? (
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {enrolledCourses.map((course) => (
-                    <DashboardCourseCard
-                      key={course.id}
-                      course={course}
-                      variant="catalog"
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
-                  <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-                    <Zap className="dark-text-tertiary" size={24} />
-                  </div>
-                  <h3 className="dark-text-primary mb-2 font-semibold">
-                    Nenhum curso matriculado
-                  </h3>
-                  <p className="dark-text-tertiary mb-4 text-sm">
-                    Você ainda não se matriculou em nenhum curso
-                  </p>
-                  <Button className="dark-btn-primary">Explorar Cursos</Button>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="recommended" className="mt-6">
-              {filteredCourses.length > 0 ? (
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {filteredCourses.slice(0, 6).map((course) => (
-                    <DashboardCourseCard
-                      key={course.id}
-                      course={course}
-                      variant="catalog"
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
-                  <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-                    <Target className="dark-text-tertiary" size={24} />
-                  </div>
-                  <h3 className="dark-text-primary mb-2 font-semibold">
-                    Nenhuma recomendação
-                  </h3>
-                  <p className="dark-text-tertiary mb-4 text-sm">
-                    Não há cursos recomendados no momento
-                  </p>
-                  <Button className="dark-btn-primary">
-                    Ver Todos os Cursos
-                  </Button>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </div>
+                <h3 className="dark-text-primary mb-2 font-semibold">
+                  Nenhuma recomendação
+                </h3>
+                <p className="dark-text-tertiary mb-4 text-sm">
+                  Não há cursos recomendados no momento
+                </p>
+                <Button className="dark-btn-primary">
+                  Ver Todos os Cursos
+                </Button>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
-    </div>
+    </PageLayout>
   );
 }

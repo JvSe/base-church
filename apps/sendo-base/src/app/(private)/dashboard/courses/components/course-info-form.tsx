@@ -1,5 +1,6 @@
 "use client";
 
+import { FormSection } from "@/src/components/common/forms/form-section";
 import { COURSE_CATEGORIES } from "@/src/lib/constants";
 import { Button } from "@base-church/ui/components/button";
 import {
@@ -20,7 +21,7 @@ import {
   SelectValue,
 } from "@base-church/ui/components/select";
 import { Textarea } from "@base-church/ui/components/textarea";
-import { Plus, Save } from "lucide-react";
+import { BookOpen, Plus, Save } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 
 interface CourseInfoFormProps {
@@ -43,10 +44,7 @@ export function CourseInfoForm({
   onSubmit,
 }: CourseInfoFormProps) {
   return (
-    <div className="dark-glass dark-shadow-sm rounded-xl p-6">
-      <h2 className="dark-text-primary mb-6 text-xl font-bold">
-        Informações do Curso
-      </h2>
+    <FormSection title="Informações do Curso" icon={BookOpen}>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-4">
@@ -301,6 +299,6 @@ export function CourseInfoForm({
           )}
         </form>
       </Form>
-    </div>
+    </FormSection>
   );
 }

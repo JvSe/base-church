@@ -2,9 +2,9 @@
 
 import { prisma } from "@base-church/db";
 import { revalidatePath } from "next/cache";
+import type { NotificationData } from "../types/index";
 
-export interface NotificationData {
-  id: string;
+type CreateNotificationData = {
   userId: string;
   title: string;
   message: string;
@@ -14,42 +14,35 @@ export interface NotificationData {
     | "new_lesson"
     | "community_post"
     | "forum_reply";
-  isRead: boolean;
-  createdAt: Date;
-  actionUrl?: string;
-  metadata?: {
-    courseName?: string;
-    lessonName?: string;
-    userName?: string;
-    communityName?: string;
-  };
-}
+};
 
 // Buscar notificações do usuário
 export async function getUserNotifications(userId: string) {
+  // Guard clause: validar userId
+  if (!userId) {
+    return {
+      success: false,
+      error: "ID do usuário é obrigatório",
+      notifications: [],
+    };
+  }
+
   try {
     const notifications = await prisma.notification.findMany({
-      where: {
-        userId: userId,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
+      where: { userId },
+      orderBy: { createdAt: "desc" },
     });
 
     // Transformar para o formato esperado pelo componente
     const formattedNotifications: NotificationData[] = notifications.map(
       (notification) => ({
         id: notification.id,
-        userId: notification.userId,
+        type: notification.type as NotificationData["type"],
         title: notification.title,
         message: notification.message,
-        type: notification.type as NotificationData["type"],
-        isRead: notification.isRead,
+        read: notification.isRead,
         createdAt: notification.createdAt,
-        // TODO: Adicionar actionUrl e metadata quando necessário
-        actionUrl: undefined,
-        metadata: undefined,
+        actionUrl: (notification as any).actionUrl || null,
       }),
     );
 
@@ -72,23 +65,31 @@ export async function markNotificationAsRead(
   notificationId: string,
   userId: string,
 ) {
+  // Guard clauses
+  if (!notificationId) {
+    return {
+      success: false,
+      error: "ID da notificação é obrigatório",
+    };
+  }
+
+  if (!userId) {
+    return {
+      success: false,
+      error: "ID do usuário é obrigatório",
+    };
+  }
+
   try {
     const notification = await prisma.notification.update({
       where: {
         id: notificationId,
-        userId: userId, // Garantir que o usuário só pode marcar suas próprias notificações
+        userId, // Garantir que o usuário só pode marcar suas próprias notificações
       },
       data: {
         isRead: true,
       },
     });
-
-    if (!notification) {
-      return {
-        success: false,
-        error: "Notificação não encontrada",
-      };
-    }
 
     revalidatePath("/");
     return {
@@ -99,17 +100,25 @@ export async function markNotificationAsRead(
     console.error("Erro ao marcar notificação como lida:", error);
     return {
       success: false,
-      error: "Erro ao marcar notificação como lida",
+      error: "Notificação não encontrada ou erro ao atualizar",
     };
   }
 }
 
 // Marcar todas as notificações como lidas
 export async function markAllNotificationsAsRead(userId: string) {
+  // Guard clause
+  if (!userId) {
+    return {
+      success: false,
+      error: "ID do usuário é obrigatório",
+    };
+  }
+
   try {
     const result = await prisma.notification.updateMany({
       where: {
-        userId: userId,
+        userId,
         isRead: false,
       },
       data: {
@@ -133,11 +142,17 @@ export async function markAllNotificationsAsRead(userId: string) {
 
 // Limpar todas as notificações
 export async function clearAllNotifications(userId: string) {
+  // Guard clause
+  if (!userId) {
+    return {
+      success: false,
+      error: "ID do usuário é obrigatório",
+    };
+  }
+
   try {
     const result = await prisma.notification.deleteMany({
-      where: {
-        userId: userId,
-      },
+      where: { userId },
     });
 
     revalidatePath("/");
@@ -155,17 +170,22 @@ export async function clearAllNotifications(userId: string) {
 }
 
 // Criar nova notificação
-export async function createNotification(data: {
-  userId: string;
-  title: string;
-  message: string;
-  type:
-    | "course_completed"
-    | "certificate_ready"
-    | "new_lesson"
-    | "community_post"
-    | "forum_reply";
-}) {
+export async function createNotification(data: CreateNotificationData) {
+  // Guard clauses
+  if (!data.userId) {
+    return {
+      success: false,
+      error: "ID do usuário é obrigatório",
+    };
+  }
+
+  if (!data.title || !data.message) {
+    return {
+      success: false,
+      error: "Título e mensagem são obrigatórios",
+    };
+  }
+
   try {
     const notification = await prisma.notification.create({
       data: {

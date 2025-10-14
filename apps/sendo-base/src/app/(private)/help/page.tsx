@@ -1,20 +1,23 @@
 "use client";
 
+import { PageHeader } from "@/src/components/common/layout/page-header";
+import { PageLayout } from "@/src/components/common/layout/page-layout";
+import { Section } from "@/src/components/common/layout/section";
 import { Button } from "@base-church/ui/components/button";
 import { Input } from "@base-church/ui/components/input";
 import {
-    BookOpen,
-    ChevronRight,
-    Clock,
-    HelpCircle,
-    Mail,
-    MessageCircle,
-    Phone,
-    Search,
-    Star,
-    ThumbsUp,
-    Users,
-    Video,
+  BookOpen,
+  ChevronRight,
+  Clock,
+  HelpCircle,
+  Mail,
+  MessageCircle,
+  Phone,
+  Search,
+  Star,
+  ThumbsUp,
+  Users,
+  Video,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -127,41 +130,41 @@ export default function AjudaPage() {
   ];
 
   return (
-    <div className="dark-bg-primary min-h-screen">
-      {/* Background Pattern */}
-      <div className="fixed inset-0 opacity-3">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
-      </div>
-
-      <div className="relative mx-auto max-w-7xl space-y-8 p-6">
-        {/* Header */}
-        <div className="dark-glass dark-shadow-md rounded-2xl p-8 text-center">
-          <div className="dark-primary-subtle-bg mx-auto mb-6 w-fit rounded-full p-4">
-            <HelpCircle className="dark-primary" size={48} />
+    <PageLayout spacing="relaxed">
+      <PageHeader
+        title={
+          <div className="text-center">
+            <div className="dark-primary-subtle-bg mx-auto mb-6 w-fit rounded-full p-4">
+              <HelpCircle className="dark-primary" size={48} />
+            </div>
+            <h1 className="dark-text-primary mb-4 text-4xl font-bold">
+              Como podemos ajudar?
+            </h1>
           </div>
-          <h1 className="dark-text-primary mb-4 text-4xl font-bold">
-            Como podemos ajudar?
-          </h1>
-          <p className="dark-text-secondary mx-auto mb-8 max-w-2xl text-lg">
+        }
+        description={
+          <p className="dark-text-secondary mx-auto mb-8 max-w-2xl text-center text-lg">
             Encontre respostas para suas dúvidas ou entre em contato conosco
           </p>
-
-          {/* Search Bar */}
-          <div className="relative mx-auto max-w-md">
-            <Search
-              className="dark-text-tertiary absolute top-1/2 left-4 -translate-y-1/2 transform"
-              size={20}
-            />
-            <Input
-              className="dark-input h-14 pl-12 text-lg"
-              placeholder="Buscar ajuda..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+        }
+      >
+        {/* Search Bar */}
+        <div className="relative mx-auto max-w-md">
+          <Search
+            className="dark-text-tertiary absolute top-1/2 left-4 -translate-y-1/2 transform"
+            size={20}
+          />
+          <Input
+            className="dark-input h-14 pl-12 text-lg"
+            placeholder="Buscar ajuda..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
+      </PageHeader>
 
-        {/* FAQ Categories */}
+      {/* FAQ Categories */}
+      <Section title="Categorias de Ajuda">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           {faqCategories.map((category, index) => (
             <div
@@ -188,106 +191,100 @@ export default function AjudaPage() {
             </div>
           ))}
         </div>
+      </Section>
 
-        {/* Popular Articles */}
-        <div className="dark-glass dark-shadow-md rounded-2xl p-8">
-          <h2 className="dark-text-primary mb-6 text-2xl font-bold">
-            Artigos Populares
-          </h2>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {popularArticles.map((article, index) => (
-              <div
-                key={index}
-                className="dark-bg-secondary hover:dark-bg-tertiary group cursor-pointer rounded-xl p-6 transition-all"
-              >
-                <div className="mb-3 flex items-start justify-between">
-                  <span className="dark-primary-subtle-bg dark-primary rounded-full px-3 py-1 text-xs font-medium">
-                    {article.category}
-                  </span>
-                  <div className="flex items-center gap-1">
-                    <ThumbsUp size={14} className="dark-success" />
-                    <span className="dark-success text-sm font-medium">
-                      {article.helpful}%
-                    </span>
-                  </div>
-                </div>
-                <h3 className="dark-text-primary group-hover:dark-primary mb-2 font-semibold transition-colors">
-                  {article.title}
-                </h3>
-                <p className="dark-text-tertiary text-sm">{article.views}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Support Options */}
-        <div className="dark-glass dark-shadow-md rounded-2xl p-8">
-          <h2 className="dark-text-primary mb-6 text-center text-2xl font-bold">
-            Precisa de mais ajuda?
-          </h2>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            {supportOptions.map((option, index) => (
-              <div
-                key={index}
-                className={`dark-card dark-shadow-sm rounded-xl p-6 text-center ${!option.available && "opacity-60"}`}
-              >
-                <div className="dark-primary-subtle-bg mx-auto mb-4 w-fit rounded-full p-4">
-                  <option.icon className="dark-primary" size={32} />
-                </div>
-                <h3 className="dark-text-primary mb-2 text-lg font-semibold">
-                  {option.title}
-                </h3>
-                <p className="dark-text-secondary mb-4">{option.description}</p>
-                <div className="mb-4 flex items-center justify-center gap-1">
-                  <Clock size={14} className="dark-text-tertiary" />
-                  <span className="dark-text-tertiary text-sm">
-                    {option.responseTime}
+      {/* Popular Articles */}
+      <Section title="Artigos Populares">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {popularArticles.map((article, index) => (
+            <div
+              key={index}
+              className="dark-bg-secondary hover:dark-bg-tertiary group cursor-pointer rounded-xl p-6 transition-all"
+            >
+              <div className="mb-3 flex items-start justify-between">
+                <span className="dark-primary-subtle-bg dark-primary rounded-full px-3 py-1 text-xs font-medium">
+                  {article.category}
+                </span>
+                <div className="flex items-center gap-1">
+                  <ThumbsUp size={14} className="dark-success" />
+                  <span className="dark-success text-sm font-medium">
+                    {article.helpful}%
                   </span>
                 </div>
-                <Button
-                  className={
-                    option.available
-                      ? "dark-btn-primary w-full"
-                      : "dark-text-disabled w-full cursor-not-allowed"
-                  }
-                  disabled={!option.available}
-                >
-                  {option.action}
-                </Button>
               </div>
-            ))}
-          </div>
+              <h3 className="dark-text-primary group-hover:dark-primary mb-2 font-semibold transition-colors">
+                {article.title}
+              </h3>
+              <p className="dark-text-tertiary text-sm">{article.views}</p>
+            </div>
+          ))}
         </div>
+      </Section>
 
-        {/* Quick Stats */}
+      {/* Support Options */}
+      <Section title="Precisa de mais ajuda?">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          <div className="dark-card dark-shadow-sm rounded-xl p-6 text-center">
-            <div className="dark-success-bg mx-auto mb-4 w-fit rounded-full p-4">
-              <Star className="dark-success" size={32} />
+          {supportOptions.map((option, index) => (
+            <div
+              key={index}
+              className={`dark-card dark-shadow-sm rounded-xl p-6 text-center ${!option.available && "opacity-60"}`}
+            >
+              <div className="dark-primary-subtle-bg mx-auto mb-4 w-fit rounded-full p-4">
+                <option.icon className="dark-primary" size={32} />
+              </div>
+              <h3 className="dark-text-primary mb-2 text-lg font-semibold">
+                {option.title}
+              </h3>
+              <p className="dark-text-secondary mb-4">{option.description}</p>
+              <div className="mb-4 flex items-center justify-center gap-1">
+                <Clock size={14} className="dark-text-tertiary" />
+                <span className="dark-text-tertiary text-sm">
+                  {option.responseTime}
+                </span>
+              </div>
+              <Button
+                className={
+                  option.available
+                    ? "dark-btn-primary w-full"
+                    : "dark-text-disabled w-full cursor-not-allowed"
+                }
+                disabled={!option.available}
+              >
+                {option.action}
+              </Button>
             </div>
-            <h3 className="dark-text-primary mb-2 text-2xl font-bold">4.9/5</h3>
-            <p className="dark-text-secondary">Satisfação do suporte</p>
-          </div>
+          ))}
+        </div>
+      </Section>
 
-          <div className="dark-card dark-shadow-sm rounded-xl p-6 text-center">
-            <div className="dark-info-bg mx-auto mb-4 w-fit rounded-full p-4">
-              <MessageCircle className="dark-info" size={32} />
-            </div>
-            <h3 className="dark-text-primary mb-2 text-2xl font-bold">
-              &lt; 2min
-            </h3>
-            <p className="dark-text-secondary">Tempo médio de resposta</p>
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="dark-card dark-shadow-sm rounded-xl p-6 text-center">
+          <div className="dark-success-bg mx-auto mb-4 w-fit rounded-full p-4">
+            <Star className="dark-success" size={32} />
           </div>
+          <h3 className="dark-text-primary mb-2 text-2xl font-bold">4.9/5</h3>
+          <p className="dark-text-secondary">Satisfação do suporte</p>
+        </div>
 
-          <div className="dark-card dark-shadow-sm rounded-xl p-6 text-center">
-            <div className="dark-warning-bg mx-auto mb-4 w-fit rounded-full p-4">
-              <Users className="dark-warning" size={32} />
-            </div>
-            <h3 className="dark-text-primary mb-2 text-2xl font-bold">24/7</h3>
-            <p className="dark-text-secondary">Suporte disponível</p>
+        <div className="dark-card dark-shadow-sm rounded-xl p-6 text-center">
+          <div className="dark-info-bg mx-auto mb-4 w-fit rounded-full p-4">
+            <MessageCircle className="dark-info" size={32} />
           </div>
+          <h3 className="dark-text-primary mb-2 text-2xl font-bold">
+            &lt; 2min
+          </h3>
+          <p className="dark-text-secondary">Tempo médio de resposta</p>
+        </div>
+
+        <div className="dark-card dark-shadow-sm rounded-xl p-6 text-center">
+          <div className="dark-warning-bg mx-auto mb-4 w-fit rounded-full p-4">
+            <Users className="dark-warning" size={32} />
+          </div>
+          <h3 className="dark-text-primary mb-2 text-2xl font-bold">24/7</h3>
+          <p className="dark-text-secondary">Suporte disponível</p>
         </div>
       </div>
-    </div>
+    </PageLayout>
   );
 }

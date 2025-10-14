@@ -1,5 +1,10 @@
 "use client";
 
+import { EmptyState } from "@/src/components/common/feedback/empty-state";
+import { ErrorState } from "@/src/components/common/feedback/error-state";
+import { LoadingState } from "@/src/components/common/feedback/loading-state";
+import { PageHeader } from "@/src/components/common/layout/page-header";
+import { PageLayout } from "@/src/components/common/layout/page-layout";
 import { getForumPosts } from "@/src/lib/actions";
 import { formatDate } from "@/src/lib/formatters";
 import { Button } from "@base-church/ui/components/button";
@@ -151,363 +156,296 @@ export default function ForumPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="dark-bg-primary min-h-screen">
-        <div className="fixed inset-0 opacity-3">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
-        </div>
-        <div className="relative mx-auto max-w-7xl space-y-6 p-6">
-          <div className="dark-glass dark-shadow-md rounded-2xl p-8 text-center">
-            <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-              <MessageCircle className="dark-text-tertiary" size={32} />
-            </div>
-            <h1 className="dark-text-primary mb-2 text-2xl font-bold">
-              Carregando fórum...
-            </h1>
-            <p className="dark-text-secondary">
-              Buscando discussões da comunidade
-            </p>
-          </div>
-        </div>
-      </div>
+      <PageLayout>
+        <LoadingState
+          icon={MessageCircle}
+          title="Carregando fórum..."
+          description="Buscando discussões da comunidade"
+        />
+      </PageLayout>
     );
   }
 
   // Error state
   if (error) {
     return (
-      <div className="dark-bg-primary min-h-screen">
-        <div className="fixed inset-0 opacity-3">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
-        </div>
-        <div className="relative mx-auto max-w-7xl space-y-6 p-6">
-          <div className="dark-glass dark-shadow-md rounded-2xl p-8 text-center">
-            <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-              <MessageCircle className="dark-text-tertiary" size={32} />
-            </div>
-            <h1 className="dark-text-primary mb-2 text-2xl font-bold">
-              Erro ao carregar fórum
-            </h1>
-            <p className="dark-text-secondary mb-4">
-              Não foi possível carregar as discussões. Tente novamente.
-            </p>
-            <Button
-              className="dark-btn-primary"
-              onClick={() => window.location.reload()}
-            >
-              Tentar Novamente
-            </Button>
-          </div>
-        </div>
-      </div>
+      <PageLayout>
+        <ErrorState
+          icon={MessageCircle}
+          title="Erro ao carregar fórum"
+          description="Não foi possível carregar as discussões. Tente novamente."
+          onRetry={() => window.location.reload()}
+        />
+      </PageLayout>
     );
   }
 
   return (
-    <div className="dark-bg-primary min-h-screen">
-      {/* Background Pattern */}
-      <div className="fixed inset-0 opacity-3">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
-      </div>
-
-      <div className="relative mx-auto max-w-7xl space-y-6 p-6">
-        {/* Header */}
-        <div className="dark-glass dark-shadow-md rounded-2xl p-6">
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h1 className="dark-text-primary mb-2 text-3xl font-bold">
-                Fórum Ministerial
-              </h1>
-              <p className="dark-text-secondary">
-                Conecte-se, aprenda e compartilhe experiências ministeriais com
-                nossa comunidade
-              </p>
+    <PageLayout>
+      <PageHeader
+        title="Fórum Ministerial"
+        description="Conecte-se, aprenda e compartilhe experiências ministeriais com nossa comunidade"
+        actions={[
+          {
+            label: "Filtrar",
+            icon: Filter,
+            className: "dark-glass dark-border hover:dark-border-hover",
+          },
+          {
+            label: "Nova Discussão",
+            icon: Plus,
+            variant: "success",
+            onClick: () => setShowCreatePost(true),
+          },
+        ]}
+      >
+        {/* Forum Stats */}
+        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-4">
+          <div className="dark-bg-secondary rounded-lg p-4 text-center">
+            <div className="dark-text-primary mb-1 text-2xl font-bold">
+              {posts.length}
             </div>
-
-            <div className="flex items-center space-x-3">
-              <Button className="dark-glass dark-border hover:dark-border-hover gap-2">
-                <Filter size={16} />
-                Filtrar
-              </Button>
-              <Button
-                onClick={() => setShowCreatePost(true)}
-                variant="success"
-                className="gap-2"
-              >
-                <Plus size={16} />
-                Nova Discussão
-              </Button>
-            </div>
+            <div className="dark-text-tertiary text-sm">Discussões Ativas</div>
           </div>
 
-          {/* Forum Stats */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-            <div className="dark-bg-secondary rounded-lg p-4 text-center">
-              <div className="dark-text-primary mb-1 text-2xl font-bold">
-                {posts.length}
-              </div>
-              <div className="dark-text-tertiary text-sm">
-                Discussões Ativas
-              </div>
+          <div className="dark-bg-secondary rounded-lg p-4 text-center">
+            <div className="dark-text-primary mb-1 text-2xl font-bold">
+              {solvedPosts.length}
             </div>
+            <div className="dark-text-tertiary text-sm">Resolvidas</div>
+          </div>
 
-            <div className="dark-bg-secondary rounded-lg p-4 text-center">
-              <div className="dark-text-primary mb-1 text-2xl font-bold">
-                {solvedPosts.length}
-              </div>
-              <div className="dark-text-tertiary text-sm">Resolvidas</div>
+          <div className="dark-bg-secondary rounded-lg p-4 text-center">
+            <div className="dark-text-primary mb-1 text-2xl font-bold">
+              {posts.reduce((acc, post) => acc + post.comments, 0)}
             </div>
+            <div className="dark-text-tertiary text-sm">Respostas</div>
+          </div>
 
-            <div className="dark-bg-secondary rounded-lg p-4 text-center">
-              <div className="dark-text-primary mb-1 text-2xl font-bold">
-                {posts.reduce((acc, post) => acc + post.comments, 0)}
-              </div>
-              <div className="dark-text-tertiary text-sm">Respostas</div>
+          <div className="dark-bg-secondary rounded-lg p-4 text-center">
+            <div className="dark-text-primary mb-1 text-2xl font-bold">
+              {posts.reduce((acc, post) => acc + post.views, 0)}
             </div>
-
-            <div className="dark-bg-secondary rounded-lg p-4 text-center">
-              <div className="dark-text-primary mb-1 text-2xl font-bold">
-                {posts.reduce((acc, post) => acc + post.views, 0)}
-              </div>
-              <div className="dark-text-tertiary text-sm">Visualizações</div>
-            </div>
+            <div className="dark-text-tertiary text-sm">Visualizações</div>
           </div>
         </div>
+      </PageHeader>
 
-        {/* Search */}
-        <div className="dark-glass dark-shadow-sm rounded-xl p-4">
-          <div className="relative">
-            <Search
-              className="dark-text-tertiary absolute top-1/2 left-4 -translate-y-1/2 transform"
-              size={20}
+      {/* Search */}
+      <div className="dark-glass dark-shadow-sm rounded-xl p-4">
+        <div className="relative">
+          <Search
+            className="dark-text-tertiary absolute top-1/2 left-4 -translate-y-1/2 transform"
+            size={20}
+          />
+          <Input
+            placeholder="Buscar discussões, temas ministeriais ou dúvidas..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="dark-input h-12 pl-12 text-base"
+          />
+        </div>
+      </div>
+
+      {/* Create Post Modal */}
+      {showCreatePost && (
+        <div className="dark-glass dark-shadow-md rounded-2xl p-6">
+          <h2 className="dark-text-primary mb-6 text-xl font-bold">
+            Nova Discussão Ministerial
+          </h2>
+          <div className="space-y-4">
+            <Input
+              placeholder="Título da discussão (ex: Como melhorar o discipulado?)"
+              value={newPost.title}
+              onChange={(e) =>
+                setNewPost({ ...newPost, title: e.target.value })
+              }
+              className="dark-input h-12"
+            />
+            <Textarea
+              placeholder="Compartilhe sua experiência, dúvida ou insight ministerial..."
+              value={newPost.content}
+              onChange={(e) =>
+                setNewPost({ ...newPost, content: e.target.value })
+              }
+              rows={6}
+              className="dark-input resize-none"
             />
             <Input
-              placeholder="Buscar discussões, temas ministeriais ou dúvidas..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="dark-input h-12 pl-12 text-base"
+              placeholder="Categoria (Células, Discipulado, Cultos, etc.)"
+              value={newPost.category}
+              onChange={(e) =>
+                setNewPost({ ...newPost, category: e.target.value })
+              }
+              className="dark-input h-12"
             />
-          </div>
-        </div>
-
-        {/* Create Post Modal */}
-        {showCreatePost && (
-          <div className="dark-glass dark-shadow-md rounded-2xl p-6">
-            <h2 className="dark-text-primary mb-6 text-xl font-bold">
-              Nova Discussão Ministerial
-            </h2>
-            <div className="space-y-4">
-              <Input
-                placeholder="Título da discussão (ex: Como melhorar o discipulado?)"
-                value={newPost.title}
-                onChange={(e) =>
-                  setNewPost({ ...newPost, title: e.target.value })
-                }
-                className="dark-input h-12"
-              />
-              <Textarea
-                placeholder="Compartilhe sua experiência, dúvida ou insight ministerial..."
-                value={newPost.content}
-                onChange={(e) =>
-                  setNewPost({ ...newPost, content: e.target.value })
-                }
-                rows={6}
-                className="dark-input resize-none"
-              />
-              <Input
-                placeholder="Categoria (Células, Discipulado, Cultos, etc.)"
-                value={newPost.category}
-                onChange={(e) =>
-                  setNewPost({ ...newPost, category: e.target.value })
-                }
-                className="dark-input h-12"
-              />
-              <div className="flex justify-end space-x-3">
-                <Button
-                  onClick={() => setShowCreatePost(false)}
-                  className="dark-glass dark-border hover:dark-border-hover"
-                >
-                  Cancelar
-                </Button>
-                <Button onClick={handleCreatePost} className="dark-btn-primary">
-                  Publicar Discussão
-                </Button>
-              </div>
+            <div className="flex justify-end space-x-3">
+              <Button
+                onClick={() => setShowCreatePost(false)}
+                className="dark-glass dark-border hover:dark-border-hover"
+              >
+                Cancelar
+              </Button>
+              <Button onClick={handleCreatePost} className="dark-btn-primary">
+                Publicar Discussão
+              </Button>
             </div>
           </div>
-        )}
-
-        {/* Tabs */}
-        <div className="dark-shadow-sm rounded-xl p-1">
-          <Tabs defaultValue="all" className="w-full">
-            <TabsList className="dark-bg-secondary grid h-12 w-full grid-cols-5">
-              <TabsTrigger
-                value="all"
-                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
-              >
-                Todas ({filteredPosts.length})
-              </TabsTrigger>
-              <TabsTrigger
-                value="trending"
-                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
-              >
-                <TrendingUp size={14} className="mr-1" />
-                Em Alta
-              </TabsTrigger>
-              <TabsTrigger
-                value="recent"
-                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
-              >
-                <Clock size={14} className="mr-1" />
-                Recentes
-              </TabsTrigger>
-              <TabsTrigger
-                value="solved"
-                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
-              >
-                <MessageCircle size={14} className="mr-1" />
-                Resolvidas ({solvedPosts.length})
-              </TabsTrigger>
-              <TabsTrigger
-                value="unsolved"
-                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
-              >
-                <Users size={14} className="mr-1" />
-                Abertas ({unsolvedPosts.length})
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="all" className="mt-6">
-              {filteredPosts.length > 0 ? (
-                <div className="space-y-4">
-                  {filteredPosts.map((post) => (
-                    <PostCard key={post.id} post={post} />
-                  ))}
-                </div>
-              ) : (
-                <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
-                  <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-                    <MessageCircle className="dark-text-tertiary" size={24} />
-                  </div>
-                  <h3 className="dark-text-primary mb-2 font-semibold">
-                    {searchQuery
-                      ? "Nenhuma discussão encontrada"
-                      : "Nenhuma discussão disponível"}
-                  </h3>
-                  <p className="dark-text-tertiary mb-4 text-sm">
-                    {searchQuery
-                      ? "Tente ajustar sua busca"
-                      : "Não há discussões no momento"}
-                  </p>
-                  <Button className="dark-btn-primary">
-                    {searchQuery ? "Limpar Busca" : "Iniciar Discussão"}
-                  </Button>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="trending" className="mt-6">
-              {trendingPosts.length > 0 ? (
-                <div className="space-y-4">
-                  {trendingPosts.map((post) => (
-                    <PostCard key={post.id} post={post} />
-                  ))}
-                </div>
-              ) : (
-                <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
-                  <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-                    <TrendingUp className="dark-text-tertiary" size={24} />
-                  </div>
-                  <h3 className="dark-text-primary mb-2 font-semibold">
-                    Nenhuma discussão em alta
-                  </h3>
-                  <p className="dark-text-tertiary mb-4 text-sm">
-                    Não há discussões populares no momento
-                  </p>
-                  <Button className="dark-btn-primary">
-                    Ver Todas as Discussões
-                  </Button>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="recent" className="mt-6">
-              {recentPosts.length > 0 ? (
-                <div className="space-y-4">
-                  {recentPosts.map((post) => (
-                    <PostCard key={post.id} post={post} />
-                  ))}
-                </div>
-              ) : (
-                <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
-                  <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-                    <Clock className="dark-text-tertiary" size={24} />
-                  </div>
-                  <h3 className="dark-text-primary mb-2 font-semibold">
-                    Nenhuma discussão recente
-                  </h3>
-                  <p className="dark-text-tertiary mb-4 text-sm">
-                    Não há discussões recentes no momento
-                  </p>
-                  <Button className="dark-btn-primary">
-                    Iniciar Discussão
-                  </Button>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="solved" className="mt-6">
-              {solvedPosts.length > 0 ? (
-                <div className="space-y-4">
-                  {solvedPosts.map((post) => (
-                    <PostCard key={post.id} post={post} />
-                  ))}
-                </div>
-              ) : (
-                <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
-                  <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-                    <MessageCircle className="dark-text-tertiary" size={24} />
-                  </div>
-                  <h3 className="dark-text-primary mb-2 font-semibold">
-                    Nenhuma discussão resolvida
-                  </h3>
-                  <p className="dark-text-tertiary mb-4 text-sm">
-                    Não há discussões resolvidas no momento
-                  </p>
-                  <Button className="dark-btn-primary">
-                    Ver Todas as Discussões
-                  </Button>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="unsolved" className="mt-6">
-              {unsolvedPosts.length > 0 ? (
-                <div className="space-y-4">
-                  {unsolvedPosts.map((post) => (
-                    <PostCard key={post.id} post={post} />
-                  ))}
-                </div>
-              ) : (
-                <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
-                  <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-                    <Users className="dark-text-tertiary" size={24} />
-                  </div>
-                  <h3 className="dark-text-primary mb-2 font-semibold">
-                    Nenhuma discussão aberta
-                  </h3>
-                  <p className="dark-text-tertiary mb-4 text-sm">
-                    Todas as discussões foram resolvidas!
-                  </p>
-                  <Button className="dark-btn-primary">
-                    Iniciar Nova Discussão
-                  </Button>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
         </div>
+      )}
+
+      {/* Tabs */}
+      <div className="dark-shadow-sm rounded-xl p-1">
+        <Tabs defaultValue="all" className="w-full">
+          <TabsList className="dark-bg-secondary grid h-12 w-full grid-cols-5">
+            <TabsTrigger
+              value="all"
+              className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+            >
+              Todas ({filteredPosts.length})
+            </TabsTrigger>
+            <TabsTrigger
+              value="trending"
+              className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+            >
+              <TrendingUp size={14} className="mr-1" />
+              Em Alta
+            </TabsTrigger>
+            <TabsTrigger
+              value="recent"
+              className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+            >
+              <Clock size={14} className="mr-1" />
+              Recentes
+            </TabsTrigger>
+            <TabsTrigger
+              value="solved"
+              className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+            >
+              <MessageCircle size={14} className="mr-1" />
+              Resolvidas ({solvedPosts.length})
+            </TabsTrigger>
+            <TabsTrigger
+              value="unsolved"
+              className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+            >
+              <Users size={14} className="mr-1" />
+              Abertas ({unsolvedPosts.length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="all" className="mt-6">
+            {filteredPosts.length > 0 ? (
+              <div className="space-y-4">
+                {filteredPosts.map((post) => (
+                  <PostCard key={post.id} post={post} />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                icon={MessageCircle}
+                title={
+                  searchQuery
+                    ? "Nenhuma discussão encontrada"
+                    : "Nenhuma discussão disponível"
+                }
+                description={
+                  searchQuery
+                    ? "Tente ajustar sua busca"
+                    : "Não há discussões no momento"
+                }
+                action={{
+                  label: searchQuery ? "Limpar Busca" : "Iniciar Discussão",
+                  onClick: searchQuery
+                    ? () => setSearchQuery("")
+                    : () => setShowCreatePost(true),
+                }}
+              />
+            )}
+          </TabsContent>
+
+          <TabsContent value="trending" className="mt-6">
+            {trendingPosts.length > 0 ? (
+              <div className="space-y-4">
+                {trendingPosts.map((post) => (
+                  <PostCard key={post.id} post={post} />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                icon={TrendingUp}
+                title="Nenhuma discussão em alta"
+                description="Não há discussões populares no momento"
+                action={{
+                  label: "Ver Todas as Discussões",
+                  onClick: () => {},
+                }}
+              />
+            )}
+          </TabsContent>
+
+          <TabsContent value="recent" className="mt-6">
+            {recentPosts.length > 0 ? (
+              <div className="space-y-4">
+                {recentPosts.map((post) => (
+                  <PostCard key={post.id} post={post} />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                icon={Clock}
+                title="Nenhuma discussão recente"
+                description="Não há discussões recentes no momento"
+                action={{
+                  label: "Iniciar Discussão",
+                  onClick: () => setShowCreatePost(true),
+                }}
+              />
+            )}
+          </TabsContent>
+
+          <TabsContent value="solved" className="mt-6">
+            {solvedPosts.length > 0 ? (
+              <div className="space-y-4">
+                {solvedPosts.map((post) => (
+                  <PostCard key={post.id} post={post} />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                icon={MessageCircle}
+                title="Nenhuma discussão resolvida"
+                description="Não há discussões resolvidas no momento"
+                action={{
+                  label: "Ver Todas as Discussões",
+                  onClick: () => {},
+                }}
+              />
+            )}
+          </TabsContent>
+
+          <TabsContent value="unsolved" className="mt-6">
+            {unsolvedPosts.length > 0 ? (
+              <div className="space-y-4">
+                {unsolvedPosts.map((post) => (
+                  <PostCard key={post.id} post={post} />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                icon={Users}
+                title="Nenhuma discussão aberta"
+                description="Todas as discussões foram resolvidas!"
+                action={{
+                  label: "Iniciar Nova Discussão",
+                  onClick: () => setShowCreatePost(true),
+                }}
+              />
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
-    </div>
+    </PageLayout>
   );
 }
 
