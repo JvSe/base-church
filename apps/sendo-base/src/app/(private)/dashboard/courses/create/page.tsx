@@ -11,7 +11,6 @@ import {
 } from "@/src/lib/actions";
 import { createCertificateTemplate } from "@/src/lib/actions/certificate";
 import { extractYouTubeEmbedId } from "@/src/lib/helpers/youtube";
-import { SubjectiveAnswerType } from "@base-church/db/src";
 import {
   Accordion,
   AccordionContent,
@@ -84,23 +83,6 @@ const lessonSchema = z.object({
   isActivity: z.boolean().optional(),
 });
 
-const questionSchema = z.object({
-  questionText: z.string().min(1, "Texto da questão é obrigatório"),
-  points: z.number().min(1, "Pontuação deve ser maior que 0").optional(),
-  explanation: z.string().optional(),
-  type: z.enum(["objective", "subjective"]),
-  subjectiveAnswerType: z.enum(["text", "file"]).optional(),
-  correctAnswer: z.string().optional(),
-  options: z
-    .array(
-      z.object({
-        optionText: z.string().min(1, "Texto da opção é obrigatório"),
-        isCorrect: z.boolean(),
-      }),
-    )
-    .optional(),
-});
-
 const certificateTemplateSchema = z.object({
   title: z.string().min(1, "Título do certificado é obrigatório"),
   description: z.string().min(1, "Descrição do certificado é obrigatória"),
@@ -110,7 +92,6 @@ const certificateTemplateSchema = z.object({
 type CourseFormData = z.infer<typeof courseSchema>;
 type ModuleFormData = z.infer<typeof moduleSchema>;
 type LessonFormData = z.infer<typeof lessonSchema>;
-type QuestionFormData = z.infer<typeof questionSchema>;
 type CertificateTemplateFormData = z.infer<typeof certificateTemplateSchema>;
 
 interface Module {
@@ -171,15 +152,6 @@ export default function CreateCoursePage() {
     moduleIndex: number;
     lessonIndex: number;
   } | null>(null);
-  const [questionType, setQuestionType] = useState<"objective" | "subjective">(
-    "objective",
-  );
-  const [questionOptions, setQuestionOptions] = useState<
-    { optionText: string; isCorrect: boolean }[]
-  >([
-    { optionText: "", isCorrect: false },
-    { optionText: "", isCorrect: false },
-  ]);
   const router = useRouter();
 
   // Buscar líderes para o campo de instrutor
@@ -227,20 +199,6 @@ export default function CreateCoursePage() {
     },
   });
 
-  // Formulário de questões
-  const questionForm = useForm<QuestionFormData>({
-    resolver: zodResolver(questionSchema),
-    defaultValues: {
-      questionText: "",
-      points: 10,
-      explanation: "",
-      type: "objective",
-      subjectiveAnswerType: "text",
-      correctAnswer: "",
-      options: [],
-    },
-  });
-
   // Formulário do template de certificado
   const certificateTemplateForm = useForm<CertificateTemplateFormData>({
     resolver: zodResolver(certificateTemplateSchema),
@@ -252,10 +210,6 @@ export default function CreateCoursePage() {
 
   // Watch lesson type for conditional fields
   const selectedLessonType = lessonForm.watch("type");
-  const selectedQuestionType = questionForm.watch("type");
-  const selectedSubjectiveAnswerType = questionForm.watch(
-    "subjectiveAnswerType",
-  );
 
   // Watch course title to auto-generate certificate title
   const courseTitle = courseForm.watch("title");
@@ -473,141 +427,6 @@ export default function CreateCoursePage() {
       }
     } catch (error) {
       toast.error("Erro ao criar lição");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Adicionar questão objetiva
-  const handleAddObjectiveQuestion = async (
-    moduleIndex: number,
-    lessonIndex: number,
-  ) => {
-    const module = modules[moduleIndex];
-    const lesson = module?.lessons[lessonIndex];
-
-    if (!lesson || !lesson.id) {
-      toast.error("Lição não encontrada");
-      return;
-    }
-
-    // Validar opções
-    if (questionOptions.length < 2) {
-      toast.error("Adicione pelo menos 2 opções");
-      return;
-    }
-
-    const hasCorrectAnswer = questionOptions.some((opt) => opt.isCorrect);
-    if (!hasCorrectAnswer) {
-      toast.error("Marque pelo menos uma opção como correta");
-      return;
-    }
-
-    const data = questionForm.getValues();
-    setIsLoading(true);
-
-    try {
-      const result = await createObjectiveQuestion({
-        lessonId: lesson.id,
-        questionText: data.questionText,
-        points: data.points || 10,
-        order: (lesson.questions?.length || 0) + 1,
-        explanation: data.explanation,
-        options: questionOptions.map((opt, idx) => ({
-          ...opt,
-          order: idx + 1,
-        })),
-      });
-
-      if (result.success && result.question) {
-        const updatedModules = [...modules];
-        if (!updatedModules[moduleIndex]?.lessons[lessonIndex]?.questions) {
-          updatedModules[moduleIndex]!.lessons[lessonIndex]!.questions = [];
-        }
-
-        updatedModules[moduleIndex]?.lessons[lessonIndex]?.questions!.push({
-          id: result.question.id,
-          questionText: data.questionText,
-          points: data.points || 10,
-          order: (lesson.questions?.length || 0) + 1,
-          explanation: data.explanation,
-          type: "objective",
-          options: questionOptions.map((opt, idx) => ({
-            optionText: opt.optionText,
-            isCorrect: opt.isCorrect,
-            order: idx + 1,
-          })),
-        });
-
-        setModules(updatedModules);
-        questionForm.reset();
-        setQuestionOptions([
-          { optionText: "", isCorrect: false },
-          { optionText: "", isCorrect: false },
-        ]);
-        toast.success("Questão objetiva adicionada!");
-      } else {
-        toast.error(result.error || "Erro ao criar questão");
-      }
-    } catch (error) {
-      toast.error("Erro ao criar questão");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Adicionar questão subjetiva
-  const handleAddSubjectiveQuestion = async (
-    moduleIndex: number,
-    lessonIndex: number,
-  ) => {
-    const module = modules[moduleIndex];
-    const lesson = module?.lessons[lessonIndex];
-
-    if (!lesson || !lesson.id) {
-      toast.error("Lição não encontrada");
-      return;
-    }
-
-    const data = questionForm.getValues();
-    setIsLoading(true);
-
-    try {
-      const result = await createSubjectiveQuestion({
-        lessonId: lesson.id,
-        questionText: data.questionText,
-        points: data.points || 10,
-        order: (lesson.questions?.length || 0) + 1,
-        explanation: data.explanation,
-        subjectiveAnswerType: data.subjectiveAnswerType as SubjectiveAnswerType,
-        correctAnswer: data.correctAnswer,
-      });
-
-      if (result.success && result.question) {
-        const updatedModules = [...modules];
-        if (!updatedModules[moduleIndex]?.lessons[lessonIndex]?.questions) {
-          updatedModules[moduleIndex]!.lessons[lessonIndex]!.questions = [];
-        }
-
-        updatedModules[moduleIndex]?.lessons[lessonIndex]?.questions!.push({
-          id: result.question.id,
-          questionText: data.questionText,
-          points: data.points || 10,
-          order: (lesson.questions?.length || 0) + 1,
-          explanation: data.explanation,
-          type: "subjective",
-          subjectiveAnswerType: data.subjectiveAnswerType,
-          correctAnswer: data.correctAnswer,
-        });
-
-        setModules(updatedModules);
-        questionForm.reset();
-        toast.success("Questão subjetiva adicionada!");
-      } else {
-        toast.error(result.error || "Erro ao criar questão");
-      }
-    } catch (error) {
-      toast.error("Erro ao criar questão");
     } finally {
       setIsLoading(false);
     }
@@ -1116,99 +935,119 @@ export default function CreateCoursePage() {
                                             showQuestionForm.moduleIndex ===
                                               moduleIndex &&
                                             showQuestionForm.lessonIndex ===
-                                              lessonIndex && (
+                                              lessonIndex &&
+                                            lesson.id && (
                                               <QuestionForm
-                                                form={questionForm}
-                                                isLoading={isLoading}
-                                                questionType={questionType}
-                                                subjectiveAnswerType={
-                                                  selectedSubjectiveAnswerType ||
-                                                  "text"
+                                                currentQuestionsCount={
+                                                  lesson.questions?.length || 0
                                                 }
-                                                questionOptions={
-                                                  questionOptions
-                                                }
-                                                onQuestionTypeChange={
-                                                  setQuestionType
-                                                }
-                                                onSubjectiveAnswerTypeChange={(
-                                                  type,
-                                                ) => {
-                                                  questionForm.setValue(
-                                                    "subjectiveAnswerType",
-                                                    type,
-                                                  );
-                                                }}
-                                                onAddOption={() => {
-                                                  setQuestionOptions([
-                                                    ...questionOptions,
-                                                    {
-                                                      optionText: "",
-                                                      isCorrect: false,
-                                                    },
-                                                  ]);
-                                                }}
-                                                onRemoveOption={(index) => {
-                                                  setQuestionOptions(
-                                                    questionOptions.filter(
-                                                      (_, i) => i !== index,
-                                                    ),
-                                                  );
-                                                }}
-                                                onOptionTextChange={(
-                                                  index,
-                                                  text,
-                                                ) => {
-                                                  const updated = [
-                                                    ...questionOptions,
-                                                  ];
-                                                  if (updated[index]) {
-                                                    updated[index].optionText =
-                                                      text;
-                                                    setQuestionOptions(updated);
-                                                  }
-                                                }}
-                                                onOptionCorrectChange={(
-                                                  index,
-                                                  isCorrect,
-                                                ) => {
-                                                  const updated = [
-                                                    ...questionOptions,
-                                                  ];
-                                                  if (updated[index]) {
-                                                    updated[index].isCorrect =
-                                                      isCorrect;
-                                                    setQuestionOptions(updated);
-                                                  }
-                                                }}
-                                                onSubmit={() => {
-                                                  if (
-                                                    questionType === "objective"
-                                                  ) {
-                                                    handleAddObjectiveQuestion(
-                                                      moduleIndex,
-                                                      lessonIndex,
+                                                onSuccess={async (question) => {
+                                                  // Verificar se a lição tem ID
+                                                  if (!lesson.id) {
+                                                    toast.error(
+                                                      "Lição precisa ser criada primeiro",
                                                     );
-                                                  } else {
-                                                    handleAddSubjectiveQuestion(
-                                                      moduleIndex,
-                                                      lessonIndex,
+                                                    return;
+                                                  }
+
+                                                  // Criar a questão no banco
+                                                  setIsLoading(true);
+                                                  try {
+                                                    let result;
+                                                    if (
+                                                      question.type ===
+                                                      "objective"
+                                                    ) {
+                                                      result =
+                                                        await createObjectiveQuestion(
+                                                          {
+                                                            lessonId: lesson.id,
+                                                            questionText:
+                                                              question.questionText,
+                                                            points:
+                                                              question.points,
+                                                            order:
+                                                              question.order,
+                                                            explanation:
+                                                              question.explanation,
+                                                            options:
+                                                              question.options ||
+                                                              [],
+                                                          },
+                                                        );
+                                                    } else {
+                                                      result =
+                                                        await createSubjectiveQuestion(
+                                                          {
+                                                            lessonId: lesson.id,
+                                                            questionText:
+                                                              question.questionText,
+                                                            points:
+                                                              question.points,
+                                                            order:
+                                                              question.order,
+                                                            explanation:
+                                                              question.explanation,
+                                                            subjectiveAnswerType:
+                                                              question.subjectiveAnswerType as
+                                                                | "TEXT"
+                                                                | "FILE",
+                                                            correctAnswer:
+                                                              question.correctAnswer,
+                                                          },
+                                                        );
+                                                    }
+
+                                                    if (
+                                                      result.success &&
+                                                      result.question
+                                                    ) {
+                                                      // Atualizar o estado local com a questão criada
+                                                      const updatedModules = [
+                                                        ...modules,
+                                                      ];
+                                                      if (
+                                                        !updatedModules[
+                                                          moduleIndex
+                                                        ]?.lessons[lessonIndex]
+                                                          ?.questions
+                                                      ) {
+                                                        updatedModules[
+                                                          moduleIndex
+                                                        ]!.lessons[
+                                                          lessonIndex
+                                                        ]!.questions = [];
+                                                      }
+
+                                                      updatedModules[
+                                                        moduleIndex
+                                                      ]?.lessons[
+                                                        lessonIndex
+                                                      ]?.questions!.push({
+                                                        ...question,
+                                                        id: result.question.id,
+                                                      });
+
+                                                      setModules(
+                                                        updatedModules,
+                                                      );
+                                                      setShowQuestionForm(null);
+                                                    } else {
+                                                      toast.error(
+                                                        result.error ||
+                                                          "Erro ao criar questão no banco",
+                                                      );
+                                                    }
+                                                  } catch (error) {
+                                                    toast.error(
+                                                      "Erro ao criar questão",
                                                     );
+                                                  } finally {
+                                                    setIsLoading(false);
                                                   }
                                                 }}
                                                 onCancel={() => {
                                                   setShowQuestionForm(null);
-                                                  questionForm.reset();
-                                                  setQuestionOptions([
-                                                    {
-                                                      optionText: "",
-                                                      isCorrect: false,
-                                                    },
-                                                    {
-                                                      optionText: "",
-                                                      isCorrect: false,
-                                                    },
-                                                  ]);
                                                 }}
                                               />
                                             )}

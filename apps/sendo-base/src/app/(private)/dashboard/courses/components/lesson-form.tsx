@@ -18,12 +18,10 @@ import {
   SelectValue,
 } from "@base-church/ui/components/select";
 import { Textarea } from "@base-church/ui/components/textarea";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle, Edit, FileText, Plus, Upload, Video } from "lucide-react";
 import { useState } from "react";
-import { useForm, UseFormReturn } from "react-hook-form";
+import { UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
 import { QuestionForm } from "./question-form";
 import { QuestionList } from "./question-list";
 
@@ -44,26 +42,6 @@ interface Question {
   }[];
 }
 
-// Schema de validação para questões
-const questionSchema = z.object({
-  questionText: z.string().min(1, "Texto da questão é obrigatório"),
-  points: z.number().min(1, "Pontuação deve ser maior que 0").optional(),
-  explanation: z.string().optional(),
-  type: z.enum(["objective", "subjective"]),
-  subjectiveAnswerType: z.enum(["text", "file"]).optional(),
-  correctAnswer: z.string().optional(),
-  options: z
-    .array(
-      z.object({
-        optionText: z.string().min(1, "Texto da opção é obrigatório"),
-        isCorrect: z.boolean(),
-      }),
-    )
-    .optional(),
-});
-
-type QuestionFormData = z.infer<typeof questionSchema>;
-
 interface LessonFormProps {
   form: UseFormReturn<any>;
   isLoading: boolean;
@@ -80,99 +58,15 @@ export function LessonForm({
   // Estados internos para gerenciar questões
   const [questions, setQuestions] = useState<Question[]>([]);
   const [showQuestionForm, setShowQuestionForm] = useState(false);
-  const [questionType, setQuestionType] = useState<"objective" | "subjective">(
-    "objective",
-  );
-  const [questionOptions, setQuestionOptions] = useState<
-    { optionText: string; isCorrect: boolean }[]
-  >([
-    { optionText: "", isCorrect: false },
-    { optionText: "", isCorrect: false },
-  ]);
-
-  // Formulário de questões
-  const questionForm = useForm<QuestionFormData>({
-    resolver: zodResolver(questionSchema),
-    defaultValues: {
-      questionText: "",
-      points: 10,
-      explanation: "",
-      type: "objective",
-      subjectiveAnswerType: "text",
-      correctAnswer: "",
-      options: [],
-    },
-  });
 
   // Watchers
   const selectedLessonType = form.watch("type");
-  const selectedQuestionType = questionForm.watch("type");
-  const selectedSubjectiveAnswerType = questionForm.watch(
-    "subjectiveAnswerType",
-  );
 
   const isActivity =
     selectedLessonType === "objective_quiz" ||
     selectedLessonType === "subjective_quiz";
 
   // Handlers de questões
-  const handleAddQuestion = () => {
-    const data = questionForm.getValues();
-
-    if (questionType === "objective") {
-      // Validar opções
-      if (questionOptions.length < 2) {
-        toast.error("Adicione pelo menos 2 opções");
-        return;
-      }
-
-      const hasCorrectAnswer = questionOptions.some((opt) => opt.isCorrect);
-      if (!hasCorrectAnswer) {
-        toast.error("Marque pelo menos uma opção como correta");
-        return;
-      }
-
-      // Adicionar questão objetiva
-      const newQuestion: Question = {
-        questionText: data.questionText,
-        points: data.points || 10,
-        order: questions.length + 1,
-        explanation: data.explanation,
-        type: "objective",
-        options: questionOptions.map((opt, idx) => ({
-          optionText: opt.optionText,
-          isCorrect: opt.isCorrect,
-          order: idx + 1,
-        })),
-      };
-
-      setQuestions([...questions, newQuestion]);
-      toast.success("Questão objetiva adicionada!");
-    } else {
-      // Adicionar questão subjetiva
-      const newQuestion: Question = {
-        questionText: data.questionText,
-        points: data.points || 10,
-        order: questions.length + 1,
-        explanation: data.explanation,
-        type: "subjective",
-        subjectiveAnswerType: data.subjectiveAnswerType,
-        correctAnswer: data.correctAnswer,
-      };
-
-      setQuestions([...questions, newQuestion]);
-      toast.success("Questão subjetiva adicionada!");
-    }
-
-    // Resetar formulário
-    questionForm.reset();
-    setQuestionOptions([
-      { optionText: "", isCorrect: false },
-      { optionText: "", isCorrect: false },
-    ]);
-    setShowQuestionForm(false);
-  };
-
   const handleDeleteQuestion = (index: number) => {
     setQuestions(questions.filter((_, i) => i !== index));
     toast.success("Questão removida!");
@@ -180,10 +74,10 @@ export function LessonForm({
 
   const handleSubmitLesson = (data: any) => {
     // Validar se é atividade e não tem questões
-    if (isActivity && questions.length === 0) {
-      toast.error("Adicione pelo menos uma questão para esta atividade!");
-      return;
-    }
+    // if (isActivity && questions.length === 0) {
+    //   toast.error("Adicione pelo menos uma questão para esta atividade!");
+    //   return;
+    // }
 
     // Chamar o callback com os dados da lição e as questões
     onSubmit(data, questions);
@@ -193,11 +87,6 @@ export function LessonForm({
     // Limpar questões ao cancelar
     setQuestions([]);
     setShowQuestionForm(false);
-    questionForm.reset();
-    setQuestionOptions([
-      { optionText: "", isCorrect: false },
-      { optionText: "", isCorrect: false },
-    ]);
     onCancel();
   };
   return (
@@ -294,25 +183,25 @@ export function LessonForm({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="video">
+                    <SelectItem value="VIDEO">
                       <div className="flex items-center space-x-2">
                         <Video className="h-4 w-4" />
                         <span>Vídeo</span>
                       </div>
                     </SelectItem>
-                    <SelectItem value="text">
+                    <SelectItem value="TEXT">
                       <div className="flex items-center space-x-2">
                         <FileText className="h-4 w-4" />
                         <span>Texto/Leitura</span>
                       </div>
                     </SelectItem>
-                    <SelectItem value="objective_quiz">
+                    <SelectItem value="OBJECTIVE_QUIZ">
                       <div className="flex items-center space-x-2">
                         <CheckCircle className="h-4 w-4" />
                         <span>Atividade Objetiva (Múltipla Escolha)</span>
                       </div>
                     </SelectItem>
-                    <SelectItem value="subjective_quiz">
+                    <SelectItem value="SUBJECTIVE_QUIZ">
                       <div className="flex items-center space-x-2">
                         <Edit className="h-4 w-4" />
                         <span>Atividade Subjetiva (Dissertativa)</span>
@@ -418,50 +307,13 @@ export function LessonForm({
                 {showQuestionForm && (
                   <div className="mb-6">
                     <QuestionForm
-                      form={questionForm}
-                      isLoading={isLoading}
-                      questionType={questionType}
-                      subjectiveAnswerType={
-                        selectedSubjectiveAnswerType || "text"
-                      }
-                      questionOptions={questionOptions}
-                      onQuestionTypeChange={setQuestionType}
-                      onSubjectiveAnswerTypeChange={(type) => {
-                        questionForm.setValue("subjectiveAnswerType", type);
+                      currentQuestionsCount={questions.length}
+                      onSuccess={(question) => {
+                        setQuestions([...questions, question]);
+                        setShowQuestionForm(false);
                       }}
-                      onAddOption={() => {
-                        setQuestionOptions([
-                          ...questionOptions,
-                          { optionText: "", isCorrect: false },
-                        ]);
-                      }}
-                      onRemoveOption={(index) => {
-                        setQuestionOptions(
-                          questionOptions.filter((_, i) => i !== index),
-                        );
-                      }}
-                      onOptionTextChange={(index, text) => {
-                        const updated = [...questionOptions];
-                        if (updated[index]) {
-                          updated[index].optionText = text;
-                          setQuestionOptions(updated);
-                        }
-                      }}
-                      onOptionCorrectChange={(index, isCorrect) => {
-                        const updated = [...questionOptions];
-                        if (updated[index]) {
-                          updated[index].isCorrect = isCorrect;
-                          setQuestionOptions(updated);
-                        }
-                      }}
-                      onSubmit={handleAddQuestion}
                       onCancel={() => {
                         setShowQuestionForm(false);
-                        questionForm.reset();
-                        setQuestionOptions([
-                          { optionText: "", isCorrect: false },
-                          { optionText: "", isCorrect: false },
-                        ]);
                       }}
                     />
                   </div>

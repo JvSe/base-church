@@ -691,7 +691,7 @@ export async function updateLesson(
     youtubeEmbedId?: string;
     duration: number;
     order: number;
-    type: string;
+    type: "VIDEO" | "TEXT" | "OBJECTIVE_QUIZ" | "SUBJECTIVE_QUIZ";
   },
 ) {
   try {
@@ -725,7 +725,7 @@ export async function updateLesson(
       message: "Lição atualizada com sucesso",
     };
   } catch (error) {
-    console.error("Update lesson error:", error);
+    console.error("Update lesson error:", JSON.stringify(error, null, 2));
     return { success: false, error: "Erro interno do servidor" };
   }
 }
