@@ -4,12 +4,14 @@ import {
   createCourse,
   createLesson,
   createModule,
+  createObjectiveQuestion,
+  createSubjectiveQuestion,
   getLeaders,
   updateCourseStatus,
 } from "@/src/lib/actions";
 import { createCertificateTemplate } from "@/src/lib/actions/certificate";
-import { COURSE_CATEGORIES } from "@/src/lib/constants";
 import { extractYouTubeEmbedId } from "@/src/lib/helpers/youtube";
+import { SubjectiveAnswerType } from "@base-church/db/src";
 import {
   Accordion,
   AccordionContent,
@@ -17,28 +19,9 @@ import {
   AccordionTrigger,
 } from "@base-church/ui/components/accordion";
 import { Button } from "@base-church/ui/components/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@base-church/ui/components/form";
-import { Input } from "@base-church/ui/components/input";
-import { MoneyInput } from "@base-church/ui/components/money-input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@base-church/ui/components/select";
-import { Textarea } from "@base-church/ui/components/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import {
-  ArrowLeft,
   Award,
   BookOpen,
   CheckCircle,
@@ -48,14 +31,21 @@ import {
   Play,
   Plus,
   Trash2,
-  Upload,
-  Video,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import {
+  CertificateForm,
+  CourseHeader,
+  CourseInfoForm,
+  LessonForm,
+  ModuleForm,
+  QuestionForm,
+  QuestionList,
+} from "../components";
 
 // Schemas de validação
 const courseSchema = z.object({
@@ -88,9 +78,27 @@ const lessonSchema = z.object({
   content: z.string().optional(),
   videoUrl: z.string().optional(),
   duration: z.number().min(1, "Duração deve ser maior que 0"),
-  type: z.enum(["video", "text", "quiz"], {
+  type: z.enum(["video", "text", "objective_quiz", "subjective_quiz"], {
     required_error: "Tipo é obrigatório",
   }),
+  isActivity: z.boolean().optional(),
+});
+
+const questionSchema = z.object({
+  questionText: z.string().min(1, "Texto da questão é obrigatório"),
+  points: z.number().min(1, "Pontuação deve ser maior que 0").optional(),
+  explanation: z.string().optional(),
+  type: z.enum(["objective", "subjective"]),
+  subjectiveAnswerType: z.enum(["text", "file"]).optional(),
+  correctAnswer: z.string().optional(),
+  options: z
+    .array(
+      z.object({
+        optionText: z.string().min(1, "Texto da opção é obrigatório"),
+        isCorrect: z.boolean(),
+      }),
+    )
+    .optional(),
 });
 
 const certificateTemplateSchema = z.object({
@@ -102,6 +110,7 @@ const certificateTemplateSchema = z.object({
 type CourseFormData = z.infer<typeof courseSchema>;
 type ModuleFormData = z.infer<typeof moduleSchema>;
 type LessonFormData = z.infer<typeof lessonSchema>;
+type QuestionFormData = z.infer<typeof questionSchema>;
 type CertificateTemplateFormData = z.infer<typeof certificateTemplateSchema>;
 
 interface Module {
@@ -110,6 +119,23 @@ interface Module {
   description: string;
   order: number;
   lessons: Lesson[];
+}
+
+interface Question {
+  id?: string;
+  questionText: string;
+  points: number;
+  order: number;
+  explanation?: string;
+  type: "objective" | "subjective";
+  subjectiveAnswerType?: "text" | "file";
+  correctAnswer?: string;
+  options?: {
+    id?: string;
+    optionText: string;
+    isCorrect: boolean;
+    order: number;
+  }[];
 }
 
 interface Lesson {
@@ -121,7 +147,9 @@ interface Lesson {
   youtubeEmbedId?: string;
   duration: number;
   order: number;
-  type: "video" | "text" | "quiz";
+  type: "video" | "text" | "objective_quiz" | "subjective_quiz";
+  isActivity?: boolean;
+  questions?: Question[];
 }
 
 export default function CreateCoursePage() {
@@ -139,6 +167,19 @@ export default function CreateCoursePage() {
   const [editingCertificate, setEditingCertificate] = useState(false);
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
   const [openModules, setOpenModules] = useState<string[]>([]);
+  const [showQuestionForm, setShowQuestionForm] = useState<{
+    moduleIndex: number;
+    lessonIndex: number;
+  } | null>(null);
+  const [questionType, setQuestionType] = useState<"objective" | "subjective">(
+    "objective",
+  );
+  const [questionOptions, setQuestionOptions] = useState<
+    { optionText: string; isCorrect: boolean }[]
+  >([
+    { optionText: "", isCorrect: false },
+    { optionText: "", isCorrect: false },
+  ]);
   const router = useRouter();
 
   // Buscar líderes para o campo de instrutor
@@ -182,6 +223,21 @@ export default function CreateCoursePage() {
       videoUrl: "",
       duration: 15,
       type: "video",
+      isActivity: false,
+    },
+  });
+
+  // Formulário de questões
+  const questionForm = useForm<QuestionFormData>({
+    resolver: zodResolver(questionSchema),
+    defaultValues: {
+      questionText: "",
+      points: 10,
+      explanation: "",
+      type: "objective",
+      subjectiveAnswerType: "text",
+      correctAnswer: "",
+      options: [],
     },
   });
 
@@ -196,6 +252,10 @@ export default function CreateCoursePage() {
 
   // Watch lesson type for conditional fields
   const selectedLessonType = lessonForm.watch("type");
+  const selectedQuestionType = questionForm.watch("type");
+  const selectedSubjectiveAnswerType = questionForm.watch(
+    "subjectiveAnswerType",
+  );
 
   // Watch course title to auto-generate certificate title
   const courseTitle = courseForm.watch("title");
@@ -208,7 +268,7 @@ export default function CreateCoursePage() {
       const result = await createCourse({
         ...data,
         tags: data.tags || "",
-        status: "draft", // Sempre começar como rascunho
+        status: "draft",
       });
 
       if (result.success && result.course) {
@@ -342,14 +402,37 @@ export default function CreateCoursePage() {
     const module = modules[moduleIndex];
     if (!module || !module.id) return;
 
+    // Validar se está tentando adicionar uma atividade que não seja a última lição
+    const isQuiz =
+      data.type === "objective_quiz" || data.type === "subjective_quiz";
+    if (isQuiz && module.lessons.length > 0) {
+      const hasActivity = module.lessons.some((l) => l.isActivity);
+      if (hasActivity) {
+        toast.error(
+          "Este módulo já possui uma atividade. Cada módulo pode ter apenas uma atividade como última lição.",
+        );
+        return;
+      }
+    }
+
     setIsLoading(true);
     const youtubeEmbedId = extractYouTubeEmbedId(data.videoUrl || "");
+
+    // Mapear os tipos para o formato do banco
+    let lessonType: "VIDEO" | "TEXT" | "OBJECTIVE_QUIZ" | "SUBJECTIVE_QUIZ" =
+      "VIDEO";
+    if (data.type === "video") lessonType = "VIDEO";
+    else if (data.type === "text") lessonType = "TEXT";
+    else if (data.type === "objective_quiz") lessonType = "OBJECTIVE_QUIZ";
+    else if (data.type === "subjective_quiz") lessonType = "SUBJECTIVE_QUIZ";
 
     try {
       const result = await createLesson(module.id, {
         ...data,
+        type: lessonType,
         youtubeEmbedId: youtubeEmbedId || undefined,
         order: module.lessons.length + 1,
+        isActivity: isQuiz,
       });
 
       if (result.success && result.lesson) {
@@ -363,6 +446,8 @@ export default function CreateCoursePage() {
           duration: data.duration,
           order: module.lessons.length + 1,
           type: data.type,
+          isActivity: isQuiz,
+          questions: [],
         };
 
         const updatedModules = [...modules];
@@ -372,7 +457,17 @@ export default function CreateCoursePage() {
         }
         lessonForm.reset();
         setShowLessonForm(null);
-        toast.success("Lição adicionada com sucesso!");
+
+        if (isQuiz) {
+          toast.success("Atividade criada! Agora adicione as questões.");
+          // Abrir formulário de questões para a nova atividade
+          setShowQuestionForm({
+            moduleIndex,
+            lessonIndex: module.lessons.length,
+          });
+        } else {
+          toast.success("Lição adicionada com sucesso!");
+        }
       } else {
         toast.error(result.error || "Erro ao criar lição");
       }
@@ -383,10 +478,144 @@ export default function CreateCoursePage() {
     }
   };
 
+  // Adicionar questão objetiva
+  const handleAddObjectiveQuestion = async (
+    moduleIndex: number,
+    lessonIndex: number,
+  ) => {
+    const module = modules[moduleIndex];
+    const lesson = module?.lessons[lessonIndex];
+
+    if (!lesson || !lesson.id) {
+      toast.error("Lição não encontrada");
+      return;
+    }
+
+    // Validar opções
+    if (questionOptions.length < 2) {
+      toast.error("Adicione pelo menos 2 opções");
+      return;
+    }
+
+    const hasCorrectAnswer = questionOptions.some((opt) => opt.isCorrect);
+    if (!hasCorrectAnswer) {
+      toast.error("Marque pelo menos uma opção como correta");
+      return;
+    }
+
+    const data = questionForm.getValues();
+    setIsLoading(true);
+
+    try {
+      const result = await createObjectiveQuestion({
+        lessonId: lesson.id,
+        questionText: data.questionText,
+        points: data.points || 10,
+        order: (lesson.questions?.length || 0) + 1,
+        explanation: data.explanation,
+        options: questionOptions.map((opt, idx) => ({
+          ...opt,
+          order: idx + 1,
+        })),
+      });
+
+      if (result.success && result.question) {
+        const updatedModules = [...modules];
+        if (!updatedModules[moduleIndex]?.lessons[lessonIndex]?.questions) {
+          updatedModules[moduleIndex]!.lessons[lessonIndex]!.questions = [];
+        }
+
+        updatedModules[moduleIndex]?.lessons[lessonIndex]?.questions!.push({
+          id: result.question.id,
+          questionText: data.questionText,
+          points: data.points || 10,
+          order: (lesson.questions?.length || 0) + 1,
+          explanation: data.explanation,
+          type: "objective",
+          options: questionOptions.map((opt, idx) => ({
+            optionText: opt.optionText,
+            isCorrect: opt.isCorrect,
+            order: idx + 1,
+          })),
+        });
+
+        setModules(updatedModules);
+        questionForm.reset();
+        setQuestionOptions([
+          { optionText: "", isCorrect: false },
+          { optionText: "", isCorrect: false },
+        ]);
+        toast.success("Questão objetiva adicionada!");
+      } else {
+        toast.error(result.error || "Erro ao criar questão");
+      }
+    } catch (error) {
+      toast.error("Erro ao criar questão");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Adicionar questão subjetiva
+  const handleAddSubjectiveQuestion = async (
+    moduleIndex: number,
+    lessonIndex: number,
+  ) => {
+    const module = modules[moduleIndex];
+    const lesson = module?.lessons[lessonIndex];
+
+    if (!lesson || !lesson.id) {
+      toast.error("Lição não encontrada");
+      return;
+    }
+
+    const data = questionForm.getValues();
+    setIsLoading(true);
+
+    try {
+      const result = await createSubjectiveQuestion({
+        lessonId: lesson.id,
+        questionText: data.questionText,
+        points: data.points || 10,
+        order: (lesson.questions?.length || 0) + 1,
+        explanation: data.explanation,
+        subjectiveAnswerType: data.subjectiveAnswerType as SubjectiveAnswerType,
+        correctAnswer: data.correctAnswer,
+      });
+
+      if (result.success && result.question) {
+        const updatedModules = [...modules];
+        if (!updatedModules[moduleIndex]?.lessons[lessonIndex]?.questions) {
+          updatedModules[moduleIndex]!.lessons[lessonIndex]!.questions = [];
+        }
+
+        updatedModules[moduleIndex]?.lessons[lessonIndex]?.questions!.push({
+          id: result.question.id,
+          questionText: data.questionText,
+          points: data.points || 10,
+          order: (lesson.questions?.length || 0) + 1,
+          explanation: data.explanation,
+          type: "subjective",
+          subjectiveAnswerType: data.subjectiveAnswerType,
+          correctAnswer: data.correctAnswer,
+        });
+
+        setModules(updatedModules);
+        questionForm.reset();
+        toast.success("Questão subjetiva adicionada!");
+      } else {
+        toast.error(result.error || "Erro ao criar questão");
+      }
+    } catch (error) {
+      toast.error("Erro ao criar questão");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Salvar como rascunho
   const handleSaveDraft = async () => {
     if (!courseId) {
-      // Se ainda não criou o curso, criar como rascunho
       const courseData = courseForm.getValues();
       await handleCreateCourse(courseData);
     } else {
@@ -403,7 +632,6 @@ export default function CreateCoursePage() {
 
     setIsLoading(true);
     try {
-      // Converter arquivo PDF para base64 se existir
       let templateUrl = "";
       if (certificateFile) {
         templateUrl = await convertFileToBase64(certificateFile);
@@ -467,7 +695,8 @@ export default function CreateCoursePage() {
         return Play;
       case "text":
         return FileText;
-      case "quiz":
+      case "objective_quiz":
+      case "subjective_quiz":
         return CheckCircle;
       default:
         return FileText;
@@ -480,8 +709,10 @@ export default function CreateCoursePage() {
         return "Vídeo";
       case "text":
         return "Texto";
-      case "quiz":
-        return "Quiz";
+      case "objective_quiz":
+        return "Atividade Objetiva";
+      case "subjective_quiz":
+        return "Atividade Subjetiva";
       default:
         return "Texto";
     }
@@ -496,313 +727,23 @@ export default function CreateCoursePage() {
 
       <div className="relative mx-auto max-w-6xl space-y-8 p-6">
         {/* Header */}
-        <div className="dark-glass dark-shadow-md rounded-2xl p-6">
-          <div className="flex items-center space-x-4">
-            <Button
-              className="dark-glass dark-border hover:dark-border-hover"
-              onClick={() => router.back()}
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Voltar
-            </Button>
-            <div className="flex-1">
-              <h1 className="dark-text-primary text-3xl font-bold">
-                Criar Curso Completo 📚
-              </h1>
-              <p className="dark-text-secondary mt-2">
-                Crie seu curso com módulos e lições em uma única tela
-              </p>
-            </div>
-            <div className="flex gap-2">
-              {courseId && (
-                <Button
-                  type="button"
-                  className="dark-glass dark-border hover:dark-border-hover"
-                  onClick={() => courseForm.handleSubmit(handleCreateCourse)()}
-                  disabled={isLoading}
-                >
-                  <FileText className="mr-2 h-4 w-4" />
-                  Salvar Alterações
-                </Button>
-              )}
-              <Button
-                type="button"
-                className="dark-glass dark-border hover:dark-border-hover"
-                onClick={handleSaveDraft}
-                disabled={isLoading}
-              >
-                <FileText className="mr-2 h-4 w-4" />
-                Salvar Rascunho
-              </Button>
-              {courseId && modules.length > 0 && (
-                <Button
-                  type="button"
-                  className="dark-btn-primary"
-                  onClick={handleFinishCourse}
-                  disabled={isLoading}
-                >
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Finalizar Curso
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
+        <CourseHeader
+          courseId={courseId}
+          hasModules={modules.length > 0}
+          isLoading={isLoading}
+          onSaveDraft={handleSaveDraft}
+          onFinishCourse={handleFinishCourse}
+        />
 
         {/* Course Form */}
-        <div className="dark-glass dark-shadow-sm rounded-xl p-6">
-          <h2 className="dark-text-primary mb-6 text-xl font-bold">
-            Informações do Curso
-          </h2>
-          <Form {...courseForm}>
-            <form
-              onSubmit={courseForm.handleSubmit(handleCreateCourse)}
-              className="space-y-6"
-            >
-              <div className="space-y-4">
-                <FormField
-                  control={courseForm.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="dark-text-secondary text-sm font-medium">
-                        Título do Curso *
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="Ex: Fundamentos da Fé Cristã"
-                          className="dark-input"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={courseForm.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="dark-text-secondary text-sm font-medium">
-                        Descrição *
-                      </FormLabel>
-                      <FormControl>
-                        <Textarea
-                          {...field}
-                          placeholder="Descreva o conteúdo bíblico e espiritual que será ensinado neste curso..."
-                          className="dark-input min-h-[100px]"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <FormField
-                    control={courseForm.control}
-                    name="instructorId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="dark-text-secondary text-sm font-medium">
-                          Instrutor (Líder) *
-                        </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                          disabled={leadersLoading}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="dark-input h-10">
-                              <SelectValue
-                                placeholder={
-                                  leadersLoading
-                                    ? "Carregando líderes..."
-                                    : "Selecione um líder como instrutor"
-                                }
-                              />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="dark-bg-secondary dark-border">
-                            {leadersData?.map((leader: any) => (
-                              <SelectItem
-                                key={leader.id}
-                                value={leader.id}
-                                className="dark-text-primary hover:dark-bg-tertiary"
-                              >
-                                <div className="flex items-center space-x-2">
-                                  <span>{leader.name}</span>
-                                  {leader.isPastor && (
-                                    <span className="dark-primary text-xs font-medium">
-                                      (Pastor)
-                                    </span>
-                                  )}
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={courseForm.control}
-                    name="duration"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="dark-text-secondary text-sm font-medium">
-                          Duração (minutos) *
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="60"
-                            className="dark-input"
-                            onChange={(e) =>
-                              field.onChange(parseInt(e.target.value) || 0)
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <FormField
-                    control={courseForm.control}
-                    name="level"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="dark-text-secondary text-sm font-medium">
-                          Nível *
-                        </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="dark-input h-10">
-                              <SelectValue placeholder="Selecione o nível" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="beginner">Iniciante</SelectItem>
-                            <SelectItem value="intermediate">
-                              Intermediário
-                            </SelectItem>
-                            <SelectItem value="advanced">Avançado</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={courseForm.control}
-                    name="category"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="dark-text-secondary text-sm font-medium">
-                          Categoria *
-                        </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="dark-input h-10">
-                              <SelectValue placeholder="Selecione uma categoria" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="dark-bg-secondary dark-border">
-                            {COURSE_CATEGORIES.map((category) => (
-                              <SelectItem
-                                key={category.value}
-                                value={category.value}
-                                className="dark-text-primary hover:dark-bg-tertiary"
-                              >
-                                <div className="flex items-center space-x-2">
-                                  <span>{category.icon}</span>
-                                  <span>{category.label}</span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <FormField
-                    control={courseForm.control}
-                    name="tags"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="dark-text-secondary text-sm font-medium">
-                          Tags (separadas por vírgula)
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="Fé, Bíblia, Liderança, Ministério"
-                            className="dark-input"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={courseForm.control}
-                    name="price"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="dark-text-secondary text-sm font-medium">
-                          Preço (R$)
-                        </FormLabel>
-                        <FormControl>
-                          <MoneyInput
-                            {...field}
-                            placeholder="0"
-                            className="dark-input"
-                            onChange={(e) =>
-                              field.onChange(parseFloat(e.target.value) || 0)
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-
-              {!courseId && (
-                <div className="flex justify-end space-x-4 pt-6">
-                  <Button
-                    type="submit"
-                    disabled={isLoading}
-                    className="dark-btn-primary"
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    {isLoading ? "Criando..." : "Criar Curso"}
-                  </Button>
-                </div>
-              )}
-            </form>
-          </Form>
-        </div>
+        <CourseInfoForm
+          form={courseForm}
+          courseId={courseId}
+          isLoading={isLoading}
+          leadersData={leadersData || []}
+          leadersLoading={leadersLoading}
+          onSubmit={handleCreateCourse}
+        />
 
         {/* Modules Section - Only show after course is created */}
         {courseId && (
@@ -825,81 +766,15 @@ export default function CreateCoursePage() {
 
               {/* Module Form */}
               {showModuleForm && (
-                <div className="mt-6">
-                  <div className="dark-glass dark-shadow-sm rounded-xl p-6">
-                    <h3 className="dark-text-primary mb-6 text-xl font-bold">
-                      Adicionar Novo Módulo
-                    </h3>
-                    <Form {...moduleForm}>
-                      <form
-                        onSubmit={moduleForm.handleSubmit(handleAddModule)}
-                        className="space-y-6"
-                      >
-                        <FormField
-                          control={moduleForm.control}
-                          name="title"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="dark-text-secondary text-sm font-medium">
-                                Título do Módulo *
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  placeholder="Ex: Introdução à Fé Cristã"
-                                  className="dark-input"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={moduleForm.control}
-                          name="description"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="dark-text-secondary text-sm font-medium">
-                                Descrição *
-                              </FormLabel>
-                              <FormControl>
-                                <Textarea
-                                  {...field}
-                                  placeholder="Descreva o que será abordado neste módulo..."
-                                  className="dark-input min-h-[100px]"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <div className="flex justify-end space-x-4 pt-6">
-                          <Button
-                            type="button"
-                            className="dark-glass dark-border hover:dark-border-hover"
-                            variant="outline"
-                            onClick={() => {
-                              setShowModuleForm(false);
-                              moduleForm.reset();
-                            }}
-                          >
-                            Cancelar
-                          </Button>
-                          <Button
-                            type="submit"
-                            disabled={isLoading}
-                            variant="success"
-                          >
-                            <Plus className="mr-2 h-4 w-4" />
-                            {isLoading ? "Adicionando..." : "Adicionar Módulo"}
-                          </Button>
-                        </div>
-                      </form>
-                    </Form>
-                  </div>
-                </div>
+                <ModuleForm
+                  form={moduleForm}
+                  isLoading={isLoading}
+                  onSubmit={handleAddModule}
+                  onCancel={() => {
+                    setShowModuleForm(false);
+                    moduleForm.reset();
+                  }}
+                />
               )}
             </div>
 
@@ -946,7 +821,6 @@ export default function CreateCoursePage() {
                             onClick={(e) => {
                               e.stopPropagation();
                               setShowLessonForm(moduleIndex);
-                              // Abre o accordion do módulo para mostrar o formulário de lição
                               setOpenModules([
                                 ...openModules,
                                 `module-${moduleIndex}`,
@@ -963,7 +837,6 @@ export default function CreateCoursePage() {
                             onClick={(e) => {
                               e.stopPropagation();
                               handleEditModule(moduleIndex);
-                              // Abre o accordion do módulo para mostrar o formulário de edição
                               setOpenModules([
                                 ...openModules,
                                 `module-${moduleIndex}`,
@@ -995,322 +868,33 @@ export default function CreateCoursePage() {
                       {/* Module Edit Form */}
                       {editingModule === moduleIndex && (
                         <div className="dark-border border-b p-6">
-                          <Form {...moduleForm}>
-                            <form
-                              onSubmit={moduleForm.handleSubmit((data) =>
-                                handleSaveModuleEdit(data, moduleIndex),
-                              )}
-                              className="space-y-6"
-                            >
-                              <h4 className="dark-text-primary mb-6 text-xl font-bold">
-                                Editar Módulo
-                              </h4>
-
-                              <FormField
-                                control={moduleForm.control}
-                                name="title"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel className="dark-text-secondary text-sm font-medium">
-                                      Título do Módulo *
-                                    </FormLabel>
-                                    <FormControl>
-                                      <Input
-                                        {...field}
-                                        placeholder="Ex: Introdução à Fé Cristã"
-                                        className="dark-input"
-                                      />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-
-                              <FormField
-                                control={moduleForm.control}
-                                name="description"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel className="dark-text-secondary text-sm font-medium">
-                                      Descrição *
-                                    </FormLabel>
-                                    <FormControl>
-                                      <Textarea
-                                        {...field}
-                                        placeholder="Descreva o que será abordado neste módulo..."
-                                        className="dark-input min-h-[100px]"
-                                      />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-
-                              <div className="flex justify-end space-x-4 pt-6">
-                                <Button
-                                  type="button"
-                                  className="dark-glass dark-border hover:dark-border-hover"
-                                  variant="outline"
-                                  onClick={() => {
-                                    setEditingModule(null);
-                                    moduleForm.reset();
-                                  }}
-                                >
-                                  Cancelar
-                                </Button>
-                                <Button
-                                  type="submit"
-                                  disabled={isLoading}
-                                  className="dark-btn-primary"
-                                >
-                                  <CheckCircle className="mr-2 h-4 w-4" />
-                                  {isLoading
-                                    ? "Atualizando..."
-                                    : "Atualizar Módulo"}
-                                </Button>
-                              </div>
-                            </form>
-                          </Form>
+                          <ModuleForm
+                            form={moduleForm}
+                            isLoading={isLoading}
+                            onSubmit={(data) =>
+                              handleSaveModuleEdit(data, moduleIndex)
+                            }
+                            onCancel={() => {
+                              setEditingModule(null);
+                              moduleForm.reset();
+                            }}
+                          />
                         </div>
                       )}
 
                       {/* Lesson Form */}
                       {showLessonForm === moduleIndex && (
-                        <div className="dark-border border-b p-6">
-                          <Form {...lessonForm}>
-                            <form
-                              onSubmit={lessonForm.handleSubmit((data) =>
-                                handleAddLesson(data, moduleIndex),
-                              )}
-                              className="space-y-6"
-                            >
-                              <h4 className="dark-text-primary mb-6 text-xl font-bold">
-                                Adicionar Nova Lição
-                              </h4>
-
-                              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <FormField
-                                  control={lessonForm.control}
-                                  name="title"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel className="dark-text-secondary text-sm font-medium">
-                                        Título da Lição *
-                                      </FormLabel>
-                                      <FormControl>
-                                        <Input
-                                          {...field}
-                                          placeholder="Ex: O que é a Fé Cristã"
-                                          className="dark-input"
-                                        />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-
-                                <FormField
-                                  control={lessonForm.control}
-                                  name="duration"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel className="dark-text-secondary text-sm font-medium">
-                                        Duração (minutos) *
-                                      </FormLabel>
-                                      <FormControl>
-                                        <Input
-                                          {...field}
-                                          placeholder="15"
-                                          className="dark-input"
-                                          onChange={(e) =>
-                                            field.onChange(
-                                              parseInt(e.target.value) || 0,
-                                            )
-                                          }
-                                        />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                              </div>
-
-                              <FormField
-                                control={lessonForm.control}
-                                name="description"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel className="dark-text-secondary text-sm font-medium">
-                                      Descrição *
-                                    </FormLabel>
-                                    <FormControl>
-                                      <Textarea
-                                        {...field}
-                                        placeholder="Descreva o que será abordado nesta lição..."
-                                        className="dark-input min-h-[100px]"
-                                      />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-
-                              <FormField
-                                control={lessonForm.control}
-                                name="type"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel className="dark-text-secondary text-sm font-medium">
-                                      Tipo de Conteúdo *
-                                    </FormLabel>
-                                    <Select
-                                      onValueChange={field.onChange}
-                                      defaultValue={field.value}
-                                    >
-                                      <FormControl>
-                                        <SelectTrigger className="dark-input">
-                                          <SelectValue placeholder="Selecione o tipo" />
-                                        </SelectTrigger>
-                                      </FormControl>
-                                      <SelectContent>
-                                        <SelectItem value="video">
-                                          <div className="flex items-center space-x-2">
-                                            <Video className="h-4 w-4" />
-                                            <span>Vídeo</span>
-                                          </div>
-                                        </SelectItem>
-                                        <SelectItem value="text">
-                                          <div className="flex items-center space-x-2">
-                                            <span>📄</span>
-                                            <span>Texto</span>
-                                          </div>
-                                        </SelectItem>
-                                        <SelectItem value="quiz">
-                                          <div className="flex items-center space-x-2">
-                                            <span>❓</span>
-                                            <span>Quiz</span>
-                                          </div>
-                                        </SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-
-                              {/* Conditional fields based on type */}
-                              {selectedLessonType === "video" && (
-                                <>
-                                  <FormField
-                                    control={lessonForm.control}
-                                    name="videoUrl"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel className="dark-text-secondary text-sm font-medium">
-                                          URL do Vídeo (YouTube)
-                                        </FormLabel>
-                                        <FormControl>
-                                          <Input
-                                            {...field}
-                                            placeholder="https://youtu.be/VIDEO_ID"
-                                            className="dark-input"
-                                          />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                </>
-                              )}
-
-                              {(selectedLessonType === "text" ||
-                                selectedLessonType === "quiz") && (
-                                <FormField
-                                  control={lessonForm.control}
-                                  name="content"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel className="dark-text-secondary text-sm font-medium">
-                                        Conteúdo{" "}
-                                        {selectedLessonType === "quiz"
-                                          ? "do Quiz"
-                                          : "da Lição"}
-                                      </FormLabel>
-                                      <FormControl>
-                                        <Textarea
-                                          {...field}
-                                          placeholder={
-                                            selectedLessonType === "quiz"
-                                              ? "Digite as perguntas e respostas do quiz..."
-                                              : "Digite o conteúdo da lição..."
-                                          }
-                                          className="dark-input min-h-[200px]"
-                                        />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                              )}
-
-                              {/* File Upload Section */}
-                              <div className="dark-card dark-shadow-sm rounded-lg p-4">
-                                <h3 className="dark-text-primary mb-3 font-semibold">
-                                  Materiais Complementares
-                                </h3>
-                                <div className="space-y-3">
-                                  <div className="dark-bg-secondary rounded-lg border-2 border-dashed border-gray-600 p-6 text-center">
-                                    <Upload className="dark-text-tertiary mx-auto mb-2 h-8 w-8" />
-                                    <p className="dark-text-secondary text-sm">
-                                      Arraste arquivos aqui ou clique para
-                                      selecionar
-                                    </p>
-                                    <p className="dark-text-tertiary text-xs">
-                                      PDF, DOC, PPT, imagens (máx. 10MB)
-                                    </p>
-                                  </div>
-                                  <Button
-                                    type="button"
-                                    className="dark-glass dark-border hover:dark-border-hover w-full"
-                                    variant="outline"
-                                    onClick={() => {
-                                      toast.info(
-                                        "Funcionalidade de upload em desenvolvimento",
-                                      );
-                                    }}
-                                  >
-                                    <Upload className="mr-2 h-4 w-4" />
-                                    Selecionar Arquivos
-                                  </Button>
-                                </div>
-                              </div>
-
-                              <div className="flex justify-end space-x-4 pt-6">
-                                <Button
-                                  type="button"
-                                  className="dark-glass dark-border hover:dark-border-hover"
-                                  variant="outline"
-                                  onClick={() => {
-                                    setShowLessonForm(null);
-                                    lessonForm.reset();
-                                  }}
-                                >
-                                  Cancelar
-                                </Button>
-                                <Button
-                                  type="submit"
-                                  disabled={isLoading}
-                                  variant="success"
-                                >
-                                  <Plus className="mr-2 h-4 w-4" />
-                                  {isLoading
-                                    ? "Adicionando..."
-                                    : "Adicionar Lição"}
-                                </Button>
-                              </div>
-                            </form>
-                          </Form>
-                        </div>
+                        <LessonForm
+                          form={lessonForm}
+                          isLoading={isLoading}
+                          onSubmit={(data) =>
+                            handleAddLesson(data, moduleIndex)
+                          }
+                          onCancel={() => {
+                            setShowLessonForm(null);
+                            lessonForm.reset();
+                          }}
+                        />
                       )}
 
                       {/* Lessons List */}
@@ -1401,248 +985,21 @@ export default function CreateCoursePage() {
                                   {editingLesson?.moduleIndex === moduleIndex &&
                                   editingLesson?.lessonIndex === lessonIndex ? (
                                     // Formulário de edição
-                                    <Form {...lessonForm}>
-                                      <form
-                                        onSubmit={lessonForm.handleSubmit(
-                                          (data) =>
-                                            handleSaveLessonEdit(
-                                              data,
-                                              moduleIndex,
-                                              lessonIndex,
-                                            ),
-                                        )}
-                                        className="space-y-6"
-                                      >
-                                        <h6 className="dark-text-primary mb-6 text-xl font-bold">
-                                          Editar Lição
-                                        </h6>
-
-                                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                          <FormField
-                                            control={lessonForm.control}
-                                            name="title"
-                                            render={({ field }) => (
-                                              <FormItem>
-                                                <FormLabel className="dark-text-secondary text-sm font-medium">
-                                                  Título da Lição *
-                                                </FormLabel>
-                                                <FormControl>
-                                                  <Input
-                                                    {...field}
-                                                    placeholder="Ex: O que é a Fé Cristã"
-                                                    className="dark-input"
-                                                  />
-                                                </FormControl>
-                                                <FormMessage />
-                                              </FormItem>
-                                            )}
-                                          />
-
-                                          <FormField
-                                            control={lessonForm.control}
-                                            name="duration"
-                                            render={({ field }) => (
-                                              <FormItem>
-                                                <FormLabel className="dark-text-secondary text-sm font-medium">
-                                                  Duração (minutos) *
-                                                </FormLabel>
-                                                <FormControl>
-                                                  <Input
-                                                    {...field}
-                                                    placeholder="15"
-                                                    className="dark-input"
-                                                    onChange={(e) =>
-                                                      field.onChange(
-                                                        parseInt(
-                                                          e.target.value,
-                                                        ) || 0,
-                                                      )
-                                                    }
-                                                  />
-                                                </FormControl>
-                                                <FormMessage />
-                                              </FormItem>
-                                            )}
-                                          />
-                                        </div>
-
-                                        <FormField
-                                          control={lessonForm.control}
-                                          name="description"
-                                          render={({ field }) => (
-                                            <FormItem>
-                                              <FormLabel className="dark-text-secondary text-sm font-medium">
-                                                Descrição *
-                                              </FormLabel>
-                                              <FormControl>
-                                                <Textarea
-                                                  {...field}
-                                                  placeholder="Descreva o que será abordado nesta lição..."
-                                                  className="dark-input min-h-[100px]"
-                                                />
-                                              </FormControl>
-                                              <FormMessage />
-                                            </FormItem>
-                                          )}
-                                        />
-
-                                        <FormField
-                                          control={lessonForm.control}
-                                          name="type"
-                                          render={({ field }) => (
-                                            <FormItem>
-                                              <FormLabel className="dark-text-secondary text-sm font-medium">
-                                                Tipo de Conteúdo *
-                                              </FormLabel>
-                                              <Select
-                                                onValueChange={field.onChange}
-                                                defaultValue={field.value}
-                                              >
-                                                <FormControl>
-                                                  <SelectTrigger className="dark-input">
-                                                    <SelectValue placeholder="Selecione o tipo" />
-                                                  </SelectTrigger>
-                                                </FormControl>
-                                                <SelectContent>
-                                                  <SelectItem value="video">
-                                                    <div className="flex items-center space-x-2">
-                                                      <Video className="h-4 w-4" />
-                                                      <span>Vídeo</span>
-                                                    </div>
-                                                  </SelectItem>
-                                                  <SelectItem value="text">
-                                                    <div className="flex items-center space-x-2">
-                                                      <span>📄</span>
-                                                      <span>Texto</span>
-                                                    </div>
-                                                  </SelectItem>
-                                                  <SelectItem value="quiz">
-                                                    <div className="flex items-center space-x-2">
-                                                      <span>❓</span>
-                                                      <span>Quiz</span>
-                                                    </div>
-                                                  </SelectItem>
-                                                </SelectContent>
-                                              </Select>
-                                              <FormMessage />
-                                            </FormItem>
-                                          )}
-                                        />
-
-                                        {/* Conditional fields based on type */}
-                                        {selectedLessonType === "video" && (
-                                          <>
-                                            <FormField
-                                              control={lessonForm.control}
-                                              name="videoUrl"
-                                              render={({ field }) => (
-                                                <FormItem>
-                                                  <FormLabel className="dark-text-secondary text-sm font-medium">
-                                                    URL do Vídeo (YouTube)
-                                                  </FormLabel>
-                                                  <FormControl>
-                                                    <Input
-                                                      {...field}
-                                                      placeholder="https://youtu.be/VIDEO_ID"
-                                                      className="dark-input"
-                                                    />
-                                                  </FormControl>
-                                                  <FormMessage />
-                                                </FormItem>
-                                              )}
-                                            />
-                                          </>
-                                        )}
-
-                                        {(selectedLessonType === "text" ||
-                                          selectedLessonType === "quiz") && (
-                                          <FormField
-                                            control={lessonForm.control}
-                                            name="content"
-                                            render={({ field }) => (
-                                              <FormItem>
-                                                <FormLabel className="dark-text-secondary text-sm font-medium">
-                                                  Conteúdo{" "}
-                                                  {selectedLessonType === "quiz"
-                                                    ? "do Quiz"
-                                                    : "da Lição"}
-                                                </FormLabel>
-                                                <FormControl>
-                                                  <Textarea
-                                                    {...field}
-                                                    placeholder={
-                                                      selectedLessonType ===
-                                                      "quiz"
-                                                        ? "Digite as perguntas e respostas do quiz..."
-                                                        : "Digite o conteúdo da lição..."
-                                                    }
-                                                    className="dark-input min-h-[200px]"
-                                                  />
-                                                </FormControl>
-                                                <FormMessage />
-                                              </FormItem>
-                                            )}
-                                          />
-                                        )}
-
-                                        {/* File Upload Section */}
-                                        <div className="dark-card dark-shadow-sm rounded-lg p-4">
-                                          <h3 className="dark-text-primary mb-3 font-semibold">
-                                            Materiais Complementares
-                                          </h3>
-                                          <div className="space-y-3">
-                                            <div className="dark-bg-secondary rounded-lg border-2 border-dashed border-gray-600 p-6 text-center">
-                                              <Upload className="dark-text-tertiary mx-auto mb-2 h-8 w-8" />
-                                              <p className="dark-text-secondary text-sm">
-                                                Arraste arquivos aqui ou clique
-                                                para selecionar
-                                              </p>
-                                              <p className="dark-text-tertiary text-xs">
-                                                PDF, DOC, PPT, imagens (máx.
-                                                10MB)
-                                              </p>
-                                            </div>
-                                            <Button
-                                              type="button"
-                                              className="dark-glass dark-border hover:dark-border-hover w-full"
-                                              variant="outline"
-                                              onClick={() => {
-                                                toast.info(
-                                                  "Funcionalidade de upload em desenvolvimento",
-                                                );
-                                              }}
-                                            >
-                                              <Upload className="mr-2 h-4 w-4" />
-                                              Selecionar Arquivos
-                                            </Button>
-                                          </div>
-                                        </div>
-
-                                        <div className="flex justify-end space-x-4 pt-6">
-                                          <Button
-                                            type="button"
-                                            className="dark-glass dark-border hover:dark-border-hover"
-                                            variant="outline"
-                                            onClick={() => {
-                                              setEditingLesson(null);
-                                              lessonForm.reset();
-                                            }}
-                                          >
-                                            Cancelar
-                                          </Button>
-                                          <Button
-                                            type="submit"
-                                            disabled={isLoading}
-                                            variant="success"
-                                          >
-                                            <CheckCircle className="mr-2 h-4 w-4" />
-                                            {isLoading
-                                              ? "Atualizando..."
-                                              : "Atualizar Lição"}
-                                          </Button>
-                                        </div>
-                                      </form>
-                                    </Form>
+                                    <LessonForm
+                                      form={lessonForm}
+                                      isLoading={isLoading}
+                                      onSubmit={(data) =>
+                                        handleSaveLessonEdit(
+                                          data,
+                                          moduleIndex,
+                                          lessonIndex,
+                                        )
+                                      }
+                                      onCancel={() => {
+                                        setEditingLesson(null);
+                                        lessonForm.reset();
+                                      }}
+                                    />
                                   ) : (
                                     // Visualização da lição
                                     <div className="space-y-4">
@@ -1725,6 +1082,169 @@ export default function CreateCoursePage() {
                                           </p>
                                         </div>
                                       )}
+
+                                      {/* Questões (para atividades) */}
+                                      {lesson.isActivity && (
+                                        <div className="mt-6 space-y-4">
+                                          <div className="flex items-center justify-between">
+                                            <h6 className="dark-text-primary font-medium">
+                                              Questões da Atividade
+                                            </h6>
+                                            {!showQuestionForm ||
+                                            showQuestionForm.moduleIndex !==
+                                              moduleIndex ||
+                                            showQuestionForm.lessonIndex !==
+                                              lessonIndex ? (
+                                              <Button
+                                                size="sm"
+                                                variant="success"
+                                                onClick={() =>
+                                                  setShowQuestionForm({
+                                                    moduleIndex,
+                                                    lessonIndex,
+                                                  })
+                                                }
+                                              >
+                                                <Plus className="mr-2 h-3 w-3" />
+                                                Adicionar Questão
+                                              </Button>
+                                            ) : null}
+                                          </div>
+
+                                          {/* Formulário de Questão */}
+                                          {showQuestionForm &&
+                                            showQuestionForm.moduleIndex ===
+                                              moduleIndex &&
+                                            showQuestionForm.lessonIndex ===
+                                              lessonIndex && (
+                                              <QuestionForm
+                                                form={questionForm}
+                                                isLoading={isLoading}
+                                                questionType={questionType}
+                                                subjectiveAnswerType={
+                                                  selectedSubjectiveAnswerType ||
+                                                  "text"
+                                                }
+                                                questionOptions={
+                                                  questionOptions
+                                                }
+                                                onQuestionTypeChange={
+                                                  setQuestionType
+                                                }
+                                                onSubjectiveAnswerTypeChange={(
+                                                  type,
+                                                ) => {
+                                                  questionForm.setValue(
+                                                    "subjectiveAnswerType",
+                                                    type,
+                                                  );
+                                                }}
+                                                onAddOption={() => {
+                                                  setQuestionOptions([
+                                                    ...questionOptions,
+                                                    {
+                                                      optionText: "",
+                                                      isCorrect: false,
+                                                    },
+                                                  ]);
+                                                }}
+                                                onRemoveOption={(index) => {
+                                                  setQuestionOptions(
+                                                    questionOptions.filter(
+                                                      (_, i) => i !== index,
+                                                    ),
+                                                  );
+                                                }}
+                                                onOptionTextChange={(
+                                                  index,
+                                                  text,
+                                                ) => {
+                                                  const updated = [
+                                                    ...questionOptions,
+                                                  ];
+                                                  if (updated[index]) {
+                                                    updated[index].optionText =
+                                                      text;
+                                                    setQuestionOptions(updated);
+                                                  }
+                                                }}
+                                                onOptionCorrectChange={(
+                                                  index,
+                                                  isCorrect,
+                                                ) => {
+                                                  const updated = [
+                                                    ...questionOptions,
+                                                  ];
+                                                  if (updated[index]) {
+                                                    updated[index].isCorrect =
+                                                      isCorrect;
+                                                    setQuestionOptions(updated);
+                                                  }
+                                                }}
+                                                onSubmit={() => {
+                                                  if (
+                                                    questionType === "objective"
+                                                  ) {
+                                                    handleAddObjectiveQuestion(
+                                                      moduleIndex,
+                                                      lessonIndex,
+                                                    );
+                                                  } else {
+                                                    handleAddSubjectiveQuestion(
+                                                      moduleIndex,
+                                                      lessonIndex,
+                                                    );
+                                                  }
+                                                }}
+                                                onCancel={() => {
+                                                  setShowQuestionForm(null);
+                                                  questionForm.reset();
+                                                  setQuestionOptions([
+                                                    {
+                                                      optionText: "",
+                                                      isCorrect: false,
+                                                    },
+                                                    {
+                                                      optionText: "",
+                                                      isCorrect: false,
+                                                    },
+                                                  ]);
+                                                }}
+                                              />
+                                            )}
+
+                                          {/* Lista de Questões */}
+                                          <QuestionList
+                                            questions={lesson.questions || []}
+                                            onDeleteQuestion={(index) => {
+                                              const updatedModules = [
+                                                ...modules,
+                                              ];
+                                              if (
+                                                updatedModules[moduleIndex]
+                                                  ?.lessons[lessonIndex]
+                                                  ?.questions
+                                              ) {
+                                                updatedModules[
+                                                  moduleIndex
+                                                ].lessons[
+                                                  lessonIndex
+                                                ].questions = updatedModules[
+                                                  moduleIndex
+                                                ].lessons[
+                                                  lessonIndex
+                                                ].questions!.filter(
+                                                  (_, i) => i !== index,
+                                                );
+                                                setModules(updatedModules);
+                                                toast.success(
+                                                  "Questão removida com sucesso!",
+                                                );
+                                              }
+                                            }}
+                                          />
+                                        </div>
+                                      )}
                                     </div>
                                   )}
                                 </AccordionContent>
@@ -1775,185 +1295,22 @@ export default function CreateCoursePage() {
 
               {/* Certificate Form */}
               {showCertificateForm && (
-                <div className="mt-6">
-                  <div className="dark-glass dark-shadow-sm rounded-xl p-6">
-                    <h3 className="dark-text-primary mb-6 text-xl font-bold">
-                      {editingCertificate
-                        ? "Editar Template de Certificado"
-                        : "Configurar Template de Certificado"}
-                    </h3>
-                    <Form {...certificateTemplateForm}>
-                      <form
-                        onSubmit={certificateTemplateForm.handleSubmit(
-                          handleCreateCertificateTemplate,
-                        )}
-                        className="space-y-6"
-                      >
-                        <FormField
-                          control={certificateTemplateForm.control}
-                          name="title"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="dark-text-secondary text-sm font-medium">
-                                Título do Template *
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  placeholder={
-                                    courseTitle
-                                      ? `${courseTitle} - Certificado`
-                                      : "Ex: Fundamentos da Fé Cristã - Certificado"
-                                  }
-                                  className="dark-input"
-                                  value={
-                                    field.value ||
-                                    (courseTitle
-                                      ? `${courseTitle} - Certificado`
-                                      : "")
-                                  }
-                                  onChange={(e) => {
-                                    field.onChange(e.target.value);
-                                  }}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={certificateTemplateForm.control}
-                          name="description"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="dark-text-secondary text-sm font-medium">
-                                Descrição do Template *
-                              </FormLabel>
-                              <FormControl>
-                                <Textarea
-                                  {...field}
-                                  placeholder={
-                                    courseDescription ||
-                                    "Certificado de conclusão do curso..."
-                                  }
-                                  className="dark-input min-h-[100px]"
-                                  value={field.value || courseDescription || ""}
-                                  onChange={(e) => {
-                                    field.onChange(e.target.value);
-                                  }}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        {/* File Upload Section */}
-                        <div className="dark-card dark-shadow-sm rounded-lg p-4">
-                          <h3 className="dark-text-primary mb-3 font-semibold">
-                            Template do Certificado (PDF)
-                          </h3>
-                          <div className="space-y-3">
-                            <div className="dark-bg-secondary rounded-lg border-2 border-dashed border-gray-600 p-6 text-center">
-                              <Upload className="dark-text-tertiary mx-auto mb-2 h-8 w-8" />
-                              <p className="dark-text-secondary text-sm">
-                                {certificateFile
-                                  ? certificateFile.name
-                                  : "Arraste o arquivo PDF aqui ou clique para selecionar"}
-                              </p>
-                              <p className="dark-text-tertiary text-xs">
-                                Apenas arquivos PDF (máx. 10MB)
-                              </p>
-                            </div>
-                            <input
-                              type="file"
-                              accept=".pdf"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) {
-                                  if (file.type === "application/pdf") {
-                                    setCertificateFile(file);
-                                  } else {
-                                    toast.error(
-                                      "Por favor, selecione apenas arquivos PDF",
-                                    );
-                                  }
-                                }
-                              }}
-                              className="hidden"
-                              id="certificate-upload"
-                            />
-                            <Button
-                              type="button"
-                              className="dark-glass dark-border hover:dark-border-hover w-full"
-                              variant="outline"
-                              onClick={() => {
-                                document
-                                  .getElementById("certificate-upload")
-                                  ?.click();
-                              }}
-                            >
-                              <Upload className="mr-2 h-4 w-4" />
-                              {certificateFile
-                                ? "Alterar Arquivo"
-                                : "Selecionar PDF"}
-                            </Button>
-                            {certificateFile && (
-                              <div className="flex items-center justify-between rounded-lg bg-green-900/20 p-3">
-                                <div className="flex items-center gap-2">
-                                  <FileText className="h-4 w-4 text-green-400" />
-                                  <span className="text-sm text-green-400">
-                                    {certificateFile.name}
-                                  </span>
-                                </div>
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="ghost"
-                                  className="text-red-400 hover:text-red-300"
-                                  onClick={() => setCertificateFile(null)}
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex justify-end space-x-4 pt-6">
-                          <Button
-                            type="button"
-                            className="dark-glass dark-border hover:dark-border-hover"
-                            variant="outline"
-                            onClick={() => {
-                              setShowCertificateForm(false);
-                              setEditingCertificate(false);
-                              certificateTemplateForm.reset();
-                              setCertificateFile(null);
-                            }}
-                          >
-                            Cancelar
-                          </Button>
-                          <Button
-                            type="submit"
-                            disabled={isLoading}
-                            className="dark-btn-primary"
-                          >
-                            <Award className="mr-2 h-4 w-4" />
-                            {isLoading
-                              ? editingCertificate
-                                ? "Atualizando..."
-                                : "Criando..."
-                              : editingCertificate
-                                ? "Atualizar Template"
-                                : "Criar Template"}
-                          </Button>
-                        </div>
-                      </form>
-                    </Form>
-                  </div>
-                </div>
+                <CertificateForm
+                  form={certificateTemplateForm}
+                  isLoading={isLoading}
+                  isEditing={editingCertificate}
+                  courseTitle={courseTitle}
+                  courseDescription={courseDescription}
+                  certificateFile={certificateFile}
+                  setCertificateFile={setCertificateFile}
+                  onSubmit={handleCreateCertificateTemplate}
+                  onCancel={() => {
+                    setShowCertificateForm(false);
+                    setEditingCertificate(false);
+                    certificateTemplateForm.reset();
+                    setCertificateFile(null);
+                  }}
+                />
               )}
             </div>
           </div>

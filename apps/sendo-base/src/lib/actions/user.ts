@@ -405,7 +405,7 @@ export async function getLeaders() {
   try {
     const leaders = await prisma.user.findMany({
       where: {
-        role: "ADMIN",
+        role: { in: ["ADMIN", "LIDER"] },
       },
       select: {
         id: true,

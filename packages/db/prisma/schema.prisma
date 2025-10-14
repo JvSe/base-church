@@ -33,6 +33,30 @@ enum UserApprovalStatus {
   REJECTED // Usuário rejeitado
 }
 
+enum LessonType {
+  VIDEO // Lição em vídeo
+  TEXT // Lição de texto/leitura
+  OBJECTIVE_QUIZ // Quiz com questões objetivas (múltipla escolha)
+  SUBJECTIVE_QUIZ // Quiz com questões subjetivas (texto ou arquivo)
+}
+
+enum QuestionType {
+  OBJECTIVE // Questão de múltipla escolha
+  SUBJECTIVE // Questão dissertativa
+}
+
+enum SubjectiveAnswerType {
+  TEXT // Resposta em texto
+  FILE // Resposta por upload de arquivo
+}
+
+enum AnswerStatus {
+  PENDING // Aguardando correção
+  APPROVED // Resposta aprovada/correta
+  REJECTED // Resposta rejeitada/incorreta
+  NEEDS_REVISION // Precisa de revisão
+}
+
 model User {
   id                   String             @id @default(uuid())
   name                 String?
@@ -87,6 +111,7 @@ model User {
   instructorCourses   Course[]          @relation("CourseInstructor")
   instructorEvents    Event[]           @relation("EventInstructor")
   approvedEnrollments Enrollment[]      @relation("EnrollmentApprover")
+  studentAnswers      StudentAnswer[] // Respostas do aluno às questões
 
   @@map("users")
 }
@@ -129,13 +154,14 @@ model Course {
 }
 
 model Module {
-  id          String   @id @default(uuid())
-  title       String
-  description String?
-  order       Int
-  courseId    String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                         String   @id @default(uuid())
+  title                      String
+  description                String?
+  order                      Int
+  courseId                   String
+  requiresActivityCompletion Boolean  @default(false) // Se true, módulo só é liberado após atividade do módulo anterior
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
 
   // Relations
   course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -145,23 +171,25 @@ model Module {
 }
 
 model Lesson {
-  id             String   @id @default(uuid())
+  id             String     @id @default(uuid())
   title          String
   description    String?
-  content        String?
+  content        String? // Conteúdo para lições de texto
   videoUrl       String?
   youtubeEmbedId String?
   duration       Int? // in minutes
   order          Int
   moduleId       String
-  type           String?  @default("video") // video, reading, exercise, quiz
-  isPublished    Boolean  @default(false)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  type           LessonType @default(VIDEO) // Tipo da lição
+  isActivity     Boolean    @default(false) // Se true, é uma atividade que bloqueia o próximo módulo
+  isPublished    Boolean    @default(false)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
 
   // Relations
-  module   Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  progress LessonProgress[]
+  module    Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  progress  LessonProgress[]
+  questions Question[] // Questões da atividade (se for quiz)
 
   @@map("lessons")
 }
@@ -503,4 +531,66 @@ model Category {
   createdAt   DateTime @default(now())
 
   @@map("categories")
+}
+
+// Questões das atividades (quizzes)
+model Question {
+  id                   String                @id @default(uuid())
+  lessonId             String
+  type                 QuestionType // Objetiva ou subjetiva
+  questionText         String // Texto da pergunta
+  points               Int                   @default(10) // Pontuação da questão
+  order                Int // Ordem da questão na atividade
+  explanation          String? // Explicação da resposta (opcional)
+  subjectiveAnswerType SubjectiveAnswerType? // TEXT ou FILE (apenas para questões subjetivas)
+  correctAnswer        String? // Resposta correta para questões subjetivas (para comparação)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+
+  // Relations
+  lesson  Lesson           @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  options QuestionOption[] // Opções de resposta (apenas para questões objetivas)
+  answers StudentAnswer[] // Respostas dos alunos
+
+  @@map("questions")
+}
+
+// Opções de resposta para questões objetivas
+model QuestionOption {
+  id         String   @id @default(uuid())
+  questionId String
+  optionText String // Texto da opção
+  isCorrect  Boolean  @default(false) // Se é a resposta correta
+  order      Int // Ordem da opção
+  createdAt  DateTime @default(now())
+
+  // Relations
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@map("question_options")
+}
+
+// Respostas dos alunos às questões
+model StudentAnswer {
+  id               String       @id @default(uuid())
+  userId           String
+  questionId       String
+  lessonId         String // Para facilitar consultas
+  answerText       String? // Resposta em texto (para subjetivas ou objetivas)
+  selectedOptionId String? // ID da opção selecionada (para objetivas)
+  fileUrl          String? // URL do arquivo enviado (para subjetivas com arquivo)
+  status           AnswerStatus @default(PENDING) // Status da correção
+  score            Int?         @default(0) // Pontuação obtida
+  feedback         String? // Feedback do corretor (para subjetivas)
+  correctedBy      String? // ID do usuário que corrigiu (para subjetivas)
+  correctedAt      DateTime? // Data da correção
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  // Relations
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId]) // Um aluno só pode responder cada questão uma vez
+  @@map("student_answers")
 }

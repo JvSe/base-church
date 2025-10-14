@@ -641,6 +641,7 @@ export async function createLesson(
     duration: number;
     order: number;
     type: string;
+    isActivity?: boolean;
   },
 ) {
   try {
@@ -665,6 +666,7 @@ export async function createLesson(
         order: lessonData.order,
         type: lessonData.type as any,
         moduleId: moduleId,
+        isActivity: lessonData.isActivity || false,
       },
     });
 
@@ -1067,15 +1069,12 @@ export async function getLessonWithProgress(lessonId: string, userId: string) {
             isWatched: false,
           }),
           // Add locked status for certificate lessons
-          isLocked:
-            moduleLesson.type === "certificate" && !moduleLesson.isPublished,
+          isLocked: !moduleLesson.isPublished,
         })),
         // Add locked status for certificate modules
         isLocked:
           module.title === "Certificado de Conclusão" &&
-          module.lessons.some(
-            (l) => l.type === "certificate" && !l.isPublished,
-          ),
+          module.lessons.some((l) => !l.isPublished),
       })),
     };
 
@@ -1150,7 +1149,6 @@ export async function createCertificateModule(courseId: string) {
         title: "Baixar Certificado",
         description:
           "Clique aqui para visualizar e baixar seu certificado de conclusão.",
-        type: "certificate",
         order: 1,
         isPublished: false, // Will be published when course is completed
         duration: 0, // No duration for certificate
@@ -1297,15 +1295,6 @@ export async function generateCertificateForCompletedCourse(
           },
         },
       },
-    });
-
-    console.log("✅ Certificado gerado automaticamente:", certificate.id);
-    console.log("📜 Dados do certificado:", {
-      id: certificate.id,
-      userId: certificate.userId,
-      courseId: certificate.courseId,
-      templateId: certificate.templateId,
-      status: certificate.status,
     });
 
     return { success: true, certificate };

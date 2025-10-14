@@ -4,6 +4,8 @@ import { PdfViewer } from "@/src/components/pdf-viewer";
 import {
   createLesson,
   createModule,
+  createObjectiveQuestion,
+  createSubjectiveQuestion,
   deleteCourse,
   deleteLesson,
   deleteModule,
@@ -19,7 +21,6 @@ import {
   createCertificateTemplate,
   updateCertificateTemplate,
 } from "@/src/lib/actions/certificate";
-import { COURSE_CATEGORIES } from "@/src/lib/constants";
 import { extractYouTubeEmbedId } from "@/src/lib/helpers/youtube";
 import {
   Accordion,
@@ -28,28 +29,9 @@ import {
   AccordionTrigger,
 } from "@base-church/ui/components/accordion";
 import { Button } from "@base-church/ui/components/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@base-church/ui/components/form";
-import { Input } from "@base-church/ui/components/input";
-import { MoneyInput } from "@base-church/ui/components/money-input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@base-church/ui/components/select";
-import { Textarea } from "@base-church/ui/components/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  ArrowLeft,
   Award,
   BookOpen,
   CheckCircle,
@@ -58,16 +40,22 @@ import {
   Layers,
   Play,
   Plus,
-  Save,
   Trash2,
-  Upload,
-  Video,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import {
+  CertificateForm,
+  CourseHeader,
+  CourseInfoForm,
+  LessonForm,
+  ModuleForm,
+  QuestionForm,
+  QuestionList,
+} from "../../components";
 
 // Schemas de validação
 const courseSchema = z.object({
@@ -124,6 +112,23 @@ interface Module {
   lessons: Lesson[];
 }
 
+interface Question {
+  id?: string;
+  questionText: string;
+  points: number;
+  order: number;
+  explanation?: string;
+  type: "objective" | "subjective";
+  subjectiveAnswerType?: "text" | "file";
+  correctAnswer?: string;
+  options?: {
+    id?: string;
+    optionText: string;
+    isCorrect: boolean;
+    order: number;
+  }[];
+}
+
 interface Lesson {
   id: string;
   title: string;
@@ -134,6 +139,8 @@ interface Lesson {
   duration: number;
   order: number;
   type: "video" | "text" | "quiz";
+  isActivity?: boolean;
+  questions?: Question[];
 }
 
 interface EditCoursePageProps {
@@ -158,6 +165,19 @@ export default function EditCoursePage(props: EditCoursePageProps) {
   const [openLessons, setOpenLessons] = useState<string[]>([]);
   const [isEditingCertificate, setIsEditingCertificate] = useState(false);
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
+  const [showQuestionForm, setShowQuestionForm] = useState<{
+    moduleIndex: number;
+    lessonIndex: number;
+  } | null>(null);
+  const [questionType, setQuestionType] = useState<"objective" | "subjective">(
+    "objective",
+  );
+  const [questionOptions, setQuestionOptions] = useState<
+    { optionText: string; isCorrect: boolean }[]
+  >([
+    { optionText: "", isCorrect: false },
+    { optionText: "", isCorrect: false },
+  ]);
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -192,26 +212,6 @@ export default function EditCoursePage(props: EditCoursePageProps) {
     queryFn: getLeaders,
     select: (data) => data.leaders,
   });
-
-  // Transformar dados do banco para o formato da interface
-  const modules: Module[] =
-    modulesData?.map((module: any) => ({
-      id: module.id,
-      title: module.title,
-      description: module.description,
-      order: module.order,
-      lessons:
-        module.lessons?.map((lesson: any) => ({
-          id: lesson.id,
-          title: lesson.title,
-          description: lesson.description,
-          content: lesson.content,
-          videoUrl: lesson.videoUrl,
-          duration: lesson.duration,
-          order: lesson.order,
-          type: lesson.type,
-        })) || [],
-    })) || [];
 
   // Formulário do curso
   const courseForm = useForm<CourseFormData>({
@@ -255,8 +255,45 @@ export default function EditCoursePage(props: EditCoursePageProps) {
     resolver: zodResolver(certificateTemplateSchema),
   });
 
+  // Formulário de questões
+  const questionSchema = z.object({
+    questionText: z.string().min(1, "Texto da questão é obrigatório"),
+    points: z.number().min(1, "Pontuação deve ser maior que 0").optional(),
+    explanation: z.string().optional(),
+    type: z.enum(["objective", "subjective"]),
+    subjectiveAnswerType: z.enum(["text", "file"]).optional(),
+    correctAnswer: z.string().optional(),
+    options: z
+      .array(
+        z.object({
+          optionText: z.string().min(1, "Texto da opção é obrigatório"),
+          isCorrect: z.boolean(),
+        }),
+      )
+      .optional(),
+  });
+
+  type QuestionFormData = z.infer<typeof questionSchema>;
+
+  const questionForm = useForm<QuestionFormData>({
+    resolver: zodResolver(questionSchema),
+    defaultValues: {
+      questionText: "",
+      points: 10,
+      explanation: "",
+      type: "objective",
+      subjectiveAnswerType: "text",
+      correctAnswer: "",
+      options: [],
+    },
+  });
+
   // Watch lesson type for conditional fields
   const selectedLessonType = lessonForm.watch("type");
+  const selectedQuestionType = questionForm.watch("type");
+  const selectedSubjectiveAnswerType = questionForm.watch(
+    "subjectiveAnswerType",
+  );
 
   // Watch course title to auto-generate certificate title
   const courseTitle = courseForm.watch("title");
@@ -304,6 +341,31 @@ export default function EditCoursePage(props: EditCoursePageProps) {
     }
   }, [modulesData]);
 
+  // Atualizar template de certificado quando os dados chegarem
+  useEffect(() => {
+    if (courseData) {
+      if (courseData.certificateTemplate) {
+        certificateTemplateForm.setValue(
+          "title",
+          courseData.certificateTemplate.title,
+        );
+        certificateTemplateForm.setValue(
+          "description",
+          courseData.certificateTemplate.description || "",
+        );
+      } else {
+        certificateTemplateForm.setValue(
+          "title",
+          `Certificado - ${courseData.title}`,
+        );
+        certificateTemplateForm.setValue(
+          "description",
+          courseData.description || "",
+        );
+      }
+    }
+  }, [courseData]);
+
   // Atualizar curso
   const handleUpdateCourse = async (data: CourseFormData) => {
     setIsLoading(true);
@@ -311,7 +373,7 @@ export default function EditCoursePage(props: EditCoursePageProps) {
       const result = await updateCourse(courseId, {
         ...data,
         tags: data.tags || "",
-        status: "draft", // Sempre manter como draft na edição
+        status: "draft",
       });
 
       if (result.success) {
@@ -413,27 +475,7 @@ export default function EditCoursePage(props: EditCoursePageProps) {
         description: module.description,
       });
       setEditingModule(moduleIndex);
-      // Abre o accordion do módulo para mostrar o formulário de edição
       setOpenModules([...openModules, `module-${moduleIndex}`]);
-    }
-  };
-
-  // Editar lição
-  const handleEditLesson = (moduleIndex: number, lessonIndex: number) => {
-    const lesson = modulesState[moduleIndex]?.lessons[lessonIndex];
-    if (lesson) {
-      lessonForm.reset({
-        title: lesson.title,
-        description: lesson.description,
-        content: lesson.content || "",
-        videoUrl: lesson.videoUrl || "",
-        duration: lesson.duration,
-        type: lesson.type,
-      });
-      setEditingLesson({ moduleIndex, lessonIndex });
-      // Abre o accordion do módulo e da lição para mostrar o formulário de edição
-      setOpenModules([...openModules, `module-${moduleIndex}`]);
-      setOpenLessons([...openLessons, `lesson-${moduleIndex}-${lessonIndex}`]);
     }
   };
 
@@ -457,7 +499,6 @@ export default function EditCoursePage(props: EditCoursePageProps) {
       });
 
       if (result.success) {
-        // Atualizar o estado local
         const updatedModules = [...modulesState];
         if (updatedModules[moduleIndex]) {
           updatedModules[moduleIndex].title = data.title;
@@ -479,6 +520,24 @@ export default function EditCoursePage(props: EditCoursePageProps) {
     }
   };
 
+  // Editar lição
+  const handleEditLesson = (moduleIndex: number, lessonIndex: number) => {
+    const lesson = modulesState[moduleIndex]?.lessons[lessonIndex];
+    if (lesson) {
+      lessonForm.reset({
+        title: lesson.title,
+        description: lesson.description,
+        content: lesson.content || "",
+        videoUrl: lesson.videoUrl || "",
+        duration: lesson.duration,
+        type: lesson.type,
+      });
+      setEditingLesson({ moduleIndex, lessonIndex });
+      setOpenModules([...openModules, `module-${moduleIndex}`]);
+      setOpenLessons([...openLessons, `lesson-${moduleIndex}-${lessonIndex}`]);
+    }
+  };
+
   // Salvar edição de lição
   const handleSaveLessonEdit = async (
     data: LessonFormData,
@@ -488,7 +547,6 @@ export default function EditCoursePage(props: EditCoursePageProps) {
     const lesson = modulesState[moduleIndex]?.lessons[lessonIndex];
     if (!lesson) return;
 
-    // Extrair YouTube Embed ID da URL fornecida
     const youtubeEmbedId = extractYouTubeEmbedId(data.videoUrl || "");
 
     setIsLoading(true);
@@ -512,10 +570,6 @@ export default function EditCoursePage(props: EditCoursePageProps) {
             type: data.type,
           };
           setModulesState(updatedModules);
-          console.log(
-            "🔍 Debug - Estado local atualizado com youtubeEmbedId:",
-            youtubeEmbedId,
-          );
         }
         setEditingLesson(null);
         toast.success("Lição atualizada com sucesso!");
@@ -563,7 +617,6 @@ export default function EditCoursePage(props: EditCoursePageProps) {
     const module = modulesState[moduleIndex];
     if (!module) return;
 
-    // Extrair YouTube Embed ID da URL fornecida
     const youtubeEmbedId = extractYouTubeEmbedId(data.videoUrl || "");
 
     setIsLoading(true);
@@ -591,10 +644,6 @@ export default function EditCoursePage(props: EditCoursePageProps) {
         if (updatedModules[moduleIndex]) {
           updatedModules[moduleIndex].lessons.push(newLesson);
           setModulesState(updatedModules);
-          console.log(
-            "🔍 Debug - Nova lição criada com youtubeEmbedId:",
-            youtubeEmbedId,
-          );
         }
         lessonForm.reset();
         setShowLessonForm(null);
@@ -605,6 +654,143 @@ export default function EditCoursePage(props: EditCoursePageProps) {
       }
     } catch (error) {
       toast.error("Erro ao criar lição");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Adicionar questão objetiva
+  const handleAddObjectiveQuestion = async (
+    moduleIndex: number,
+    lessonIndex: number,
+  ) => {
+    const module = modulesState[moduleIndex];
+    const lesson = module?.lessons[lessonIndex];
+
+    if (!lesson || !lesson.id) {
+      toast.error("Lição não encontrada");
+      return;
+    }
+
+    // Validar opções
+    if (questionOptions.length < 2) {
+      toast.error("Adicione pelo menos 2 opções");
+      return;
+    }
+
+    const hasCorrectAnswer = questionOptions.some((opt) => opt.isCorrect);
+    if (!hasCorrectAnswer) {
+      toast.error("Marque pelo menos uma opção como correta");
+      return;
+    }
+
+    const data = questionForm.getValues();
+    setIsLoading(true);
+
+    try {
+      const result = await createObjectiveQuestion({
+        lessonId: lesson.id,
+        questionText: data.questionText,
+        points: data.points || 10,
+        order: (lesson.questions?.length || 0) + 1,
+        explanation: data.explanation,
+        options: questionOptions.map((opt, idx) => ({
+          ...opt,
+          order: idx + 1,
+        })),
+      });
+
+      if (result.success && result.question) {
+        const updatedModules = [...modulesState];
+        if (!updatedModules[moduleIndex]?.lessons[lessonIndex]?.questions) {
+          updatedModules[moduleIndex]!.lessons[lessonIndex]!.questions = [];
+        }
+
+        updatedModules[moduleIndex]?.lessons[lessonIndex]?.questions!.push({
+          id: result.question.id,
+          questionText: data.questionText,
+          points: data.points || 10,
+          order: (lesson.questions?.length || 0) + 1,
+          explanation: data.explanation,
+          type: "objective",
+          options: questionOptions.map((opt, idx) => ({
+            optionText: opt.optionText,
+            isCorrect: opt.isCorrect,
+            order: idx + 1,
+          })),
+        });
+
+        setModulesState(updatedModules);
+        questionForm.reset();
+        setQuestionOptions([
+          { optionText: "", isCorrect: false },
+          { optionText: "", isCorrect: false },
+        ]);
+        setShowQuestionForm(null);
+        toast.success("Questão objetiva adicionada!");
+      } else {
+        toast.error(result.error || "Erro ao criar questão");
+      }
+    } catch (error) {
+      toast.error("Erro ao criar questão");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Adicionar questão subjetiva
+  const handleAddSubjectiveQuestion = async (
+    moduleIndex: number,
+    lessonIndex: number,
+  ) => {
+    const module = modulesState[moduleIndex];
+    const lesson = module?.lessons[lessonIndex];
+
+    if (!lesson || !lesson.id) {
+      toast.error("Lição não encontrada");
+      return;
+    }
+
+    const data = questionForm.getValues();
+    setIsLoading(true);
+
+    try {
+      const result = await createSubjectiveQuestion({
+        lessonId: lesson.id,
+        questionText: data.questionText,
+        points: data.points || 10,
+        order: (lesson.questions?.length || 0) + 1,
+        explanation: data.explanation,
+        subjectiveAnswerType: data.subjectiveAnswerType as "TEXT" | "FILE",
+        correctAnswer: data.correctAnswer,
+      });
+
+      if (result.success && result.question) {
+        const updatedModules = [...modulesState];
+        if (!updatedModules[moduleIndex]?.lessons[lessonIndex]?.questions) {
+          updatedModules[moduleIndex]!.lessons[lessonIndex]!.questions = [];
+        }
+
+        updatedModules[moduleIndex]?.lessons[lessonIndex]?.questions!.push({
+          id: result.question.id,
+          questionText: data.questionText,
+          points: data.points || 10,
+          order: (lesson.questions?.length || 0) + 1,
+          explanation: data.explanation,
+          type: "subjective",
+          subjectiveAnswerType: data.subjectiveAnswerType,
+          correctAnswer: data.correctAnswer,
+        });
+
+        setModulesState(updatedModules);
+        questionForm.reset();
+        setShowQuestionForm(null);
+        toast.success("Questão subjetiva adicionada!");
+      } else {
+        toast.error(result.error || "Erro ao criar questão");
+      }
+    } catch (error) {
+      toast.error("Erro ao criar questão");
     } finally {
       setIsLoading(false);
     }
@@ -638,7 +824,6 @@ export default function EditCoursePage(props: EditCoursePageProps) {
 
     setIsLoading(true);
     try {
-      // Converter arquivo PDF para base64 se existir
       let templateUrl = "";
       if (certificateFile) {
         templateUrl = await convertFileToBase64(certificateFile);
@@ -660,9 +845,6 @@ export default function EditCoursePage(props: EditCoursePageProps) {
         queryClient.invalidateQueries({
           queryKey: ["course", courseId],
         });
-        queryClient.invalidateQueries({
-          queryKey: ["course-modules", courseId],
-        });
       } else {
         toast.error(result.error || "Erro ao criar template de certificado");
       }
@@ -681,7 +863,6 @@ export default function EditCoursePage(props: EditCoursePageProps) {
 
     setIsLoading(true);
     try {
-      // Converter arquivo PDF para base64 se existir
       let templateUrl = courseData.certificateTemplate.templateUrl || "";
       if (certificateFile) {
         templateUrl = await convertFileToBase64(certificateFile);
@@ -702,6 +883,9 @@ export default function EditCoursePage(props: EditCoursePageProps) {
         setShowCertificateForm(false);
         setIsEditingCertificate(false);
         setCertificateFile(null);
+        queryClient.invalidateQueries({
+          queryKey: ["course", courseId],
+        });
       } else {
         toast.error(
           result.error || "Erro ao atualizar template de certificado",
@@ -713,32 +897,6 @@ export default function EditCoursePage(props: EditCoursePageProps) {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (courseData) {
-      if (courseData.certificateTemplate) {
-        // Carregar dados do template existente
-        certificateTemplateForm.setValue(
-          "title",
-          courseData.certificateTemplate.title,
-        );
-        certificateTemplateForm.setValue(
-          "description",
-          courseData.certificateTemplate.description || "",
-        );
-      } else {
-        // Valores padrão para novo template
-        certificateTemplateForm.setValue(
-          "title",
-          `Certificado - ${courseData.title}`,
-        );
-        certificateTemplateForm.setValue(
-          "description",
-          courseData.description || "",
-        );
-      }
-    }
-  }, [courseData]);
 
   // Converter arquivo para base64
   const convertFileToBase64 = (file: File): Promise<string> => {
@@ -752,25 +910,29 @@ export default function EditCoursePage(props: EditCoursePageProps) {
 
   const getLessonTypeIcon = (type: string) => {
     switch (type) {
-      case "video":
-        return Play;
-      case "text":
-        return FileText;
-      case "quiz":
-        return CheckCircle;
+      case "VIDEO":
+        return <Play className="dark-secondary" size={16} />;
+      case "TEXT":
+        return <FileText className="dark-secondary" size={16} />;
+      case "OBJECTIVE_QUIZ":
+        return <CheckCircle className="dark-secondary" size={16} />;
+      case "SUBJECTIVE_QUIZ":
+        return <CheckCircle className="dark-secondary" size={16} />;
       default:
-        return FileText;
+        return <FileText className="dark-secondary" size={16} />;
     }
   };
 
   const getLessonTypeText = (type: string) => {
     switch (type) {
-      case "video":
+      case "VIDEO":
         return "Vídeo";
-      case "text":
+      case "TEXT":
         return "Texto";
-      case "quiz":
-        return "Quiz";
+      case "OBJECTIVE_QUIZ":
+        return "Atividade Objetiva";
+      case "SUBJECTIVE_QUIZ":
+        return "Atividade Subjetiva";
       default:
         return "Texto";
     }
@@ -840,1525 +1002,648 @@ export default function EditCoursePage(props: EditCoursePageProps) {
 
       <div className="relative mx-auto max-w-6xl space-y-8 p-6">
         {/* Header */}
-        <div className="dark-glass dark-shadow-md rounded-2xl p-6">
-          <div className="flex items-center space-x-4">
-            <Button
-              className="dark-glass dark-border hover:dark-border-hover"
-              onClick={() => router.back()}
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Voltar
-            </Button>
-            <div className="flex-1">
-              <h1 className="dark-text-primary text-3xl font-bold">
-                Editar Curso 📚
-              </h1>
-              <p className="dark-text-secondary mt-2">
-                Edite seu curso com módulos e lições em uma única tela
-              </p>
-            </div>
-            <div className="flex gap-2">
-              {courseId && modules.length > 0 && (
-                <Button
-                  type="button"
-                  className="dark-btn-primary"
-                  onClick={handleFinishCourse}
-                  disabled={isLoading}
-                >
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Publicar Curso
-                </Button>
-              )}
+        <CourseHeader
+          courseId={courseId}
+          hasModules={modulesState.length > 0}
+          isLoading={isLoading}
+          isEditing={true}
+          isDeleting={isDeleting}
+          onFinishCourse={handleFinishCourse}
+          onDeleteCourse={handleDeleteCourse}
+        />
+
+        {/* Course Form */}
+        <CourseInfoForm
+          form={courseForm}
+          courseId={courseId}
+          isLoading={isLoading}
+          isEditing={true}
+          leadersData={leadersData || []}
+          leadersLoading={leadersLoading}
+          onSubmit={handleUpdateCourse}
+        />
+
+        {/* Modules Section */}
+        <div className="space-y-6">
+          {/* Add Module Button */}
+          <div className="dark-glass dark-shadow-sm rounded-xl p-6">
+            <div className="flex items-center justify-between">
+              <h2 className="dark-text-primary flex items-center gap-2 text-xl font-bold">
+                <Layers className="dark-primary" size={24} />
+                Módulos do Curso ({modulesState.length})
+              </h2>
               <Button
-                onClick={handleDeleteCourse}
-                variant="destructive"
-                disabled={isDeleting}
+                variant="success"
+                onClick={() => {
+                  setShowModuleForm(!showModuleForm);
+                  if (!showModuleForm) {
+                    const newModuleIndex = modulesState.length;
+                    setOpenModules([
+                      ...openModules,
+                      `module-${newModuleIndex}`,
+                    ]);
+                  }
+                }}
               >
-                <Trash2 className="mr-2 h-4 w-4" />
-                {isDeleting ? "Excluindo..." : "Excluir Curso"}
+                <Plus className="mr-2 h-4 w-4" />
+                Adicionar Módulo
               </Button>
             </div>
+
+            {/* Module Form */}
+            {showModuleForm && (
+              <ModuleForm
+                form={moduleForm}
+                isLoading={isLoading}
+                onSubmit={handleAddModule}
+                onCancel={() => {
+                  setShowModuleForm(false);
+                  moduleForm.reset();
+                }}
+              />
+            )}
           </div>
-        </div>
-        {/* Course Form */}
-        <div className="dark-glass dark-shadow-sm rounded-xl p-6">
-          <h2 className="dark-text-primary mb-6 text-xl font-bold">
-            Informações do Curso
-          </h2>
-          <Form {...courseForm}>
-            <form
-              onSubmit={courseForm.handleSubmit(handleUpdateCourse)}
-              className="space-y-6"
+
+          {/* Modules List */}
+          {modulesState.length > 0 && (
+            <Accordion
+              type="multiple"
+              className="space-y-4"
+              value={openModules}
+              onValueChange={setOpenModules}
             >
-              <div className="space-y-4">
-                <FormField
-                  control={courseForm.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="dark-text-secondary text-sm font-medium">
-                        Título do Curso *
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="Ex: Fundamentos da Fé Cristã"
-                          className="dark-input"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={courseForm.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="dark-text-secondary text-sm font-medium">
-                        Descrição *
-                      </FormLabel>
-                      <FormControl>
-                        <Textarea
-                          {...field}
-                          placeholder="Descreva o conteúdo bíblico e espiritual que será ensinado neste curso..."
-                          className="dark-input min-h-[100px]"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <FormField
-                    control={courseForm.control}
-                    name="instructorId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="dark-text-secondary text-sm font-medium">
-                          Instrutor (Líder) *
-                        </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                          disabled={leadersLoading}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="dark-input h-10">
-                              <SelectValue
-                                placeholder={
-                                  leadersLoading
-                                    ? "Carregando líderes..."
-                                    : "Selecione um líder como instrutor"
-                                }
-                              />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="dark-bg-secondary dark-border">
-                            {leadersData?.map((leader: any) => (
-                              <SelectItem
-                                key={leader.id}
-                                value={leader.id}
-                                className="dark-text-primary hover:dark-bg-tertiary"
-                              >
-                                <div className="flex items-center space-x-2">
-                                  <span>{leader.name}</span>
-                                  {leader.isPastor && (
-                                    <span className="dark-primary text-xs font-medium">
-                                      (Pastor)
-                                    </span>
-                                  )}
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={courseForm.control}
-                    name="duration"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="dark-text-secondary text-sm font-medium">
-                          Duração (minutos) *
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="60"
-                            className="dark-input"
-                            onChange={(e) =>
-                              field.onChange(parseInt(e.target.value) || 0)
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <FormField
-                    control={courseForm.control}
-                    name="level"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="dark-text-secondary text-sm font-medium">
-                          Nível *
-                        </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="dark-input h-10">
-                              <SelectValue placeholder="Selecione o nível" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="beginner">Iniciante</SelectItem>
-                            <SelectItem value="intermediate">
-                              Intermediário
-                            </SelectItem>
-                            <SelectItem value="advanced">Avançado</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={courseForm.control}
-                    name="category"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="dark-text-secondary text-sm font-medium">
-                          Categoria *
-                        </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="dark-input h-10">
-                              <SelectValue placeholder="Selecione uma categoria" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="dark-bg-secondary dark-border">
-                            {COURSE_CATEGORIES.map((category) => (
-                              <SelectItem
-                                key={category.value}
-                                value={category.value}
-                                className="dark-text-primary hover:dark-bg-tertiary"
-                              >
-                                <div className="flex items-center space-x-2">
-                                  <span>{category.icon}</span>
-                                  <span>{category.label}</span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <FormField
-                    control={courseForm.control}
-                    name="tags"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="dark-text-secondary text-sm font-medium">
-                          Tags (separadas por vírgula)
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="Fé, Bíblia, Liderança, Ministério"
-                            className="dark-input"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={courseForm.control}
-                    name="price"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="dark-text-secondary text-sm font-medium">
-                          Preço (R$)
-                        </FormLabel>
-                        <FormControl>
-                          <MoneyInput
-                            {...field}
-                            placeholder="0"
-                            className="dark-input"
-                            onChange={(e) =>
-                              field.onChange(parseFloat(e.target.value) || 0)
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-4 pt-6">
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="dark-btn-primary"
+              {modulesState.map((module, moduleIndex) => (
+                <AccordionItem
+                  key={moduleIndex}
+                  value={`module-${moduleIndex}`}
+                  className="dark-glass dark-shadow-sm rounded-xl"
                 >
-                  <Save className="mr-2 h-4 w-4" />
-                  {isLoading ? "Salvando..." : "Salvar Alterações"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </div>
-        {/* Modules Section */}
-        {
-          <div className="space-y-6">
-            {/* Add Module Button */}
-            <div className="dark-glass dark-shadow-sm rounded-xl p-6">
-              <div className="flex items-center justify-between">
-                <h2 className="dark-text-primary flex items-center gap-2 text-xl font-bold">
-                  <Layers className="dark-primary" size={24} />
-                  Módulos do Curso ({modulesState.length})
-                </h2>
+                  <AccordionTrigger
+                    arrow={false}
+                    className="dark-card hover:dark-bg-secondary p-4 transition-all"
+                  >
+                    <div className="flex w-full items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="dark-primary-subtle-bg rounded-xl p-2">
+                          <Layers className="dark-primary" size={20} />
+                        </div>
+                        <div className="text-left">
+                          <h3 className="dark-text-primary font-semibold">
+                            {module.title}
+                          </h3>
+                          <p className="dark-text-secondary text-sm">
+                            {module.description}
+                          </p>
+                          <p className="dark-text-tertiary mt-1 text-xs">
+                            {module.lessons.length} lição(ões)
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="success"
+                          className="gap-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowLessonForm(moduleIndex);
+                            setOpenModules([
+                              ...openModules,
+                              `module-${moduleIndex}`,
+                            ]);
+                          }}
+                        >
+                          <Plus className="h-3 w-3" />
+                          Adicionar nova lição
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="info"
+                          className="gap-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditModule(moduleIndex);
+                          }}
+                        >
+                          <Edit className="h-3 w-3" />
+                          Editar módulo
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="gap-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteModule(module.id);
+                          }}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                          Excluir módulo
+                        </Button>
+                      </div>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="dark-border">
+                    {/* Module Edit Form */}
+                    {editingModule === moduleIndex && (
+                      <div className="dark-border border-b p-6">
+                        <ModuleForm
+                          form={moduleForm}
+                          isLoading={isLoading}
+                          onSubmit={(data) =>
+                            handleSaveModuleEdit(data, moduleIndex)
+                          }
+                          onCancel={() => {
+                            setEditingModule(null);
+                            moduleForm.reset();
+                          }}
+                        />
+                      </div>
+                    )}
+
+                    {/* Lesson Form */}
+                    {showLessonForm === moduleIndex && (
+                      <LessonForm
+                        form={lessonForm}
+                        isLoading={isLoading}
+                        onSubmit={(data) => handleAddLesson(data, moduleIndex)}
+                        onCancel={() => {
+                          setShowLessonForm(null);
+                          lessonForm.reset();
+                        }}
+                      />
+                    )}
+
+                    {/* Lessons List */}
+                    {module.lessons.length > 0 && (
+                      <div className="p-4">
+                        <h4 className="dark-text-primary mb-3 font-medium">
+                          Lições ({module.lessons.length})
+                        </h4>
+                        <Accordion
+                          type="multiple"
+                          className="space-y-3"
+                          value={openLessons.filter((lesson) =>
+                            lesson.startsWith(`lesson-${moduleIndex}-`),
+                          )}
+                          onValueChange={(value) => {
+                            const otherLessons = openLessons.filter(
+                              (lesson) =>
+                                !lesson.startsWith(`lesson-${moduleIndex}-`),
+                            );
+                            setOpenLessons([...otherLessons, ...value]);
+                          }}
+                        >
+                          {module.lessons.map((lesson, lessonIndex) => (
+                            <AccordionItem
+                              key={lessonIndex}
+                              value={`lesson-${moduleIndex}-${lessonIndex}`}
+                              className="dark-card dark-shadow-sm rounded-lg"
+                            >
+                              <AccordionTrigger
+                                arrow={false}
+                                className="hover:dark-bg-secondary p-4 transition-colors"
+                              >
+                                <div className="flex w-full items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <div className="dark-secondary-subtle-bg rounded-lg p-2">
+                                      <span className="text-lg">
+                                        {getLessonTypeIcon(lesson.type)}
+                                      </span>
+                                    </div>
+                                    <div className="text-left">
+                                      <h5 className="dark-text-primary font-medium">
+                                        {lesson.title}
+                                      </h5>
+                                      <p className="dark-text-secondary text-sm">
+                                        {lesson.description}
+                                      </p>
+                                      <div className="mt-1 flex items-center gap-4">
+                                        <span className="dark-text-tertiary text-xs">
+                                          Tipo: {getLessonTypeText(lesson.type)}
+                                        </span>
+                                        <span className="dark-text-tertiary text-xs">
+                                          Duração: {lesson.duration}min
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      size="sm"
+                                      variant="info"
+                                      className="gap-1"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleEditLesson(
+                                          moduleIndex,
+                                          lessonIndex,
+                                        );
+                                      }}
+                                    >
+                                      <Edit className="h-3 w-3" />
+                                      Editar Lição
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="destructive"
+                                      className="gap-1"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteLesson(
+                                          lesson.id,
+                                          moduleIndex,
+                                          lessonIndex,
+                                        );
+                                      }}
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                      Excluir Lição
+                                    </Button>
+                                  </div>
+                                </div>
+                              </AccordionTrigger>
+                              <AccordionContent className="p-4">
+                                {editingLesson?.moduleIndex === moduleIndex &&
+                                editingLesson?.lessonIndex === lessonIndex ? (
+                                  // Formulário de edição
+                                  <LessonForm
+                                    form={lessonForm}
+                                    isLoading={isLoading}
+                                    onSubmit={(data) =>
+                                      handleSaveLessonEdit(
+                                        data,
+                                        moduleIndex,
+                                        lessonIndex,
+                                      )
+                                    }
+                                    onCancel={() => {
+                                      setEditingLesson(null);
+                                      lessonForm.reset();
+                                    }}
+                                  />
+                                ) : (
+                                  // Visualização da lição
+                                  <div className="space-y-4">
+                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                      <div>
+                                        <h6 className="dark-text-primary mb-2 font-medium">
+                                          Tipo de Conteúdo
+                                        </h6>
+                                        <div className="flex items-center space-x-2">
+                                          <span className="text-lg">
+                                            {getLessonTypeIcon(lesson.type)}
+                                          </span>
+                                          <span className="dark-text-secondary text-sm">
+                                            {getLessonTypeText(lesson.type)}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <h6 className="dark-text-primary mb-2 font-medium">
+                                          Duração
+                                        </h6>
+                                        <p className="dark-text-secondary text-sm">
+                                          {lesson.duration} minutos
+                                        </p>
+                                      </div>
+                                    </div>
+
+                                    {lesson.videoUrl && (
+                                      <div>
+                                        <h6 className="dark-text-primary mb-2 font-medium">
+                                          Vídeo da Lição
+                                        </h6>
+                                        <a
+                                          href={lesson.videoUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="dark-text-secondary hover:dark-text-primary text-sm underline"
+                                        >
+                                          {lesson.videoUrl}
+                                        </a>
+                                      </div>
+                                    )}
+
+                                    {lesson.content && (
+                                      <div>
+                                        <h6 className="dark-text-primary mb-2 font-medium">
+                                          Conteúdo da Lição
+                                        </h6>
+                                        <div className="dark-card dark-shadow-sm rounded-lg p-4">
+                                          <p className="dark-text-secondary text-sm whitespace-pre-wrap">
+                                            {lesson.content}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {!lesson.content && !lesson.videoUrl && (
+                                      <div className="dark-card dark-shadow-sm rounded-lg p-6 text-center">
+                                        <div className="dark-bg-secondary mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full">
+                                          <BookOpen
+                                            className="dark-text-tertiary"
+                                            size={20}
+                                          />
+                                        </div>
+                                        <h6 className="dark-text-primary mb-2 font-medium">
+                                          Conteúdo não definido
+                                        </h6>
+                                        <p className="dark-text-tertiary text-sm">
+                                          Esta lição ainda não possui conteúdo
+                                          específico definido.
+                                        </p>
+                                      </div>
+                                    )}
+
+                                    {/* Questões (para atividades) */}
+                                    {lesson.isActivity && (
+                                      <div className="mt-6 space-y-4">
+                                        <div className="flex items-center justify-between">
+                                          <h6 className="dark-text-primary font-medium">
+                                            Questões da Atividade
+                                          </h6>
+                                          {!showQuestionForm ||
+                                          showQuestionForm.moduleIndex !==
+                                            moduleIndex ||
+                                          showQuestionForm.lessonIndex !==
+                                            lessonIndex ? (
+                                            <Button
+                                              size="sm"
+                                              variant="success"
+                                              onClick={() =>
+                                                setShowQuestionForm({
+                                                  moduleIndex,
+                                                  lessonIndex,
+                                                })
+                                              }
+                                            >
+                                              <Plus className="mr-2 h-3 w-3" />
+                                              Adicionar Questão
+                                            </Button>
+                                          ) : null}
+                                        </div>
+
+                                        {/* Formulário de Questão */}
+                                        {showQuestionForm &&
+                                          showQuestionForm.moduleIndex ===
+                                            moduleIndex &&
+                                          showQuestionForm.lessonIndex ===
+                                            lessonIndex && (
+                                            <QuestionForm
+                                              form={questionForm}
+                                              isLoading={isLoading}
+                                              questionType={questionType}
+                                              subjectiveAnswerType={
+                                                selectedSubjectiveAnswerType ||
+                                                "text"
+                                              }
+                                              questionOptions={questionOptions}
+                                              onQuestionTypeChange={
+                                                setQuestionType
+                                              }
+                                              onSubjectiveAnswerTypeChange={(
+                                                type,
+                                              ) => {
+                                                questionForm.setValue(
+                                                  "subjectiveAnswerType",
+                                                  type,
+                                                );
+                                              }}
+                                              onAddOption={() => {
+                                                setQuestionOptions([
+                                                  ...questionOptions,
+                                                  {
+                                                    optionText: "",
+                                                    isCorrect: false,
+                                                  },
+                                                ]);
+                                              }}
+                                              onRemoveOption={(index) => {
+                                                setQuestionOptions(
+                                                  questionOptions.filter(
+                                                    (_, i) => i !== index,
+                                                  ),
+                                                );
+                                              }}
+                                              onOptionTextChange={(
+                                                index,
+                                                text,
+                                              ) => {
+                                                const updated = [
+                                                  ...questionOptions,
+                                                ];
+                                                if (updated[index]) {
+                                                  updated[index].optionText =
+                                                    text;
+                                                  setQuestionOptions(updated);
+                                                }
+                                              }}
+                                              onOptionCorrectChange={(
+                                                index,
+                                                isCorrect,
+                                              ) => {
+                                                const updated = [
+                                                  ...questionOptions,
+                                                ];
+                                                if (updated[index]) {
+                                                  updated[index].isCorrect =
+                                                    isCorrect;
+                                                  setQuestionOptions(updated);
+                                                }
+                                              }}
+                                              onSubmit={() => {
+                                                if (
+                                                  questionType === "objective"
+                                                ) {
+                                                  handleAddObjectiveQuestion(
+                                                    moduleIndex,
+                                                    lessonIndex,
+                                                  );
+                                                } else {
+                                                  handleAddSubjectiveQuestion(
+                                                    moduleIndex,
+                                                    lessonIndex,
+                                                  );
+                                                }
+                                              }}
+                                              onCancel={() => {
+                                                setShowQuestionForm(null);
+                                                questionForm.reset();
+                                                setQuestionOptions([
+                                                  {
+                                                    optionText: "",
+                                                    isCorrect: false,
+                                                  },
+                                                  {
+                                                    optionText: "",
+                                                    isCorrect: false,
+                                                  },
+                                                ]);
+                                              }}
+                                            />
+                                          )}
+
+                                        {/* Lista de Questões */}
+                                        <QuestionList
+                                          questions={lesson.questions || []}
+                                          onDeleteQuestion={(index) => {
+                                            const updatedModules = [
+                                              ...modulesState,
+                                            ];
+                                            if (
+                                              updatedModules[moduleIndex]
+                                                ?.lessons[lessonIndex]
+                                                ?.questions
+                                            ) {
+                                              updatedModules[
+                                                moduleIndex
+                                              ].lessons[lessonIndex].questions =
+                                                updatedModules[
+                                                  moduleIndex
+                                                ].lessons[
+                                                  lessonIndex
+                                                ].questions!.filter(
+                                                  (_, i) => i !== index,
+                                                );
+                                              setModulesState(updatedModules);
+                                              toast.success(
+                                                "Questão removida com sucesso!",
+                                              );
+                                            }
+                                          }}
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </AccordionContent>
+                            </AccordionItem>
+                          ))}
+                        </Accordion>
+                      </div>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          )}
+
+          {/* Certificate Section */}
+          <div className="dark-glass dark-shadow-sm rounded-xl p-6">
+            <div className="flex items-center justify-between">
+              <h2 className="dark-text-primary flex items-center gap-2 text-xl font-bold">
+                <Award className="dark-primary" size={24} />
+                Template de Certificado
+              </h2>
+              {courseData?.certificateTemplate ? (
+                <div className="flex gap-2">
+                  <Button
+                    variant="info"
+                    onClick={() => {
+                      setShowCertificateForm(true);
+                      setIsEditingCertificate(true);
+                    }}
+                  >
+                    <Edit className="mr-2 h-4 w-4" />
+                    Editar Template
+                  </Button>
+                </div>
+              ) : (
                 <Button
                   variant="success"
                   onClick={() => {
-                    setShowModuleForm(!showModuleForm);
-                    // Abre o accordion do módulo que será criado
-                    if (!showModuleForm) {
-                      const newModuleIndex = modulesState.length;
-                      setOpenModules([
-                        ...openModules,
-                        `module-${newModuleIndex}`,
-                      ]);
-                    }
+                    setShowCertificateForm(true);
+                    setIsEditingCertificate(false);
                   }}
                 >
                   <Plus className="mr-2 h-4 w-4" />
-                  Adicionar Módulo
+                  Adicionar Template
                 </Button>
-              </div>
-
-              {/* Module Form */}
-              {showModuleForm && (
-                <div className="mt-6">
-                  <div className="dark-glass dark-shadow-sm rounded-xl p-6">
-                    <h3 className="dark-text-primary mb-6 text-xl font-bold">
-                      Adicionar Novo Módulo
-                    </h3>
-                    <Form {...moduleForm}>
-                      <form
-                        onSubmit={moduleForm.handleSubmit(handleAddModule)}
-                        className="space-y-6"
-                      >
-                        <FormField
-                          control={moduleForm.control}
-                          name="title"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="dark-text-secondary text-sm font-medium">
-                                Título do Módulo *
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  placeholder="Ex: Introdução à Fé Cristã"
-                                  className="dark-input"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={moduleForm.control}
-                          name="description"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="dark-text-secondary text-sm font-medium">
-                                Descrição *
-                              </FormLabel>
-                              <FormControl>
-                                <Textarea
-                                  {...field}
-                                  placeholder="Descreva o que será abordado neste módulo..."
-                                  className="dark-input min-h-[100px]"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <div className="flex justify-end space-x-4 pt-6">
-                          <Button
-                            type="button"
-                            className="dark-glass dark-border hover:dark-border-hover"
-                            variant="outline"
-                            onClick={() => {
-                              setShowModuleForm(false);
-                              moduleForm.reset();
-                            }}
-                          >
-                            Cancelar
-                          </Button>
-                          <Button
-                            type="submit"
-                            disabled={isLoading}
-                            variant="success"
-                          >
-                            <Plus className="mr-2 h-4 w-4" />
-                            {isLoading ? "Adicionando..." : "Adicionar Módulo"}
-                          </Button>
-                        </div>
-                      </form>
-                    </Form>
-                  </div>
-                </div>
               )}
             </div>
 
-            {/* Modules List */}
-            {modulesState.length > 0 && (
-              <Accordion
-                type="multiple"
-                className="space-y-4"
-                value={openModules}
-                onValueChange={setOpenModules}
-              >
-                {modulesState.map((module, moduleIndex) => (
-                  <AccordionItem
-                    key={moduleIndex}
-                    value={`module-${moduleIndex}`}
-                    className="dark-glass dark-shadow-sm rounded-xl"
-                  >
-                    <AccordionTrigger
-                      arrow={false}
-                      className="dark-card hover:dark-bg-secondary p-4 transition-all"
-                    >
-                      <div className="flex w-full items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="dark-primary-subtle-bg rounded-xl p-2">
-                            <Layers className="dark-primary" size={20} />
-                          </div>
-                          <div className="text-left">
-                            <h3 className="dark-text-primary font-semibold">
-                              {module.title}
-                            </h3>
-                            <p className="dark-text-secondary text-sm">
-                              {module.description}
-                            </p>
-                            <p className="dark-text-tertiary mt-1 text-xs">
-                              {module.lessons.length} lição(ões)
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="success"
-                            className="gap-1"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setShowLessonForm(moduleIndex);
-                              // Abre o accordion do módulo para mostrar o formulário de lição
-                              setOpenModules([
-                                ...openModules,
-                                `module-${moduleIndex}`,
-                              ]);
-                            }}
-                          >
-                            <Plus className="h-3 w-3" />
-                            Adicionar nova lição
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="info"
-                            className="gap-1"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditModule(moduleIndex);
-                            }}
-                          >
-                            <Edit className="h-3 w-3" />
-                            Editar módulo
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            className="gap-1"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteModule(module.id);
-                            }}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                            Excluir módulo
-                          </Button>
-                        </div>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="dark-border">
-                      {/* Module Edit Form */}
-                      {editingModule === moduleIndex && (
-                        <div className="dark-border border-b p-6">
-                          <Form {...moduleForm}>
-                            <form
-                              onSubmit={moduleForm.handleSubmit((data) =>
-                                handleSaveModuleEdit(data, moduleIndex),
-                              )}
-                              className="space-y-6"
-                            >
-                              <h4 className="dark-text-primary mb-6 text-xl font-bold">
-                                Editar Módulo
-                              </h4>
-
-                              <div className="grid grid-cols-1 gap-4">
-                                <FormField
-                                  control={moduleForm.control}
-                                  name="title"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel className="dark-text-secondary text-sm font-medium">
-                                        Título do Módulo *
-                                      </FormLabel>
-                                      <FormControl>
-                                        <Input
-                                          {...field}
-                                          placeholder="Ex: Fundamentos da Fé"
-                                          className="dark-input"
-                                        />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-
-                                <FormField
-                                  control={moduleForm.control}
-                                  name="description"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel className="dark-text-secondary text-sm font-medium">
-                                        Descrição do Módulo *
-                                      </FormLabel>
-                                      <FormControl>
-                                        <Textarea
-                                          {...field}
-                                          placeholder="Descreva o que será abordado neste módulo..."
-                                          className="dark-input min-h-[100px]"
-                                        />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                              </div>
-
-                              <div className="flex justify-end space-x-4 pt-6">
-                                <Button
-                                  type="button"
-                                  className="dark-glass dark-border hover:dark-border-hover"
-                                  variant="outline"
-                                  onClick={() => {
-                                    setEditingModule(null);
-                                    moduleForm.reset();
-                                  }}
-                                >
-                                  Cancelar
-                                </Button>
-                                <Button
-                                  type="submit"
-                                  disabled={isLoading}
-                                  className="dark-btn-primary"
-                                >
-                                  <CheckCircle className="mr-2 h-4 w-4" />
-                                  {isLoading
-                                    ? "Atualizando..."
-                                    : "Atualizar Módulo"}
-                                </Button>
-                              </div>
-                            </form>
-                          </Form>
-                        </div>
-                      )}
-
-                      {/* Lesson Form */}
-                      {showLessonForm === moduleIndex && (
-                        <div className="dark-border border-b p-6">
-                          <Form {...lessonForm}>
-                            <form
-                              onSubmit={lessonForm.handleSubmit((data) =>
-                                handleAddLesson(data, moduleIndex),
-                              )}
-                              className="space-y-6"
-                            >
-                              <h4 className="dark-text-primary mb-6 text-xl font-bold">
-                                Adicionar Nova Lição
-                              </h4>
-
-                              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <FormField
-                                  control={lessonForm.control}
-                                  name="title"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel className="dark-text-secondary text-sm font-medium">
-                                        Título da Lição *
-                                      </FormLabel>
-                                      <FormControl>
-                                        <Input
-                                          {...field}
-                                          placeholder="Ex: O que é a Fé Cristã"
-                                          className="dark-input"
-                                        />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-
-                                <FormField
-                                  control={lessonForm.control}
-                                  name="duration"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel className="dark-text-secondary text-sm font-medium">
-                                        Duração (minutos) *
-                                      </FormLabel>
-                                      <FormControl>
-                                        <Input
-                                          {...field}
-                                          placeholder="15"
-                                          className="dark-input"
-                                          onChange={(e) =>
-                                            field.onChange(
-                                              parseInt(e.target.value) || 0,
-                                            )
-                                          }
-                                        />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                              </div>
-
-                              <FormField
-                                control={lessonForm.control}
-                                name="description"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel className="dark-text-secondary text-sm font-medium">
-                                      Descrição *
-                                    </FormLabel>
-                                    <FormControl>
-                                      <Textarea
-                                        {...field}
-                                        placeholder="Descreva o que será abordado nesta lição..."
-                                        className="dark-input min-h-[100px]"
-                                      />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-
-                              <FormField
-                                control={lessonForm.control}
-                                name="type"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel className="dark-text-secondary text-sm font-medium">
-                                      Tipo de Conteúdo *
-                                    </FormLabel>
-                                    <Select
-                                      onValueChange={field.onChange}
-                                      defaultValue={field.value}
-                                    >
-                                      <FormControl>
-                                        <SelectTrigger className="dark-input">
-                                          <SelectValue placeholder="Selecione o tipo" />
-                                        </SelectTrigger>
-                                      </FormControl>
-                                      <SelectContent>
-                                        <SelectItem value="video">
-                                          <div className="flex items-center space-x-2">
-                                            <Video className="h-4 w-4" />
-                                            <span>Vídeo</span>
-                                          </div>
-                                        </SelectItem>
-                                        <SelectItem value="text">
-                                          <div className="flex items-center space-x-2">
-                                            <span>📄</span>
-                                            <span>Texto</span>
-                                          </div>
-                                        </SelectItem>
-                                        <SelectItem value="quiz">
-                                          <div className="flex items-center space-x-2">
-                                            <span>❓</span>
-                                            <span>Quiz</span>
-                                          </div>
-                                        </SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-
-                              {/* Conditional fields based on type */}
-                              {selectedLessonType === "video" && (
-                                <FormField
-                                  control={lessonForm.control}
-                                  name="videoUrl"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel className="dark-text-secondary text-sm font-medium">
-                                        URL do Vídeo (YouTube)
-                                      </FormLabel>
-                                      <FormControl>
-                                        <Input
-                                          {...field}
-                                          placeholder="https://youtu.be/VIDEO_ID"
-                                          className="dark-input"
-                                        />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                              )}
-
-                              {(selectedLessonType === "text" ||
-                                selectedLessonType === "quiz") && (
-                                <FormField
-                                  control={lessonForm.control}
-                                  name="content"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel className="dark-text-secondary text-sm font-medium">
-                                        Conteúdo{" "}
-                                        {selectedLessonType === "quiz"
-                                          ? "do Quiz"
-                                          : "da Lição"}
-                                      </FormLabel>
-                                      <FormControl>
-                                        <Textarea
-                                          {...field}
-                                          placeholder={
-                                            selectedLessonType === "quiz"
-                                              ? "Digite as perguntas e respostas do quiz..."
-                                              : "Digite o conteúdo da lição..."
-                                          }
-                                          className="dark-input min-h-[200px]"
-                                        />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                              )}
-
-                              {/* File Upload Section */}
-                              <div className="dark-card dark-shadow-sm rounded-lg p-4">
-                                <h3 className="dark-text-primary mb-3 font-semibold">
-                                  Materiais Complementares
-                                </h3>
-                                <div className="space-y-3">
-                                  <div className="dark-bg-secondary rounded-lg border-2 border-dashed border-gray-600 p-6 text-center">
-                                    <Upload className="dark-text-tertiary mx-auto mb-2 h-8 w-8" />
-                                    <p className="dark-text-secondary text-sm">
-                                      Arraste arquivos aqui ou clique para
-                                      selecionar
-                                    </p>
-                                    <p className="dark-text-tertiary text-xs">
-                                      PDF, DOC, PPT, imagens (máx. 10MB)
-                                    </p>
-                                  </div>
-                                  <Button
-                                    type="button"
-                                    disabled
-                                    className="dark-glass dark-border hover:dark-border-hover w-full"
-                                    variant="outline"
-                                    onClick={() => {
-                                      toast.info(
-                                        "Funcionalidade de upload em desenvolvimento",
-                                      );
-                                    }}
-                                  >
-                                    <Upload className="mr-2 h-4 w-4" />
-                                    Selecionar Arquivos
-                                  </Button>
-                                </div>
-                              </div>
-
-                              <div className="flex justify-end space-x-4 pt-6">
-                                <Button
-                                  type="button"
-                                  className="dark-glass dark-border hover:dark-border-hover"
-                                  variant="outline"
-                                  onClick={() => {
-                                    setShowLessonForm(null);
-                                    lessonForm.reset();
-                                  }}
-                                >
-                                  Cancelar
-                                </Button>
-                                <Button
-                                  type="submit"
-                                  disabled={isLoading}
-                                  variant="success"
-                                >
-                                  <Plus className="mr-2 h-4 w-4" />
-                                  {isLoading
-                                    ? "Adicionando..."
-                                    : "Adicionar Lição"}
-                                </Button>
-                              </div>
-                            </form>
-                          </Form>
-                        </div>
-                      )}
-
-                      {/* Lessons List */}
-                      {module.lessons.length > 0 && (
-                        <div className="p-4">
-                          <h4 className="dark-text-primary mb-3 font-medium">
-                            Lições ({module.lessons.length})
-                          </h4>
-                          <Accordion
-                            type="multiple"
-                            className="space-y-3"
-                            value={openLessons.filter((lesson) =>
-                              lesson.startsWith(`lesson-${moduleIndex}-`),
-                            )}
-                            onValueChange={(value) => {
-                              const otherLessons = openLessons.filter(
-                                (lesson) =>
-                                  !lesson.startsWith(`lesson-${moduleIndex}-`),
-                              );
-                              setOpenLessons([...otherLessons, ...value]);
-                            }}
-                          >
-                            {module.lessons.map((lesson, lessonIndex) => (
-                              <AccordionItem
-                                key={lessonIndex}
-                                value={`lesson-${moduleIndex}-${lessonIndex}`}
-                                className="dark-card dark-shadow-sm rounded-lg"
-                              >
-                                <AccordionTrigger
-                                  arrow={false}
-                                  className="hover:dark-bg-secondary p-4 transition-colors"
-                                >
-                                  <div className="flex w-full items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                      <div className="dark-secondary-subtle-bg rounded-lg p-2">
-                                        {(() => {
-                                          const LessonIcon = getLessonTypeIcon(
-                                            lesson.type,
-                                          );
-                                          return (
-                                            <LessonIcon
-                                              className="dark-secondary"
-                                              size={16}
-                                            />
-                                          );
-                                        })()}
-                                      </div>
-                                      <div className="text-left">
-                                        <h5 className="dark-text-primary font-medium">
-                                          {lesson.title}
-                                        </h5>
-                                        <p className="dark-text-secondary text-sm">
-                                          {lesson.description}
-                                        </p>
-                                        <div className="mt-1 flex items-center gap-4">
-                                          <span className="dark-text-tertiary text-xs">
-                                            Tipo:{" "}
-                                            {getLessonTypeText(lesson.type)}
-                                          </span>
-                                          <span className="dark-text-tertiary text-xs">
-                                            Duração: {lesson.duration}min
-                                          </span>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <div className="flex gap-2">
-                                      <Button
-                                        size="sm"
-                                        variant="info"
-                                        className="gap-1"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleEditLesson(
-                                            moduleIndex,
-                                            lessonIndex,
-                                          );
-                                        }}
-                                      >
-                                        <Edit className="h-3 w-3" />
-                                        Editar Lição
-                                      </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="destructive"
-                                        className="gap-1"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleDeleteLesson(
-                                            lesson.id,
-                                            moduleIndex,
-                                            lessonIndex,
-                                          );
-                                        }}
-                                      >
-                                        <Trash2 className="h-3 w-3" />
-                                        Excluir Lição
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </AccordionTrigger>
-                                <AccordionContent className="p-4">
-                                  {editingLesson?.moduleIndex === moduleIndex &&
-                                  editingLesson?.lessonIndex === lessonIndex ? (
-                                    // Formulário de edição
-                                    <Form {...lessonForm}>
-                                      <form
-                                        onSubmit={lessonForm.handleSubmit(
-                                          (data) =>
-                                            handleSaveLessonEdit(
-                                              data,
-                                              moduleIndex,
-                                              lessonIndex,
-                                            ),
-                                        )}
-                                        className="space-y-6"
-                                      >
-                                        <h6 className="dark-text-primary mb-6 text-xl font-bold">
-                                          Editar Lição
-                                        </h6>
-
-                                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                          <FormField
-                                            control={lessonForm.control}
-                                            name="title"
-                                            render={({ field }) => (
-                                              <FormItem>
-                                                <FormLabel className="dark-text-secondary text-sm font-medium">
-                                                  Título da Lição *
-                                                </FormLabel>
-                                                <FormControl>
-                                                  <Input
-                                                    {...field}
-                                                    placeholder="Ex: O que é a Fé Cristã"
-                                                    className="dark-input"
-                                                  />
-                                                </FormControl>
-                                                <FormMessage />
-                                              </FormItem>
-                                            )}
-                                          />
-
-                                          <FormField
-                                            control={lessonForm.control}
-                                            name="duration"
-                                            render={({ field }) => (
-                                              <FormItem>
-                                                <FormLabel className="dark-text-secondary text-sm font-medium">
-                                                  Duração (minutos) *
-                                                </FormLabel>
-                                                <FormControl>
-                                                  <Input
-                                                    {...field}
-                                                    placeholder="15"
-                                                    className="dark-input"
-                                                    onChange={(e) =>
-                                                      field.onChange(
-                                                        parseInt(
-                                                          e.target.value,
-                                                        ) || 0,
-                                                      )
-                                                    }
-                                                  />
-                                                </FormControl>
-                                                <FormMessage />
-                                              </FormItem>
-                                            )}
-                                          />
-                                        </div>
-
-                                        <FormField
-                                          control={lessonForm.control}
-                                          name="description"
-                                          render={({ field }) => (
-                                            <FormItem>
-                                              <FormLabel className="dark-text-secondary text-sm font-medium">
-                                                Descrição *
-                                              </FormLabel>
-                                              <FormControl>
-                                                <Textarea
-                                                  {...field}
-                                                  placeholder="Descreva o que será abordado nesta lição..."
-                                                  className="dark-input min-h-[100px]"
-                                                />
-                                              </FormControl>
-                                              <FormMessage />
-                                            </FormItem>
-                                          )}
-                                        />
-
-                                        <FormField
-                                          control={lessonForm.control}
-                                          name="type"
-                                          render={({ field }) => (
-                                            <FormItem>
-                                              <FormLabel className="dark-text-secondary text-sm font-medium">
-                                                Tipo de Conteúdo *
-                                              </FormLabel>
-                                              <Select
-                                                onValueChange={field.onChange}
-                                                defaultValue={field.value}
-                                              >
-                                                <FormControl>
-                                                  <SelectTrigger className="dark-input">
-                                                    <SelectValue placeholder="Selecione o tipo" />
-                                                  </SelectTrigger>
-                                                </FormControl>
-                                                <SelectContent>
-                                                  <SelectItem value="video">
-                                                    <div className="flex items-center space-x-2">
-                                                      <Video className="h-4 w-4" />
-                                                      <span>Vídeo</span>
-                                                    </div>
-                                                  </SelectItem>
-                                                  <SelectItem value="text">
-                                                    <div className="flex items-center space-x-2">
-                                                      <span>📄</span>
-                                                      <span>Texto</span>
-                                                    </div>
-                                                  </SelectItem>
-                                                  <SelectItem value="quiz">
-                                                    <div className="flex items-center space-x-2">
-                                                      <span>❓</span>
-                                                      <span>Quiz</span>
-                                                    </div>
-                                                  </SelectItem>
-                                                </SelectContent>
-                                              </Select>
-                                              <FormMessage />
-                                            </FormItem>
-                                          )}
-                                        />
-
-                                        {/* Conditional fields based on type */}
-                                        {selectedLessonType === "video" && (
-                                          <FormField
-                                            control={lessonForm.control}
-                                            name="videoUrl"
-                                            render={({ field }) => (
-                                              <FormItem>
-                                                <FormLabel className="dark-text-secondary text-sm font-medium">
-                                                  URL do Vídeo (YouTube)
-                                                </FormLabel>
-                                                <FormControl>
-                                                  <Input
-                                                    {...field}
-                                                    placeholder="https://youtu.be/VIDEO_ID"
-                                                    className="dark-input"
-                                                  />
-                                                </FormControl>
-                                                <FormMessage />
-                                              </FormItem>
-                                            )}
-                                          />
-                                        )}
-
-                                        {(selectedLessonType === "text" ||
-                                          selectedLessonType === "quiz") && (
-                                          <FormField
-                                            control={lessonForm.control}
-                                            name="content"
-                                            render={({ field }) => (
-                                              <FormItem>
-                                                <FormLabel className="dark-text-secondary text-sm font-medium">
-                                                  Conteúdo{" "}
-                                                  {selectedLessonType === "quiz"
-                                                    ? "do Quiz"
-                                                    : "da Lição"}
-                                                </FormLabel>
-                                                <FormControl>
-                                                  <Textarea
-                                                    {...field}
-                                                    placeholder={
-                                                      selectedLessonType ===
-                                                      "quiz"
-                                                        ? "Digite as perguntas e respostas do quiz..."
-                                                        : "Digite o conteúdo da lição..."
-                                                    }
-                                                    className="dark-input min-h-[200px]"
-                                                  />
-                                                </FormControl>
-                                                <FormMessage />
-                                              </FormItem>
-                                            )}
-                                          />
-                                        )}
-
-                                        {/* File Upload Section */}
-                                        <div className="dark-card dark-shadow-sm rounded-lg p-4">
-                                          <h3 className="dark-text-primary mb-3 font-semibold">
-                                            Materiais Complementares
-                                          </h3>
-                                          <div className="space-y-3">
-                                            <div className="dark-bg-secondary rounded-lg border-2 border-dashed border-gray-600 p-6 text-center">
-                                              <Upload className="dark-text-tertiary mx-auto mb-2 h-8 w-8" />
-                                              <p className="dark-text-secondary text-sm">
-                                                Arraste arquivos aqui ou clique
-                                                para selecionar
-                                              </p>
-                                              <p className="dark-text-tertiary text-xs">
-                                                PDF, DOC, PPT, imagens (máx.
-                                                10MB)
-                                              </p>
-                                            </div>
-                                            <Button
-                                              type="button"
-                                              className="dark-glass dark-border hover:dark-border-hover w-full"
-                                              variant="outline"
-                                              onClick={() => {
-                                                toast.info(
-                                                  "Funcionalidade de upload em desenvolvimento",
-                                                );
-                                              }}
-                                            >
-                                              <Upload className="mr-2 h-4 w-4" />
-                                              Selecionar Arquivos
-                                            </Button>
-                                          </div>
-                                        </div>
-
-                                        <div className="flex justify-end space-x-4 pt-6">
-                                          <Button
-                                            type="button"
-                                            className="dark-glass dark-border hover:dark-border-hover"
-                                            variant="outline"
-                                            onClick={() => {
-                                              setEditingLesson(null);
-                                              lessonForm.reset();
-                                            }}
-                                          >
-                                            Cancelar
-                                          </Button>
-                                          <Button
-                                            type="submit"
-                                            disabled={isLoading}
-                                            className="dark-btn-primary"
-                                          >
-                                            <CheckCircle className="mr-2 h-4 w-4" />
-                                            {isLoading
-                                              ? "Atualizando..."
-                                              : "Atualizar Lição"}
-                                          </Button>
-                                        </div>
-                                      </form>
-                                    </Form>
-                                  ) : (
-                                    // Visualização da lição
-                                    <div className="space-y-4">
-                                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                        <div>
-                                          <h6 className="dark-text-primary mb-2 font-medium">
-                                            Tipo de Conteúdo
-                                          </h6>
-                                          <div className="flex items-center space-x-2">
-                                            {(() => {
-                                              const LessonIcon =
-                                                getLessonTypeIcon(lesson.type);
-                                              return (
-                                                <LessonIcon
-                                                  className="dark-secondary"
-                                                  size={16}
-                                                />
-                                              );
-                                            })()}
-                                            <span className="dark-text-secondary text-sm">
-                                              {getLessonTypeText(lesson.type)}
-                                            </span>
-                                          </div>
-                                        </div>
-                                        <div>
-                                          <h6 className="dark-text-primary mb-2 font-medium">
-                                            Duração
-                                          </h6>
-                                          <p className="dark-text-secondary text-sm">
-                                            {lesson.duration} minutos
-                                          </p>
-                                        </div>
-                                      </div>
-
-                                      {lesson.videoUrl && (
-                                        <div>
-                                          <h6 className="dark-text-primary mb-2 font-medium">
-                                            Vídeo da Lição
-                                          </h6>
-                                          <a
-                                            href={lesson.videoUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="dark-text-secondary hover:dark-text-primary text-sm underline"
-                                          >
-                                            {lesson.videoUrl}
-                                          </a>
-                                        </div>
-                                      )}
-
-                                      {lesson.content && (
-                                        <div>
-                                          <h6 className="dark-text-primary mb-2 font-medium">
-                                            Conteúdo da Lição
-                                          </h6>
-                                          <div className="dark-card dark-shadow-sm rounded-lg p-4">
-                                            <p className="dark-text-secondary text-sm whitespace-pre-wrap">
-                                              {lesson.content}
-                                            </p>
-                                          </div>
-                                        </div>
-                                      )}
-
-                                      {!lesson.content && !lesson.videoUrl && (
-                                        <div className="dark-card dark-shadow-sm rounded-lg p-6 text-center">
-                                          <div className="dark-bg-secondary mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full">
-                                            <BookOpen
-                                              className="dark-text-tertiary"
-                                              size={20}
-                                            />
-                                          </div>
-                                          <h6 className="dark-text-primary mb-2 font-medium">
-                                            Conteúdo não definido
-                                          </h6>
-                                          <p className="dark-text-tertiary text-sm">
-                                            Esta lição ainda não possui conteúdo
-                                            específico definido.
-                                          </p>
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-                                </AccordionContent>
-                              </AccordionItem>
-                            ))}
-                          </Accordion>
-                        </div>
-                      )}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            )}
-
-            {/* Certificate Section */}
-            <div className="dark-glass dark-shadow-sm rounded-xl p-6">
-              <div className="flex items-center justify-between">
-                <h2 className="dark-text-primary flex items-center gap-2 text-xl font-bold">
-                  <Award className="dark-primary" size={24} />
-                  Template de Certificado
-                </h2>
-                {courseData?.certificateTemplate ? (
-                  <div className="flex gap-2">
-                    <Button
-                      variant="info"
-                      onClick={() => {
-                        setShowCertificateForm(true);
-                        setIsEditingCertificate(true);
-                      }}
-                    >
-                      <Edit className="mr-2 h-4 w-4" />
-                      Editar Template
-                    </Button>
-                  </div>
-                ) : (
-                  <Button
-                    variant="success"
-                    onClick={() => {
-                      setShowCertificateForm(true);
-                      setIsEditingCertificate(false);
-                    }}
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Adicionar Template
-                  </Button>
-                )}
-              </div>
-
-              {/* Mostrar template existente se não estiver editando */}
-              {courseData?.certificateTemplate && !showCertificateForm && (
-                <div className="mt-6">
-                  <div className="dark-card dark-shadow-sm rounded-xl p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="dark-text-primary mb-2 text-lg font-semibold">
-                          {courseData.certificateTemplate.title}
-                        </h3>
-                        <p className="dark-text-secondary mb-4 text-sm">
-                          {courseData.certificateTemplate.description}
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <div
-                            className={`rounded-full px-2 py-1 text-xs font-medium ${
-                              courseData.certificateTemplate.isActive
-                                ? "dark-success-bg dark-success"
-                                : "dark-warning-bg dark-warning"
-                            }`}
-                          >
-                            {courseData.certificateTemplate.isActive
-                              ? "Ativo"
-                              : "Inativo"}
-                          </div>
-                          {courseData.certificateTemplate.templateUrl && (
-                            <div className="dark-info-bg dark-info rounded-full px-2 py-1 text-xs font-medium">
-                              PDF Disponível
-                            </div>
-                          )}
-                        </div>
-                      </div>
+            {/* Mostrar template existente se não estiver editando */}
+            {courseData?.certificateTemplate && !showCertificateForm && (
+              <div className="mt-6">
+                <div className="dark-card dark-shadow-sm rounded-xl p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="dark-text-primary mb-2 text-lg font-semibold">
+                        {courseData.certificateTemplate.title}
+                      </h3>
+                      <p className="dark-text-secondary mb-4 text-sm">
+                        {courseData.certificateTemplate.description}
+                      </p>
                       <div className="flex items-center gap-2">
+                        <div
+                          className={`rounded-full px-2 py-1 text-xs font-medium ${
+                            courseData.certificateTemplate.isActive
+                              ? "dark-success-bg dark-success"
+                              : "dark-warning-bg dark-warning"
+                          }`}
+                        >
+                          {courseData.certificateTemplate.isActive
+                            ? "Ativo"
+                            : "Inativo"}
+                        </div>
                         {courseData.certificateTemplate.templateUrl && (
-                          <PdfViewer
-                            pdfBase64={
-                              courseData.certificateTemplate.templateUrl
-                            }
-                            certificateUrl={
-                              courseData.certificateTemplate.templateUrl
-                            }
-                            title={`Template: ${courseData.certificateTemplate.title}`}
-                            fileName={`template-${courseData.certificateTemplate.id}.pdf`}
-                          >
-                            <Button
-                              className="dark-glass dark-border hover:dark-border-hover"
-                              size="sm"
-                            >
-                              <FileText className="mr-1 h-3 w-3" />
-                              Ver PDF
-                            </Button>
-                          </PdfViewer>
+                          <div className="dark-info-bg dark-info rounded-full px-2 py-1 text-xs font-medium">
+                            PDF Disponível
+                          </div>
                         )}
                       </div>
                     </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Certificate Form */}
-              {showCertificateForm && (
-                <div className="mt-6">
-                  <div className="dark-glass dark-shadow-sm rounded-xl p-6">
-                    <h3 className="dark-text-primary mb-6 text-xl font-bold">
-                      {isEditingCertificate
-                        ? "Editar Template de Certificado"
-                        : "Configurar Template de Certificado"}
-                    </h3>
-                    <Form {...certificateTemplateForm}>
-                      <form
-                        onSubmit={certificateTemplateForm.handleSubmit(
-                          isEditingCertificate
-                            ? handleUpdateCertificateTemplate
-                            : handleCreateCertificateTemplate,
-                        )}
-                        className="space-y-6"
-                      >
-                        <FormField
-                          control={certificateTemplateForm.control}
-                          name="title"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="dark-text-secondary text-sm font-medium">
-                                Título do Template *
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  placeholder={
-                                    courseTitle
-                                      ? `${courseTitle} - Certificado`
-                                      : "Ex: Fundamentos da Fé Cristã - Certificado"
-                                  }
-                                  className="dark-input"
-                                  value={
-                                    field.value ||
-                                    (courseTitle
-                                      ? `${courseTitle} - Certificado`
-                                      : "")
-                                  }
-                                  onChange={(e) => {
-                                    field.onChange(e.target.value);
-                                  }}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={certificateTemplateForm.control}
-                          name="description"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="dark-text-secondary text-sm font-medium">
-                                Descrição do Template *
-                              </FormLabel>
-                              <FormControl>
-                                <Textarea
-                                  {...field}
-                                  placeholder={
-                                    courseDescription ||
-                                    "Certificado de conclusão do curso..."
-                                  }
-                                  className="dark-input min-h-[100px]"
-                                  value={field.value || courseDescription || ""}
-                                  onChange={(e) => {
-                                    field.onChange(e.target.value);
-                                  }}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        {/* File Upload Section */}
-                        <div className="dark-card dark-shadow-sm rounded-lg p-4">
-                          <h3 className="dark-text-primary mb-3 font-semibold">
-                            Template do Certificado (PDF)
-                          </h3>
-                          <div className="space-y-3">
-                            <div className="dark-bg-secondary rounded-lg border-2 border-dashed border-gray-600 p-6 text-center">
-                              <Upload className="dark-text-tertiary mx-auto mb-2 h-8 w-8" />
-                              <p className="dark-text-secondary text-sm">
-                                {certificateFile
-                                  ? certificateFile.name
-                                  : "Arraste o arquivo PDF aqui ou clique para selecionar"}
-                              </p>
-                              <p className="dark-text-tertiary text-xs">
-                                Apenas arquivos PDF (máx. 10MB)
-                              </p>
-                            </div>
-                            <input
-                              type="file"
-                              accept=".pdf"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) {
-                                  if (file.type === "application/pdf") {
-                                    setCertificateFile(file);
-                                  } else {
-                                    toast.error(
-                                      "Por favor, selecione apenas arquivos PDF",
-                                    );
-                                  }
-                                }
-                              }}
-                              className="hidden"
-                              id="certificate-upload"
-                            />
-                            <Button
-                              type="button"
-                              className="dark-glass dark-border hover:dark-border-hover w-full"
-                              variant="outline"
-                              onClick={() => {
-                                document
-                                  .getElementById("certificate-upload")
-                                  ?.click();
-                              }}
-                            >
-                              <Upload className="mr-2 h-4 w-4" />
-                              {certificateFile
-                                ? "Alterar Arquivo"
-                                : "Selecionar PDF"}
-                            </Button>
-                            {certificateFile && (
-                              <div className="flex items-center justify-between rounded-lg bg-green-900/20 p-3">
-                                <div className="flex items-center gap-2">
-                                  <FileText className="h-4 w-4 text-green-400" />
-                                  <span className="text-sm text-green-400">
-                                    {certificateFile.name}
-                                  </span>
-                                </div>
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="ghost"
-                                  className="text-red-400 hover:text-red-300"
-                                  onClick={() => setCertificateFile(null)}
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex justify-end space-x-4 pt-6">
+                    <div className="flex items-center gap-2">
+                      {courseData.certificateTemplate.templateUrl && (
+                        <PdfViewer
+                          pdfBase64={courseData.certificateTemplate.templateUrl}
+                          certificateUrl={
+                            courseData.certificateTemplate.templateUrl
+                          }
+                          title={`Template: ${courseData.certificateTemplate.title}`}
+                          fileName={`template-${courseData.certificateTemplate.id}.pdf`}
+                        >
                           <Button
-                            type="button"
                             className="dark-glass dark-border hover:dark-border-hover"
-                            variant="outline"
-                            onClick={() => {
-                              setShowCertificateForm(false);
-                              setIsEditingCertificate(false);
-                              certificateTemplateForm.reset();
-                              setCertificateFile(null);
-                            }}
+                            size="sm"
                           >
-                            Cancelar
+                            <CheckCircle className="mr-1 h-3 w-3" />
+                            Ver PDF
                           </Button>
-                          <Button
-                            type="submit"
-                            disabled={isLoading}
-                            className="dark-btn-primary"
-                          >
-                            <Award className="mr-2 h-4 w-4" />
-                            {isLoading
-                              ? isEditingCertificate
-                                ? "Atualizando..."
-                                : "Criando..."
-                              : isEditingCertificate
-                                ? "Atualizar Template"
-                                : "Criar Template"}
-                          </Button>
-                        </div>
-                      </form>
-                    </Form>
+                        </PdfViewer>
+                      )}
+                    </div>
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+
+            {/* Certificate Form */}
+            {showCertificateForm && (
+              <CertificateForm
+                form={certificateTemplateForm}
+                isLoading={isLoading}
+                isEditing={isEditingCertificate}
+                courseTitle={courseTitle}
+                courseDescription={courseDescription}
+                certificateFile={certificateFile}
+                setCertificateFile={setCertificateFile}
+                onSubmit={
+                  isEditingCertificate
+                    ? handleUpdateCertificateTemplate
+                    : handleCreateCertificateTemplate
+                }
+                onCancel={() => {
+                  setShowCertificateForm(false);
+                  setIsEditingCertificate(false);
+                  certificateTemplateForm.reset();
+                  setCertificateFile(null);
+                }}
+              />
+            )}
           </div>
-        }
+        </div>
       </div>
     </div>
   );
