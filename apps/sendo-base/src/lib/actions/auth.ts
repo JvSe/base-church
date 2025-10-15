@@ -95,8 +95,12 @@ export async function signUp(data: SignUpInput) {
 
     return { success: true, user: userData, sessionCookie };
   } catch (error) {
-    console.error("[SENDO-BASE-ERROR]:", JSON.stringify(error, null, 2));
-    throw new Error("Erro interno do servidor");
+    console.error("[SENDO-BASE-ERROR]:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Erro interno do servidor",
+    };
   }
 }
 
@@ -104,7 +108,7 @@ export async function signIn(data: SignInInput) {
   try {
     // Validar CPF
     if (!isValidCpf(data.cpf)) {
-      throw new Error("CPF inválido");
+      return { success: false, error: "CPF inválido" };
     }
 
     const cleanCpfValue = cleanCpf(data.cpf);
@@ -115,13 +119,13 @@ export async function signIn(data: SignInInput) {
     });
 
     if (!user) {
-      throw new Error("Usuário não cadastrado!");
+      return { success: false, error: "Usuário não cadastrado!" };
     }
 
     const isPasswordValid = await verifyPassword(data.password, user.password!);
 
     if (!isPasswordValid) {
-      throw new Error("CPF ou senha incorretos");
+      return { success: false, error: "CPF ou senha incorretos" };
     }
 
     // Criar sessão
@@ -151,7 +155,11 @@ export async function signIn(data: SignInInput) {
       sessionCookie,
     };
   } catch (error) {
-    throw new Error((error as any).message);
+    console.error("[SIGNIN-ERROR]:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Erro ao fazer login",
+    };
   }
 }
 

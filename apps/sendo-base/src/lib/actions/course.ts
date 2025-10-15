@@ -336,7 +336,10 @@ export async function createCourse(courseData: CourseFormData) {
     };
   } catch (error) {
     console.log("Create course error:", error);
-    throw error;
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Erro ao criar curso",
+    };
   }
 }
 

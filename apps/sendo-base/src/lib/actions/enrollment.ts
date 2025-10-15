@@ -263,8 +263,11 @@ export async function approveEnrollment(
     };
   } catch (error) {
     console.error("Error approving enrollment:", error);
-    throw error;
-    // return { success: false, error: "Erro ao aprovar matrícula" };
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Erro ao aprovar matrícula",
+    };
   }
 }
 
@@ -324,12 +327,10 @@ export async function createEnrollmentRequest(
     });
 
     if (existingEnrollment) {
-      throw new Error(
-        JSON.stringify({
-          success: false,
-          error: "Você já possui uma solicitação de matrícula para este curso",
-        }),
-      );
+      return {
+        success: false,
+        error: "Você já possui uma solicitação de matrícula para este curso",
+      };
     }
 
     // Criar nova solicitação de matrícula
@@ -367,7 +368,13 @@ export async function createEnrollmentRequest(
     };
   } catch (error) {
     console.error("Error creating enrollment request:", error);
-    throw new Error("Error creating enrollment request:" + error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Erro ao criar solicitação de matrícula",
+    };
   }
 }
 

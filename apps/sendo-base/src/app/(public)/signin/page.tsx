@@ -59,11 +59,12 @@ export default function SignInPage() {
         } else {
           router.push("/pending-approval");
         }
+      } else {
+        toast.error(result.error || "Erro ao fazer login");
       }
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Erro ao fazer login",
-      );
+      console.error("Signin error:", error);
+      toast.error("Erro ao fazer login. Tente novamente.");
     } finally {
       setIsLoading(false);
     }
