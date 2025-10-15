@@ -162,7 +162,6 @@ export default function CreateCoursePage() {
       const result = await createCourse({
         ...data,
         tags: data.tags || "",
-        status: "draft",
       });
 
       if (result.success && result.course) {

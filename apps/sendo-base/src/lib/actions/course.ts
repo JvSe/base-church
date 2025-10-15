@@ -1059,6 +1059,14 @@ export async function getLessonWithProgress(lessonId: string, userId: string) {
         progress: {
           where: { userId },
         },
+        questions: {
+          include: {
+            options: {
+              orderBy: { order: "asc" },
+            },
+          },
+          orderBy: { order: "asc" },
+        },
       },
     });
 
@@ -1067,7 +1075,7 @@ export async function getLessonWithProgress(lessonId: string, userId: string) {
     }
 
     // Get user's progress for all lessons in the course
-    const courseProgress = await prisma.lessonProgress.findMany({
+    const userProgress = await prisma.lessonProgress.findMany({
       where: {
         userId,
         lesson: {
@@ -1091,7 +1099,7 @@ export async function getLessonWithProgress(lessonId: string, userId: string) {
 
     // Create a map of lesson progress for easy lookup
     const progressMap = new Map();
-    courseProgress.forEach((progress) => {
+    userProgress.forEach((progress) => {
       progressMap.set(progress.lessonId, {
         isCompleted: progress.isCompleted,
         isWatched: !!progress.watchedAt,
@@ -1101,23 +1109,47 @@ export async function getLessonWithProgress(lessonId: string, userId: string) {
     // Add progress info to all lessons and check certificate module status
     const courseWithProgress = {
       ...lesson.module.course,
-      modules: lesson.module.course.modules.map((module) => ({
-        ...module,
-        lessons: module.lessons.map((moduleLesson) => ({
-          ...moduleLesson,
-          ...(progressMap.get(moduleLesson.id) || {
-            isCompleted: false,
-            isWatched: false,
-          }),
-          // Add locked status for certificate lessons
-          isLocked: !moduleLesson.isPublished,
-        })),
-        // Add locked status for certificate modules
-        isLocked:
-          module.title === "Certificado de Conclusão" &&
-          module.lessons.some((l) => !l.isPublished),
-      })),
+      modules: lesson.module.course.modules.map((module, moduleIndex) => {
+        // Verificar se algum módulo anterior tem atividade não completada
+        const hasPreviousIncompleteActivity = lesson.module.course.modules
+          .slice(0, moduleIndex)
+          .some((previousModule) =>
+            previousModule.lessons.some((previousLesson) => {
+              const lessonProgress = progressMap.get(previousLesson.id);
+              return (
+                previousLesson.isActivity &&
+                (!lessonProgress || !lessonProgress.isCompleted)
+              );
+            }),
+          );
+
+        return {
+          ...module,
+          lessons: module.lessons.map((moduleLesson) => ({
+            ...moduleLesson,
+            ...(progressMap.get(moduleLesson.id) || {
+              isCompleted: false,
+              isWatched: false,
+            }),
+            // Add locked status for certificate lessons
+            isLocked: hasPreviousIncompleteActivity,
+          })),
+          // Add locked status for certificate modules
+          isLocked:
+            module.title === "Certificado de Conclusão" ||
+            hasPreviousIncompleteActivity,
+        };
+      }),
     };
+
+    // Calculate course progress
+    const allLessons = courseWithProgress.modules.flatMap(
+      (module) => module.lessons,
+    );
+    const completedLessons = allLessons.filter((l) => l.isCompleted).length;
+    const totalLessons = allLessons.length;
+    const courseProgressPercentage =
+      totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
 
     // Check if user has a certificate for this course
     const existingCertificate = await prisma.certificate.findFirst({
@@ -1137,7 +1169,12 @@ export async function getLessonWithProgress(lessonId: string, userId: string) {
         isCompleted: lesson.progress[0]?.isCompleted || false,
         isWatched: !!lesson.progress[0]?.watchedAt,
       },
-      course: courseWithProgress,
+      course: {
+        ...courseWithProgress,
+        progress: courseProgressPercentage,
+        completedLessons,
+        totalLessons,
+      },
       certificate: existingCertificate,
     };
   } catch (error) {
@@ -1243,6 +1280,140 @@ export async function unlockCertificateModule(courseId: string) {
   } catch (error) {
     console.error("❌ Error unlocking certificate module:", error);
     return { success: false, error: "Erro ao liberar módulo de certificado" };
+  }
+}
+
+export async function saveQuizAnswers(
+  userId: string,
+  lessonId: string,
+  answers: Array<{
+    questionId: string;
+    selectedOptionId: string;
+  }>,
+) {
+  try {
+    console.log("💾 Salvando respostas do quiz:", {
+      userId,
+      lessonId,
+      answersCount: answers.length,
+    });
+
+    // Verificar se a lição é um quiz
+    const lesson = await prisma.lesson.findUnique({
+      where: { id: lessonId },
+      include: {
+        questions: {
+          include: {
+            options: true,
+          },
+        },
+      },
+    });
+
+    if (!lesson) {
+      return { success: false, error: "Lição não encontrada" };
+    }
+
+    if (lesson.type !== "OBJECTIVE_QUIZ") {
+      return { success: false, error: "Esta lição não é um quiz" };
+    }
+
+    // Calcular pontuação
+    let totalScore = 0;
+    let maxScore = 0;
+    const results: Array<{
+      questionId: string;
+      selectedOptionId: string;
+      isCorrect: boolean;
+      score: number;
+    }> = [];
+
+    for (const answer of answers) {
+      const question = lesson.questions.find((q) => q.id === answer.questionId);
+      if (!question) continue;
+
+      maxScore += question.points;
+      const selectedOption = question.options.find(
+        (opt) => opt.id === answer.selectedOptionId,
+      );
+
+      if (selectedOption?.isCorrect) {
+        totalScore += question.points;
+        results.push({
+          questionId: answer.questionId,
+          selectedOptionId: answer.selectedOptionId,
+          isCorrect: true,
+          score: question.points,
+        });
+      } else {
+        results.push({
+          questionId: answer.questionId,
+          selectedOptionId: answer.selectedOptionId,
+          isCorrect: false,
+          score: 0,
+        });
+      }
+    }
+
+    const percentageScore = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
+    const passed = percentageScore >= 70;
+
+    console.log("📊 Resultado do quiz:", {
+      totalScore,
+      maxScore,
+      percentageScore,
+      passed,
+    });
+
+    // Salvar respostas no banco
+    const savedAnswers = await Promise.all(
+      answers.map((answer) =>
+        prisma.studentAnswer.upsert({
+          where: {
+            userId_questionId: {
+              userId,
+              questionId: answer.questionId,
+            },
+          },
+          update: {
+            selectedOptionId: answer.selectedOptionId,
+            score:
+              results.find((r) => r.questionId === answer.questionId)?.score ||
+              0,
+            status: passed ? "APPROVED" : "REJECTED",
+            correctedAt: new Date(),
+          },
+          create: {
+            userId,
+            questionId: answer.questionId,
+            lessonId,
+            selectedOptionId: answer.selectedOptionId,
+            score:
+              results.find((r) => r.questionId === answer.questionId)?.score ||
+              0,
+            status: passed ? "APPROVED" : "REJECTED",
+            correctedAt: new Date(),
+          },
+        }),
+      ),
+    );
+
+    console.log("✅ Respostas salvas:", savedAnswers.length);
+
+    return {
+      success: true,
+      data: {
+        totalScore,
+        maxScore,
+        percentageScore,
+        passed,
+        results,
+        savedAnswers,
+      },
+    };
+  } catch (error) {
+    console.error("❌ Erro ao salvar respostas do quiz:", error);
+    return { success: false, error: "Erro interno do servidor" };
   }
 }
 

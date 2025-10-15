@@ -1,0 +1,220 @@
+---
+alwaysApply: false
+---
+
+# PROMPT DE REFATORAÇÃO DO PROJETO
+
+Você é um expert em Next.js 15, TypeScript, React Server Components, Shadcn UI e Tailwind CSS. Sua missão é refatorar este projeto inteiro seguindo as regras e convenções estabelecidas, mantendo 100% das funcionalidades, estilos e comportamentos atuais.
+
+## OBJETIVOS DA REFATORAÇÃO
+
+1. **Manter funcionalidade idêntica** - Zero quebras, zero regressions
+2. **Aplicar as convenções do arquivo de regras** de forma consistente
+3. **Melhorar performance e manutenibilidade** sem alterar comportamento
+4. **Preservar todos os estilos visuais** existentes
+
+## PROCESSO DE REFATORAÇÃO
+
+### FASE 1: ANÁLISE
+
+Antes de qualquer mudança, analise:
+
+- Estrutura atual de pastas e arquivos
+- Componentes client vs server
+- Padrões de data fetching atuais
+- Dependências e bibliotecas em uso
+- Lógica de negócio e fluxos críticos
+
+### FASE 2: ESTRATÉGIA
+
+Para cada arquivo/componente, identifique:
+
+- [ ] Precisa virar Server Component?
+- [ ] Está usando 'use client' desnecessariamente?
+- [ ] Data fetching pode ser otimizado?
+- [ ] Nomenclatura segue convenções?
+- [ ] TypeScript está correto (types vs interfaces)?
+- [ ] Há código duplicado que pode ser modularizado?
+- [ ] Error handling está implementado?
+- [ ] Está seguindo estrutura de arquivo recomendada?
+
+### FASE 3: REFATORAÇÃO POR CATEGORIA
+
+#### 3.1 Estrutura de Pastas
+
+- Renomear diretórios para `lowercase-com-dashes`
+- Organizar por feature/domínio quando apropriado
+- Manter exports nomeados
+
+#### 3.2 Componentes
+
+**Server Components (prioridade)**
+
+- Converter para RSC sempre que possível
+- Remover 'use client' desnecessários
+- Mover data fetching para server
+- Usar async/await para dados iniciais
+
+**Client Components (apenas quando necessário)**
+
+- Manter apenas para: interatividade, Web APIs, event handlers
+- Minimizar tamanho e escopo
+- Isolar em componentes pequenos
+
+**Estrutura do arquivo:**
+
+```typescript
+// 1. Imports
+// 2. Types
+// 3. Componente principal exportado
+// 4. Subcomponentes
+// 5. Helpers/utils
+// 6. Constantes/conteúdo estático
+```
+
+#### 3.3 TypeScript
+
+- Converter interfaces → types
+- Remover enums → usar maps/unions
+- Adicionar types faltantes
+- Implementar error handling adequado
+
+#### 3.4 Data Fetching
+
+**Server Components:**
+
+- Usar async/await direto no componente
+- Aproveitar streaming e suspense do Next.js
+- Cache nativo do servidor
+
+**Client (React Query):**
+
+- Apenas para: paginação, updates frequentes, interações dinâmicas
+- Usar @tanstack/query consistentemente
+
+#### 3.5 Performance
+
+- Lazy loading para componentes não-críticos
+- Otimizar imagens (WebP, lazy load, sizes)
+- Reduzir bundle de client-side JS
+- Dynamic imports quando apropriado
+
+#### 3.6 Styling
+
+- Manter estilos visuais idênticos
+- Usar Tailwind mobile-first
+- Shadcn UI/Radix para componentes
+
+#### 3.7 Error Handling
+
+- Early returns para condições de erro
+- Guard clauses
+- Custom error types
+- Try-catch onde necessário
+
+### FASE 4: VALIDAÇÃO
+
+Após cada refatoração:
+
+- ✅ Funcionalidade mantida?
+- ✅ Estilos visuais idênticos?
+- ✅ Sem erros TypeScript?
+- ✅ Build passa sem warnings?
+- ✅ Performance igual ou melhor?
+
+## REGRAS CRÍTICAS
+
+### ❌ NÃO FAZER:
+
+- Mudar comportamento de funcionalidades
+- Remover features existentes
+- Alterar aparência visual
+- Quebrar fluxos do usuário
+- Deixar TODOs ou placeholders
+- Adivinhar requisitos - perguntar se incerto
+
+### ✅ FAZER:
+
+- Manter 100% de compatibilidade
+- Aplicar convenções de forma consistente
+- Melhorar código sem alterar resultado
+- Documentar mudanças significativas
+- Testar cada mudança
+
+## ABORDAGEM INCREMENTAL
+
+Refatore em pequenos lotes testáveis:
+
+1. Estrutura de pastas e nomenclatura
+2. TypeScript (interfaces → types, enums → maps)
+3. Componentes Server vs Client
+4. Data fetching patterns
+5. Error handling
+6. Performance optimizations
+
+**Após cada lote, validar que tudo funciona.**
+
+## OUTPUT ESPERADO
+
+Para cada arquivo refatorado, forneça:
+
+- **Caminho do arquivo**
+- **Mudanças aplicadas** (bullet points)
+- **Justificativa** (qual convenção foi aplicada)
+- **Código completo** refatorado
+- **Impacto** (performance, bundle size, etc.)
+
+## EXEMPLO DE REFATORAÇÃO
+
+**Antes:**
+
+```typescript
+'use client'
+interface UserProps {
+  name: string
+}
+export default function User({ name }: UserProps) {
+  const [data, setData] = useState(null)
+  useEffect(() => {
+    fetch('/api/user').then(r => r.json()).then(setData)
+  }, [])
+  return <div>{data?.name}</div>
+}
+```
+
+**Depois:**
+
+```typescript
+// Server Component - sem 'use client'
+type UserProps = {
+  name: string
+}
+
+async function getUser() {
+  const res = await fetch('/api/user')
+  if (!res.ok) throw new Error('Failed to fetch user')
+  return res.json()
+}
+
+export async function User({ name }: UserProps) {
+  const data = await getUser()
+  return <div>{data.name}</div>
+}
+```
+
+**Mudanças:**
+
+- ✅ Convertido para Server Component
+- ✅ Interface → type
+- ✅ Data fetching movido para server
+- ✅ Removido useState/useEffect desnecessários
+- ✅ Adicionado error handling
+- ✅ Named export
+
+---
+
+## COMEÇAR AGORA
+
+Analise o projeto atual e comece a refatoração seguindo as fases acima. Trabalhe arquivo por arquivo, mantendo funcionalidade e validando cada mudança.
+
+**Primeira tarefa: faça uma análise geral do projeto e sugira a ordem de refatoração.**

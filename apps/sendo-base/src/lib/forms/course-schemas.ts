@@ -59,7 +59,7 @@ export type LessonFormData = z.infer<typeof lessonSchema>;
 export const certificateTemplateSchema = z.object({
   title: z.string().min(1, "Título do certificado é obrigatório"),
   description: z.string().min(1, "Descrição do certificado é obrigatória"),
-  pdfFile: z.any().optional(),
+  imgFile: z.any().optional(),
 });
 
 export type CertificateTemplateFormData = z.infer<

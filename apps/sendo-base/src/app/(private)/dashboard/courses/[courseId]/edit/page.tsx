@@ -1,7 +1,7 @@
 "use client";
 
 import { PageLayout } from "@/src/components/common/layout/page-layout";
-import { PdfViewer } from "@/src/components/pdf-viewer";
+import { ImageViewer } from "@/src/components/image-viewer";
 import { useAccordionState } from "@/src/hooks/use-accordion-state";
 import { useCourseLessons } from "@/src/hooks/use-course-lessons";
 import { useCourseModules } from "@/src/hooks/use-course-modules";
@@ -146,13 +146,10 @@ export default function EditCoursePage(props: EditCoursePageProps) {
     },
   });
 
-  const {
-    isLoading: isLoadingQuestions,
-    showQuestionForm,
-    setShowQuestionForm,
-    addQuestion,
-    removeQuestion,
-  } = useCourseQuestions(modulesState, setModulesState);
+  const { addQuestion, removeQuestion } = useCourseQuestions(
+    modulesState,
+    setModulesState,
+  );
 
   const { openItems: openModules, setItems: setOpenModules } =
     useAccordionState();
@@ -199,10 +196,11 @@ export default function EditCoursePage(props: EditCoursePageProps) {
   // Formulário do template de certificado
   const certificateTemplateForm = useForm<CertificateTemplateFormData>({
     resolver: zodResolver(certificateTemplateSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+    },
   });
-
-  // Watch lesson type for conditional fields
-  const selectedLessonType = lessonForm.watch("type");
 
   // Watch course title to auto-generate certificate title
   const courseTitle = courseForm.watch("title");
@@ -1029,29 +1027,27 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                       </div>
                       {courseData.certificateTemplate.templateUrl && (
                         <div className="dark-info-bg dark-info rounded-full px-2 py-1 text-xs font-medium">
-                          PDF Disponível
+                          Certificado Disponível
                         </div>
                       )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     {courseData.certificateTemplate.templateUrl && (
-                      <PdfViewer
-                        pdfBase64={courseData.certificateTemplate.templateUrl}
-                        certificateUrl={
-                          courseData.certificateTemplate.templateUrl
-                        }
+                      <ImageViewer
+                        imageBase64={courseData.certificateTemplate.templateUrl}
+                        imageUrl={courseData.certificateTemplate.templateUrl}
                         title={`Template: ${courseData.certificateTemplate.title}`}
-                        fileName={`template-${courseData.certificateTemplate.id}.pdf`}
+                        fileName={`template-${courseData.certificateTemplate.id}.png`}
                       >
                         <Button
                           className="dark-glass dark-border hover:dark-border-hover"
                           size="sm"
                         >
                           <CheckCircle className="mr-1 h-3 w-3" />
-                          Ver PDF
+                          Ver Certificado
                         </Button>
-                      </PdfViewer>
+                      </ImageViewer>
                     )}
                   </div>
                 </div>

@@ -242,7 +242,7 @@ model CertificateTemplate {
   courseId    String   @unique // Um curso tem apenas um template de certificado
   title       String
   description String?
-  templateUrl String? // URL do template PDF
+  templateUrl String? // URL do template PNG
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -262,7 +262,7 @@ model Certificate {
   templateId       String
   status           CertificateStatus @default(PENDING)
   issuedAt         DateTime? // Nullable - só preenchido quando emitido
-  certificateUrl   String? // URL do certificado gerado
+  certificateUrl   String? // URL do certificado gerado (PNG)
   verificationCode String?           @unique // Código único para verificação
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt

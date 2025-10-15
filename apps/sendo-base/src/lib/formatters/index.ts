@@ -11,14 +11,14 @@ const formatDate = (date: Date) => {
 };
 
 const formatTime = (date: Date) => {
-  return date.toLocaleTimeString("pt-BR", {
+  return date?.toLocaleTimeString("pt-BR", {
     hour: "2-digit",
     minute: "2-digit",
   });
 };
 
 const formatDateTime = (date: Date) => {
-  return date.toLocaleString("pt-BR", {
+  return date?.toLocaleString("pt-BR", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

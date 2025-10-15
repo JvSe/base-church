@@ -11,7 +11,7 @@ import {
 } from "@base-church/ui/components/form";
 import { Input } from "@base-church/ui/components/input";
 import { Textarea } from "@base-church/ui/components/textarea";
-import { Award, FileText, Trash2, Upload } from "lucide-react";
+import { Award, FileImage, Trash2, Upload } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -109,7 +109,7 @@ export function CertificateForm({
             {/* File Upload Section */}
             <div className="dark-card dark-shadow-sm rounded-lg p-4">
               <h3 className="dark-text-primary mb-3 font-semibold">
-                Template do Certificado (PDF)
+                Template do Certificado (PNG)
               </h3>
               <div className="space-y-3">
                 <div className="dark-bg-secondary rounded-lg border-2 border-dashed border-gray-600 p-6 text-center">
@@ -117,22 +117,22 @@ export function CertificateForm({
                   <p className="dark-text-secondary text-sm">
                     {certificateFile
                       ? certificateFile.name
-                      : "Arraste o arquivo PDF aqui ou clique para selecionar"}
+                      : "Arraste a imagem PNG aqui ou clique para selecionar"}
                   </p>
                   <p className="dark-text-tertiary text-xs">
-                    Apenas arquivos PDF (máx. 10MB)
+                    Apenas imagens PNG (máx. 10MB)
                   </p>
                 </div>
                 <input
                   type="file"
-                  accept=".pdf"
+                  accept=".png,image/png"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
-                      if (file.type === "application/pdf") {
+                      if (file.type === "image/png") {
                         setCertificateFile(file);
                       } else {
-                        toast.error("Por favor, selecione apenas arquivos PDF");
+                        toast.error("Por favor, selecione apenas imagens PNG");
                       }
                     }
                   }}
@@ -148,12 +148,12 @@ export function CertificateForm({
                   }}
                 >
                   <Upload className="mr-2 h-4 w-4" />
-                  {certificateFile ? "Alterar Arquivo" : "Selecionar PDF"}
+                  {certificateFile ? "Alterar Imagem" : "Selecionar PNG"}
                 </Button>
                 {certificateFile && (
                   <div className="flex items-center justify-between rounded-lg bg-green-900/20 p-3">
                     <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-green-400" />
+                      <FileImage className="h-4 w-4 text-green-400" />
                       <span className="text-sm text-green-400">
                         {certificateFile.name}
                       </span>

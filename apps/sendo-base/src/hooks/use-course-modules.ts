@@ -1,5 +1,6 @@
 import { createModule, deleteModule, updateModule } from "@/src/lib/actions";
-import type { Module, ModuleFormData } from "@/src/lib/types/course.types";
+import type { ModuleFormData } from "@/src/lib/forms/course-schemas";
+import type { Module } from "@/src/lib/types/course.types";
 import { useState } from "react";
 import { toast } from "sonner";
 
