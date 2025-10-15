@@ -12,7 +12,7 @@ import {
   CourseDetailTabs,
   CourseStatsSidebar,
 } from "@/src/components/course-detail";
-import { useCourseDetail } from "@/src/hooks";
+import { useAuth, useCourseDetail } from "@/src/hooks";
 import { createEnrollmentRequest } from "@/src/lib/actions";
 import { use, useState } from "react";
 import { toast } from "sonner";
@@ -30,6 +30,7 @@ type CoursePageProps = {
 
 export default function CoursePage({ params }: CoursePageProps) {
   const { courseId } = use(params);
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<
     "overview" | "curriculum" | "instructor" | "reviews"
   >("overview");
@@ -47,17 +48,20 @@ export default function CoursePage({ params }: CoursePageProps) {
   } = useCourseDetail({ courseId });
 
   const handleEnrollmentRequest = async () => {
-    if (!courseId) return;
+    if (!courseId || !user?.id) {
+      toast.error("Você precisa estar logado para solicitar matrícula");
+      return;
+    }
 
     setIsEnrolling(true);
     try {
-      const result = await createEnrollmentRequest(courseId, "");
+      const result = await createEnrollmentRequest(courseId, user.id);
 
       if (result.success) {
         toast.success(result.message || "Solicitação enviada com sucesso!");
         refetchEnrollment();
       } else {
-        toast.error("Erro ao enviar solicitação");
+        toast.error(result.error || "Erro ao enviar solicitação");
       }
     } catch (error) {
       console.error(error);

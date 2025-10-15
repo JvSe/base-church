@@ -318,6 +318,38 @@ export async function createEnrollmentRequest(
   userId: string,
 ) {
   try {
+    // Validar se userId e courseId foram fornecidos
+    if (!userId || !courseId) {
+      return {
+        success: false,
+        error: "Dados inválidos para criar solicitação de matrícula",
+      };
+    }
+
+    // Verificar se o usuário existe
+    const userExists = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!userExists) {
+      return {
+        success: false,
+        error: "Usuário não encontrado",
+      };
+    }
+
+    // Verificar se o curso existe
+    const courseExists = await prisma.course.findUnique({
+      where: { id: courseId },
+    });
+
+    if (!courseExists) {
+      return {
+        success: false,
+        error: "Curso não encontrado",
+      };
+    }
+
     // Verificar se já existe uma matrícula para este usuário e curso
     const existingEnrollment = await prisma.enrollment.findFirst({
       where: {
