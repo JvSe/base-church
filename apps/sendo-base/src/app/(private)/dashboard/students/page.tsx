@@ -63,7 +63,7 @@ interface Student {
   phone?: string | null;
   cpf: string;
   joinDate: Date;
-  role: "MEMBROS" | "ADMIN";
+  role: "MEMBROS" | "ADMIN" | "LIDER";
   isPastor: boolean;
   profileCompletion: number;
   coursesEnrolled: number;
@@ -412,7 +412,12 @@ export default function StudentsPage() {
   };
 
   const getRoleText = (role: string, isPastor: boolean) => {
-    const baseRole = role === "MEMBROS" ? "Membro" : "Líder";
+    const baseRole =
+      role === "ADMIN"
+        ? "Administrador"
+        : role === "LIDER"
+          ? "Líder"
+          : "Membro";
     return isPastor ? `${baseRole} (Pastor)` : baseRole;
   };
 
@@ -761,7 +766,9 @@ export default function StudentsPage() {
                                 className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                                   student.role === "ADMIN"
                                     ? "bg-blue-400/20 text-blue-400"
-                                    : "bg-gray-400/20 text-gray-400"
+                                    : student.role === "LIDER"
+                                      ? "bg-purple-400/20 text-purple-400"
+                                      : "bg-gray-400/20 text-gray-400"
                                 }`}
                               >
                                 {getRoleText(student.role, student.isPastor)}

@@ -366,7 +366,10 @@ export function QuestionForm({
               >
                 Cancelar
               </Button>
-              <Button type="submit" variant="success">
+              <Button
+                onClick={form.handleSubmit(handleAddQuestion)}
+                variant="success"
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 Adicionar Questão
               </Button>

@@ -8,7 +8,7 @@ export type User = {
   name: string;
   cpf: string;
   email?: string;
-  role: "MEMBROS" | "ADMIN";
+  role: "MEMBROS" | "ADMIN" | "LIDER";
   isPastor?: boolean;
   image?: string;
   approvalStatus?: "PENDING" | "APPROVED" | "REJECTED";

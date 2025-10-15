@@ -2,27 +2,37 @@
 
 import { PageLayout } from "@/src/components/common/layout/page-layout";
 import { PdfViewer } from "@/src/components/pdf-viewer";
+import { useAccordionState } from "@/src/hooks/use-accordion-state";
+import { useCourseLessons } from "@/src/hooks/use-course-lessons";
+import { useCourseModules } from "@/src/hooks/use-course-modules";
+import { useCourseQuestions } from "@/src/hooks/use-course-questions";
 import {
-  createLesson,
-  createModule,
-  createObjectiveQuestion,
-  createSubjectiveQuestion,
   deleteCourse,
-  deleteLesson,
-  deleteModule,
   getCourseById,
   getCourseModules,
   getLeaders,
   updateCourse,
   updateCourseStatus,
-  updateLesson,
-  updateModule,
 } from "@/src/lib/actions";
 import {
   createCertificateTemplate,
   updateCertificateTemplate,
 } from "@/src/lib/actions/certificate";
-import { extractYouTubeEmbedId } from "@/src/lib/helpers/youtube";
+import {
+  certificateTemplateSchema,
+  courseSchema,
+  lessonSchema,
+  moduleSchema,
+  type CertificateTemplateFormData,
+  type CourseFormData,
+  type LessonFormData,
+  type ModuleFormData,
+} from "@/src/lib/forms/course-schemas";
+import {
+  convertFileToBase64,
+  getLessonTypeIcon,
+  getLessonTypeText,
+} from "@/src/lib/helpers/course.helper";
 import {
   Accordion,
   AccordionContent,
@@ -37,9 +47,7 @@ import {
   BookOpen,
   CheckCircle,
   Edit,
-  FileText,
   Layers,
-  Play,
   Plus,
   Trash2,
 } from "lucide-react";
@@ -47,102 +55,14 @@ import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
 import {
   CertificateForm,
   CourseHeader,
   CourseInfoForm,
   LessonForm,
   ModuleForm,
-  QuestionForm,
   QuestionList,
 } from "../../components";
-
-// Schemas de validação
-const courseSchema = z.object({
-  title: z
-    .string()
-    .min(1, "Título é obrigatório")
-    .min(3, "Título deve ter pelo menos 3 caracteres"),
-  description: z
-    .string()
-    .min(1, "Descrição é obrigatória")
-    .min(10, "Descrição deve ter pelo menos 10 caracteres"),
-  instructorId: z.string().min(1, "Instrutor é obrigatório"),
-  duration: z.number().min(1, "Duração deve ser maior que 0"),
-  level: z.enum(["beginner", "intermediate", "advanced"], {
-    required_error: "Nível é obrigatório",
-  }),
-  category: z.string().min(1, "Categoria é obrigatória"),
-  tags: z.string().optional(),
-  price: z.number().min(0, "Preço não pode ser negativo"),
-});
-
-const moduleSchema = z.object({
-  title: z.string().min(1, "Título do módulo é obrigatório"),
-  description: z.string().min(1, "Descrição do módulo é obrigatória"),
-});
-
-const lessonSchema = z.object({
-  title: z.string().min(1, "Título da lição é obrigatório"),
-  description: z.string().min(1, "Descrição da lição é obrigatória"),
-  content: z.string().optional(),
-  videoUrl: z.string().optional(),
-  duration: z.number().min(1, "Duração deve ser maior que 0"),
-  type: z.enum(["VIDEO", "TEXT", "OBJECTIVE_QUIZ", "SUBJECTIVE_QUIZ"], {
-    required_error: "Tipo é obrigatório",
-  }),
-});
-
-const certificateTemplateSchema = z.object({
-  title: z.string().min(1, "Título do certificado é obrigatório"),
-  description: z.string().min(1, "Descrição do certificado é obrigatória"),
-  pdfFile: z.any().optional(),
-});
-
-type CourseFormData = z.infer<typeof courseSchema>;
-type ModuleFormData = z.infer<typeof moduleSchema>;
-type LessonFormData = z.infer<typeof lessonSchema>;
-type CertificateTemplateFormData = z.infer<typeof certificateTemplateSchema>;
-
-interface Module {
-  id: string;
-  title: string;
-  description: string;
-  order: number;
-  lessons: Lesson[];
-}
-
-interface Question {
-  id?: string;
-  questionText: string;
-  points: number;
-  order: number;
-  explanation?: string;
-  type: "objective" | "subjective";
-  subjectiveAnswerType?: "text" | "file";
-  correctAnswer?: string;
-  options?: {
-    id?: string;
-    optionText: string;
-    isCorrect: boolean;
-    order: number;
-  }[];
-}
-
-interface Lesson {
-  id: string;
-  title: string;
-  description: string;
-  content?: string;
-  videoUrl?: string;
-  youtubeEmbedId?: string;
-  duration: number;
-  order: number;
-  type: "VIDEO" | "TEXT" | "OBJECTIVE_QUIZ" | "SUBJECTIVE_QUIZ";
-  isActivity?: boolean;
-  questions?: Question[];
-}
 
 interface EditCoursePageProps {
   params: Promise<{
@@ -153,23 +73,9 @@ interface EditCoursePageProps {
 export default function EditCoursePage(props: EditCoursePageProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [modulesState, setModulesState] = useState<Module[]>([]);
-  const [showModuleForm, setShowModuleForm] = useState(false);
-  const [showLessonForm, setShowLessonForm] = useState<number | null>(null);
-  const [editingLesson, setEditingLesson] = useState<{
-    moduleIndex: number;
-    lessonIndex: number;
-  } | null>(null);
-  const [editingModule, setEditingModule] = useState<number | null>(null);
   const [showCertificateForm, setShowCertificateForm] = useState(false);
-  const [openModules, setOpenModules] = useState<string[]>([]);
-  const [openLessons, setOpenLessons] = useState<string[]>([]);
   const [isEditingCertificate, setIsEditingCertificate] = useState(false);
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
-  const [showQuestionForm, setShowQuestionForm] = useState<{
-    moduleIndex: number;
-    lessonIndex: number;
-  } | null>(null);
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -205,6 +111,55 @@ export default function EditCoursePage(props: EditCoursePageProps) {
     select: (data) => data.leaders,
   });
 
+  // Hooks personalizados para gerenciamento de módulos, lições e questões
+  const {
+    modules: modulesState,
+    isLoading: isLoadingModules,
+    showModuleForm,
+    setShowModuleForm,
+    editingModuleIndex,
+    addModule,
+    startEditModule,
+    cancelEditModule,
+    saveModule,
+    removeModule,
+    setModules: setModulesState,
+  } = useCourseModules(courseId, {
+    onModuleChange: () => {
+      refetchModules();
+    },
+  });
+
+  const {
+    isLoading: isLoadingLessons,
+    showLessonForm,
+    setShowLessonForm,
+    editingLesson,
+    startEditLesson,
+    cancelEditLesson,
+    addLesson,
+    saveLesson,
+    removeLesson,
+  } = useCourseLessons(modulesState, setModulesState, {
+    onLessonChange: () => {
+      refetchModules();
+    },
+  });
+
+  const {
+    isLoading: isLoadingQuestions,
+    showQuestionForm,
+    setShowQuestionForm,
+    addQuestion,
+    removeQuestion,
+  } = useCourseQuestions(modulesState, setModulesState);
+
+  const { openItems: openModules, setItems: setOpenModules } =
+    useAccordionState();
+
+  const { openItems: openLessons, setItems: setOpenLessons } =
+    useAccordionState();
+
   // Formulário do curso
   const courseForm = useForm<CourseFormData>({
     resolver: zodResolver(courseSchema),
@@ -212,7 +167,6 @@ export default function EditCoursePage(props: EditCoursePageProps) {
       title: "",
       description: "",
       instructorId: "",
-      duration: 120,
       level: "beginner",
       category: "CREATIVITY",
       tags: "",
@@ -261,7 +215,6 @@ export default function EditCoursePage(props: EditCoursePageProps) {
         title: courseData.title,
         description: courseData.description || "",
         instructorId: courseData.instructorId || "",
-        duration: courseData.duration || 120,
         level:
           (courseData.level as "beginner" | "intermediate" | "advanced") ||
           "beginner",
@@ -290,6 +243,27 @@ export default function EditCoursePage(props: EditCoursePageProps) {
             duration: lesson.duration,
             order: lesson.order,
             type: lesson.type,
+            isActivity: lesson.isActivity,
+            questions:
+              lesson.questions?.map((question: any) => ({
+                id: question.id,
+                questionText: question.questionText,
+                points: question.points,
+                order: question.order,
+                explanation: question.explanation,
+                type:
+                  question.type === "OBJECTIVE" ? "objective" : "subjective",
+                subjectiveAnswerType:
+                  question.subjectiveAnswerType?.toLowerCase(),
+                correctAnswer: question.correctAnswer,
+                options:
+                  question.options?.map((option: any) => ({
+                    id: option.id,
+                    optionText: option.optionText,
+                    isCorrect: option.isCorrect,
+                    order: option.order,
+                  })) || [],
+              })) || [],
           })) || [],
       }));
       setModulesState(transformedModules);
@@ -325,11 +299,7 @@ export default function EditCoursePage(props: EditCoursePageProps) {
   const handleUpdateCourse = async (data: CourseFormData) => {
     setIsLoading(true);
     try {
-      const result = await updateCourse(courseId, {
-        ...data,
-        tags: data.tags || "",
-        status: "draft",
-      });
+      const result = await updateCourse(courseId, data);
 
       if (result.success) {
         toast.success(result.message);
@@ -370,271 +340,49 @@ export default function EditCoursePage(props: EditCoursePageProps) {
     }
   };
 
-  // Adicionar módulo
-  const handleAddModule = async (data: ModuleFormData) => {
-    setIsLoading(true);
-    try {
-      const result = await createModule(courseId, {
-        ...data,
-        order: modulesState.length + 1,
-      });
+  // Alternar status do curso (publicar/despublicar)
+  const handleFinishCourse = async () => {
+    if (!courseId || !courseData) return;
 
-      if (result.success && result.module) {
-        const newModule: Module = {
-          id: result.module.id,
-          title: data.title,
-          description: data.description,
-          order: modulesState.length + 1,
-          lessons: [],
-        };
-        setModulesState([...modulesState, newModule]);
-        moduleForm.reset();
-        setShowModuleForm(false);
-        toast.success("Módulo adicionado com sucesso!");
-        refetchModules();
-      } else {
-        toast.error(result.error || "Erro ao criar módulo");
-      }
-    } catch (error) {
-      toast.error("Erro ao criar módulo");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    const isCurrentlyPublished = courseData.isPublished;
+    const newStatus = isCurrentlyPublished ? "draft" : "published";
+    const actionText = isCurrentlyPublished ? "despublicar" : "publicar";
 
-  // Deletar módulo
-  const handleDeleteModule = async (moduleId: string) => {
-    if (confirm("Tem certeza que deseja excluir este módulo?")) {
-      try {
-        const result = await deleteModule(moduleId);
-        if (result.success) {
-          const updatedModules = modulesState.filter((m) => m.id !== moduleId);
-          setModulesState(updatedModules);
-          toast.success(result.message);
-          refetchModules();
-        } else {
-          toast.error(result.error);
-        }
-      } catch (error) {
-        toast.error("Erro ao excluir módulo");
-      }
-    }
-  };
-
-  // Editar módulo
-  const handleEditModule = (moduleIndex: number) => {
-    const module = modulesState[moduleIndex];
-    if (module) {
-      moduleForm.reset({
-        title: module.title,
-        description: module.description,
-      });
-      setEditingModule(moduleIndex);
-      setOpenModules([...openModules, `module-${moduleIndex}`]);
-    }
-  };
-
-  // Salvar edição de módulo
-  const handleSaveModuleEdit = async (
-    data: ModuleFormData,
-    moduleIndex: number,
-  ) => {
-    setIsLoading(true);
-    try {
-      const module = modulesState[moduleIndex];
-      if (!module) {
-        toast.error("Módulo não encontrado");
+    // Confirmar despublicação
+    if (isCurrentlyPublished) {
+      if (
+        !confirm(
+          "Tem certeza que deseja voltar este curso para rascunho? Ele não estará mais visível para os alunos.",
+        )
+      ) {
         return;
       }
-
-      const result = await updateModule(module.id, {
-        title: data.title,
-        description: data.description,
-        order: module.order,
-      });
-
-      if (result.success) {
-        const updatedModules = [...modulesState];
-        if (updatedModules[moduleIndex]) {
-          updatedModules[moduleIndex].title = data.title;
-          updatedModules[moduleIndex].description = data.description;
-        }
-        setModulesState(updatedModules);
-        setEditingModule(null);
-        moduleForm.reset();
-        toast.success("Módulo atualizado com sucesso!");
-        refetchModules();
-      } else {
-        toast.error(result.error || "Erro ao atualizar módulo");
-      }
-    } catch (error) {
-      console.error("Erro ao atualizar módulo:", error);
-      toast.error("Erro ao atualizar módulo");
-    } finally {
-      setIsLoading(false);
     }
-  };
-
-  // Editar lição
-  const handleEditLesson = (moduleIndex: number, lessonIndex: number) => {
-    const lesson = modulesState[moduleIndex]?.lessons[lessonIndex];
-    if (lesson) {
-      lessonForm.reset({
-        title: lesson.title,
-        description: lesson.description,
-        content: lesson.content || "",
-        videoUrl: lesson.videoUrl || "",
-        duration: lesson.duration,
-        type: lesson.type as any,
-      });
-      setEditingLesson({ moduleIndex, lessonIndex });
-      setOpenModules([...openModules, `module-${moduleIndex}`]);
-      setOpenLessons([...openLessons, `lesson-${moduleIndex}-${lessonIndex}`]);
-    }
-  };
-
-  // Salvar edição de lição
-  const handleSaveLessonEdit = async (
-    data: LessonFormData,
-    moduleIndex: number,
-    lessonIndex: number,
-  ) => {
-    const lesson = modulesState[moduleIndex]?.lessons[lessonIndex];
-    if (!lesson) return;
-
-    const youtubeEmbedId = extractYouTubeEmbedId(data.videoUrl || "");
 
     setIsLoading(true);
     try {
-      const result = await updateLesson(lesson.id, {
-        ...data,
-        youtubeEmbedId: youtubeEmbedId || "",
-        order: lesson.order,
-      });
+      const result = await updateCourseStatus(courseId, newStatus);
       if (result.success) {
-        const updatedModules = [...modulesState];
-        if (updatedModules[moduleIndex]?.lessons[lessonIndex]) {
-          updatedModules[moduleIndex].lessons[lessonIndex] = {
-            ...updatedModules[moduleIndex].lessons[lessonIndex],
-            title: data.title,
-            description: data.description,
-            content: data.content,
-            videoUrl: data.videoUrl,
-            youtubeEmbedId: youtubeEmbedId || "",
-            duration: data.duration,
-            type: data.type,
-          };
-          setModulesState(updatedModules);
-        }
-        setEditingLesson(null);
-        toast.success("Lição atualizada com sucesso!");
-        refetchModules();
+        toast.success(
+          isCurrentlyPublished
+            ? "Curso voltou para rascunho!"
+            : "Curso publicado com sucesso!",
+        );
+        // Invalidar cache para atualizar o status na UI
+        queryClient.invalidateQueries({
+          queryKey: ["course", courseId],
+        });
       } else {
-        toast.error(result.error || "Erro ao atualizar lição");
+        toast.error(result.error || `Erro ao ${actionText} curso`);
       }
     } catch (error) {
-      toast.error("Erro ao atualizar lição");
+      toast.error(`Erro ao ${actionText} curso`);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Deletar lição
-  const handleDeleteLesson = async (
-    lessonId: string,
-    moduleIndex: number,
-    lessonIndex: number,
-  ) => {
-    if (confirm("Tem certeza que deseja excluir esta lição?")) {
-      try {
-        const result = await deleteLesson(lessonId);
-        if (result.success) {
-          const updatedModules = [...modulesState];
-          if (updatedModules[moduleIndex]) {
-            updatedModules[moduleIndex].lessons = updatedModules[
-              moduleIndex
-            ].lessons.filter((_, i) => i !== lessonIndex);
-            setModulesState(updatedModules);
-          }
-          toast.success(result.message);
-          refetchModules();
-        } else {
-          toast.error(result.error);
-        }
-      } catch (error) {
-        toast.error("Erro ao excluir lição");
-      }
-    }
-  };
-
-  // Adicionar lição
-  const handleAddLesson = async (data: LessonFormData, moduleIndex: number) => {
-    const module = modulesState[moduleIndex];
-    if (!module) return;
-
-    const youtubeEmbedId = extractYouTubeEmbedId(data.videoUrl || "");
-
-    setIsLoading(true);
-    try {
-      const result = await createLesson(module.id, {
-        ...data,
-        youtubeEmbedId: youtubeEmbedId || "",
-        order: module.lessons.length + 1,
-      });
-
-      if (result.success && result.lesson) {
-        const newLesson: Lesson = {
-          id: result.lesson.id,
-          title: data.title,
-          description: data.description,
-          content: data.content,
-          videoUrl: data.videoUrl,
-          youtubeEmbedId: youtubeEmbedId || "",
-          duration: data.duration,
-          order: module.lessons.length + 1,
-          type: data.type,
-        };
-
-        const updatedModules = [...modulesState];
-        if (updatedModules[moduleIndex]) {
-          updatedModules[moduleIndex].lessons.push(newLesson);
-          setModulesState(updatedModules);
-        }
-        lessonForm.reset();
-        setShowLessonForm(null);
-        toast.success("Lição adicionada com sucesso!");
-        refetchModules();
-      } else {
-        toast.error(result.error || "Erro ao criar lição");
-      }
-    } catch (error) {
-      toast.error("Erro ao criar lição");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Finalizar curso
-  const handleFinishCourse = async () => {
-    if (!courseId) return;
-
-    setIsLoading(true);
-    try {
-      const result = await updateCourseStatus(courseId, "published");
-      if (result.success) {
-        toast.success("Curso publicado com sucesso!");
-        router.push("/dashboard/courses");
-      } else {
-        toast.error(result.error || "Erro ao publicar curso");
-      }
-    } catch (error) {
-      toast.error("Erro ao finalizar curso");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Criar template de certificado
+  // Criar ou atualizar template de certificado
   const handleCreateCertificateTemplate = async (
     data: CertificateTemplateFormData,
   ) => {
@@ -716,46 +464,6 @@ export default function EditCoursePage(props: EditCoursePageProps) {
     }
   };
 
-  // Converter arquivo para base64
-  const convertFileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-    });
-  };
-
-  const getLessonTypeIcon = (type: string) => {
-    switch (type) {
-      case "VIDEO":
-        return <Play className="dark-secondary" size={16} />;
-      case "TEXT":
-        return <FileText className="dark-secondary" size={16} />;
-      case "OBJECTIVE_QUIZ":
-        return <CheckCircle className="dark-secondary" size={16} />;
-      case "SUBJECTIVE_QUIZ":
-        return <CheckCircle className="dark-secondary" size={16} />;
-      default:
-        return <FileText className="dark-secondary" size={16} />;
-    }
-  };
-
-  const getLessonTypeText = (type: string) => {
-    switch (type) {
-      case "VIDEO":
-        return "Vídeo";
-      case "TEXT":
-        return "Texto";
-      case "OBJECTIVE_QUIZ":
-        return "Atividade Objetiva";
-      case "SUBJECTIVE_QUIZ":
-        return "Atividade Subjetiva";
-      default:
-        return "Texto";
-    }
-  };
-
   // Loading state
   if (courseLoading || modulesLoading) {
     return (
@@ -820,6 +528,7 @@ export default function EditCoursePage(props: EditCoursePageProps) {
         isLoading={isLoading}
         isEditing={true}
         isDeleting={isDeleting}
+        isPublished={courseData?.isPublished || false}
         onFinishCourse={handleFinishCourse}
         onDeleteCourse={handleDeleteCourse}
       />
@@ -863,8 +572,8 @@ export default function EditCoursePage(props: EditCoursePageProps) {
           {showModuleForm && (
             <ModuleForm
               form={moduleForm}
-              isLoading={isLoading}
-              onSubmit={handleAddModule}
+              isLoading={isLoadingModules}
+              onSubmit={(data) => addModule(data)}
               onCancel={() => {
                 setShowModuleForm(false);
                 moduleForm.reset();
@@ -931,7 +640,18 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                         className="gap-1"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleEditModule(moduleIndex);
+                          const mod = modulesState[moduleIndex];
+                          if (mod) {
+                            moduleForm.reset({
+                              title: mod.title,
+                              description: mod.description,
+                            });
+                            startEditModule(moduleIndex);
+                            setOpenModules([
+                              ...openModules,
+                              `module-${moduleIndex}`,
+                            ]);
+                          }
                         }}
                       >
                         <Edit className="h-3 w-3" />
@@ -943,7 +663,7 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                         className="gap-1"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDeleteModule(module.id);
+                          removeModule(module.id, moduleIndex);
                         }}
                       >
                         <Trash2 className="h-3 w-3" />
@@ -954,16 +674,14 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                 </AccordionTrigger>
                 <AccordionContent className="dark-border">
                   {/* Module Edit Form */}
-                  {editingModule === moduleIndex && (
+                  {editingModuleIndex === moduleIndex && (
                     <div className="dark-border border-b p-6">
                       <ModuleForm
                         form={moduleForm}
-                        isLoading={isLoading}
-                        onSubmit={(data) =>
-                          handleSaveModuleEdit(data, moduleIndex)
-                        }
+                        isLoading={isLoadingModules}
+                        onSubmit={(data) => saveModule(data, moduleIndex)}
                         onCancel={() => {
-                          setEditingModule(null);
+                          cancelEditModule();
                           moduleForm.reset();
                         }}
                       />
@@ -974,8 +692,12 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                   {showLessonForm === moduleIndex && (
                     <LessonForm
                       form={lessonForm}
-                      isLoading={isLoading}
-                      onSubmit={(data) => handleAddLesson(data, moduleIndex)}
+                      isEditing={false}
+                      isLoading={isLoadingLessons}
+                      moduleIndex={moduleIndex}
+                      onSubmit={async (data) => {
+                        return await addLesson(data, moduleIndex);
+                      }}
                       onCancel={() => {
                         setShowLessonForm(null);
                         lessonForm.reset();
@@ -1016,9 +738,17 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                               <div className="flex w-full items-center justify-between">
                                 <div className="flex items-center gap-3">
                                   <div className="dark-secondary-subtle-bg rounded-lg p-2">
-                                    <span className="text-lg">
-                                      {getLessonTypeIcon(lesson.type)}
-                                    </span>
+                                    {(() => {
+                                      const LessonIcon = getLessonTypeIcon(
+                                        lesson.type,
+                                      );
+                                      return (
+                                        <LessonIcon
+                                          className="dark-secondary"
+                                          size={16}
+                                        />
+                                      );
+                                    })()}
                                   </div>
                                   <div className="text-left">
                                     <h5 className="dark-text-primary font-medium">
@@ -1044,10 +774,32 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                                     className="gap-1"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      handleEditLesson(
-                                        moduleIndex,
-                                        lessonIndex,
-                                      );
+                                      const les =
+                                        modulesState[moduleIndex]?.lessons[
+                                          lessonIndex
+                                        ];
+                                      if (les) {
+                                        lessonForm.reset({
+                                          title: les.title,
+                                          description: les.description,
+                                          content: les.content || "",
+                                          videoUrl: les.videoUrl || "",
+                                          duration: les.duration,
+                                          type: les.type as any,
+                                        });
+                                        startEditLesson(
+                                          moduleIndex,
+                                          lessonIndex,
+                                        );
+                                        setOpenModules([
+                                          ...openModules,
+                                          `module-${moduleIndex}`,
+                                        ]);
+                                        setOpenLessons([
+                                          ...openLessons,
+                                          `lesson-${moduleIndex}-${lessonIndex}`,
+                                        ]);
+                                      }
                                     }}
                                   >
                                     <Edit className="h-3 w-3" />
@@ -1059,7 +811,7 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                                     className="gap-1"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      handleDeleteLesson(
+                                      removeLesson(
                                         lesson.id,
                                         moduleIndex,
                                         lessonIndex,
@@ -1078,18 +830,24 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                                 // Formulário de edição
                                 <LessonForm
                                   form={lessonForm}
-                                  isLoading={isLoading}
-                                  onSubmit={(data) =>
-                                    handleSaveLessonEdit(
+                                  isEditing={true}
+                                  isLoading={isLoadingLessons}
+                                  moduleIndex={moduleIndex}
+                                  lessonIndex={lessonIndex}
+                                  onSubmit={async (data) => {
+                                    return await saveLesson(
                                       data,
                                       moduleIndex,
                                       lessonIndex,
-                                    )
-                                  }
+                                    );
+                                  }}
                                   onCancel={() => {
-                                    setEditingLesson(null);
+                                    cancelEditLesson();
                                     lessonForm.reset();
                                   }}
+                                  addQuestion={addQuestion}
+                                  questions={lesson.questions || []}
+                                  onDeleteQuestion={removeQuestion}
                                 />
                               ) : (
                                 // Visualização da lição
@@ -1100,9 +858,17 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                                         Tipo de Conteúdo
                                       </h6>
                                       <div className="flex items-center space-x-2">
-                                        <span className="text-lg">
-                                          {getLessonTypeIcon(lesson.type)}
-                                        </span>
+                                        {(() => {
+                                          const LessonIcon = getLessonTypeIcon(
+                                            lesson.type,
+                                          );
+                                          return (
+                                            <LessonIcon
+                                              className="dark-secondary"
+                                              size={16}
+                                            />
+                                          );
+                                        })()}
                                         <span className="dark-text-secondary text-sm">
                                           {getLessonTypeText(lesson.type)}
                                         </span>
@@ -1117,6 +883,26 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                                       </p>
                                     </div>
                                   </div>
+
+                                  {!lesson.content &&
+                                    !lesson.videoUrl &&
+                                    lesson.questions?.length === 0 && (
+                                      <div className="dark-card dark-shadow-sm rounded-lg p-6 text-center">
+                                        <div className="dark-bg-secondary mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full">
+                                          <BookOpen
+                                            className="dark-text-tertiary"
+                                            size={20}
+                                          />
+                                        </div>
+                                        <h6 className="dark-text-primary mb-2 font-medium">
+                                          Conteúdo não definido
+                                        </h6>
+                                        <p className="dark-text-tertiary text-sm">
+                                          Esta lição ainda não possui conteúdo
+                                          específico definido.
+                                        </p>
+                                      </div>
+                                    )}
 
                                   {lesson.videoUrl && (
                                     <div>
@@ -1147,188 +933,28 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                                     </div>
                                   )}
 
-                                  {!lesson.content && !lesson.videoUrl && (
-                                    <div className="dark-card dark-shadow-sm rounded-lg p-6 text-center">
-                                      <div className="dark-bg-secondary mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full">
-                                        <BookOpen
-                                          className="dark-text-tertiary"
-                                          size={20}
+                                  {/* Questões (para atividades) */}
+                                  {lesson.questions &&
+                                    lesson.questions.length > 0 && (
+                                      <div className="mt-6 space-y-4">
+                                        <div className="flex items-center justify-between">
+                                          <h6 className="dark-text-primary font-medium">
+                                            Questões da Atividade
+                                          </h6>
+                                        </div>
+
+                                        <QuestionList
+                                          questions={lesson.questions || []}
+                                          onDeleteQuestion={(index) => {
+                                            removeQuestion(
+                                              moduleIndex,
+                                              lessonIndex,
+                                              index,
+                                            );
+                                          }}
                                         />
                                       </div>
-                                      <h6 className="dark-text-primary mb-2 font-medium">
-                                        Conteúdo não definido
-                                      </h6>
-                                      <p className="dark-text-tertiary text-sm">
-                                        Esta lição ainda não possui conteúdo
-                                        específico definido.
-                                      </p>
-                                    </div>
-                                  )}
-
-                                  {/* Questões (para atividades) */}
-                                  {lesson.isActivity && (
-                                    <div className="mt-6 space-y-4">
-                                      <div className="flex items-center justify-between">
-                                        <h6 className="dark-text-primary font-medium">
-                                          Questões da Atividade
-                                        </h6>
-                                        {!showQuestionForm ||
-                                        showQuestionForm.moduleIndex !==
-                                          moduleIndex ||
-                                        showQuestionForm.lessonIndex !==
-                                          lessonIndex ? (
-                                          <Button
-                                            size="sm"
-                                            variant="success"
-                                            onClick={() =>
-                                              setShowQuestionForm({
-                                                moduleIndex,
-                                                lessonIndex,
-                                              })
-                                            }
-                                          >
-                                            <Plus className="mr-2 h-3 w-3" />
-                                            Adicionar Questão
-                                          </Button>
-                                        ) : null}
-                                      </div>
-
-                                      {/* Formulário de Questão */}
-                                      {showQuestionForm &&
-                                        showQuestionForm.moduleIndex ===
-                                          moduleIndex &&
-                                        showQuestionForm.lessonIndex ===
-                                          lessonIndex && (
-                                          <QuestionForm
-                                            currentQuestionsCount={
-                                              lesson.questions?.length || 0
-                                            }
-                                            onSuccess={async (question) => {
-                                              // Criar a questão no banco
-                                              setIsLoading(true);
-                                              try {
-                                                let result;
-                                                if (
-                                                  question.type === "objective"
-                                                ) {
-                                                  result =
-                                                    await createObjectiveQuestion(
-                                                      {
-                                                        lessonId: lesson.id,
-                                                        questionText:
-                                                          question.questionText,
-                                                        points: question.points,
-                                                        order: question.order,
-                                                        explanation:
-                                                          question.explanation,
-                                                        options:
-                                                          question.options ||
-                                                          [],
-                                                      },
-                                                    );
-                                                } else {
-                                                  result =
-                                                    await createSubjectiveQuestion(
-                                                      {
-                                                        lessonId: lesson.id,
-                                                        questionText:
-                                                          question.questionText,
-                                                        points: question.points,
-                                                        order: question.order,
-                                                        explanation:
-                                                          question.explanation,
-                                                        subjectiveAnswerType:
-                                                          question.subjectiveAnswerType as
-                                                            | "TEXT"
-                                                            | "FILE",
-                                                        correctAnswer:
-                                                          question.correctAnswer,
-                                                      },
-                                                    );
-                                                }
-
-                                                if (
-                                                  result.success &&
-                                                  result.question
-                                                ) {
-                                                  // Atualizar o estado local com a questão criada
-                                                  const updatedModules = [
-                                                    ...modulesState,
-                                                  ];
-                                                  if (
-                                                    !updatedModules[moduleIndex]
-                                                      ?.lessons[lessonIndex]
-                                                      ?.questions
-                                                  ) {
-                                                    updatedModules[
-                                                      moduleIndex
-                                                    ]!.lessons[
-                                                      lessonIndex
-                                                    ]!.questions = [];
-                                                  }
-
-                                                  updatedModules[
-                                                    moduleIndex
-                                                  ]?.lessons[
-                                                    lessonIndex
-                                                  ]?.questions!.push({
-                                                    ...question,
-                                                    id: result.question.id,
-                                                  });
-
-                                                  setModulesState(
-                                                    updatedModules,
-                                                  );
-                                                  setShowQuestionForm(null);
-                                                } else {
-                                                  toast.error(
-                                                    result.error ||
-                                                      "Erro ao criar questão no banco",
-                                                  );
-                                                }
-                                              } catch (error) {
-                                                toast.error(
-                                                  "Erro ao criar questão",
-                                                );
-                                              } finally {
-                                                setIsLoading(false);
-                                              }
-                                            }}
-                                            onCancel={() => {
-                                              setShowQuestionForm(null);
-                                            }}
-                                          />
-                                        )}
-
-                                      {/* Lista de Questões */}
-                                      <QuestionList
-                                        questions={lesson.questions || []}
-                                        onDeleteQuestion={(index) => {
-                                          const updatedModules = [
-                                            ...modulesState,
-                                          ];
-                                          if (
-                                            updatedModules[moduleIndex]
-                                              ?.lessons[lessonIndex]?.questions
-                                          ) {
-                                            updatedModules[moduleIndex].lessons[
-                                              lessonIndex
-                                            ].questions = updatedModules[
-                                              moduleIndex
-                                            ].lessons[
-                                              lessonIndex
-                                            ].questions!.filter(
-                                              (_, i) => i !== index,
-                                            );
-                                            setModulesState(updatedModules);
-                                            toast.success(
-                                              "Questão removida com sucesso!",
-                                            );
-                                          }
-                                        }}
-                                      />
-                                    </div>
-                                  )}
+                                    )}
                                 </div>
                               )}
                             </AccordionContent>

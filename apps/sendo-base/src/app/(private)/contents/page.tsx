@@ -77,6 +77,8 @@ export default function ContentsPage() {
     );
   });
 
+  console.log("filteredEnrollments", courses);
+
   // Separar matrículas pendentes para a aba específica
   const pendingEnrollments =
     allEnrollmentsData?.filter(

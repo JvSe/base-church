@@ -198,9 +198,13 @@ export default function CoursePage({ params }: CoursePageProps) {
                       ? course.instructor?.isPastor
                         ? "Administrador (Pastor)"
                         : "Administrador"
-                      : course.instructor?.isPastor
-                        ? "Membro (Pastor)"
-                        : "Membro"}
+                      : course.instructor?.role === "LIDER"
+                        ? course.instructor?.isPastor
+                          ? "Líder (Pastor)"
+                          : "Líder"
+                        : course.instructor?.isPastor
+                          ? "Membro (Pastor)"
+                          : "Membro"}
                   </div>
                 </div>
               </div>

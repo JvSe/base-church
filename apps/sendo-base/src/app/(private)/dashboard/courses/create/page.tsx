@@ -1,17 +1,31 @@
 "use client";
 
 import { PageLayout } from "@/src/components/common/layout/page-layout";
+import { useAccordionState } from "@/src/hooks/use-accordion-state";
+import { useCourseLessons } from "@/src/hooks/use-course-lessons";
+import { useCourseModules } from "@/src/hooks/use-course-modules";
+import { useCourseQuestions } from "@/src/hooks/use-course-questions";
 import {
   createCourse,
-  createLesson,
-  createModule,
-  createObjectiveQuestion,
-  createSubjectiveQuestion,
   getLeaders,
   updateCourseStatus,
 } from "@/src/lib/actions";
 import { createCertificateTemplate } from "@/src/lib/actions/certificate";
-import { extractYouTubeEmbedId } from "@/src/lib/helpers/youtube";
+import {
+  certificateTemplateSchema,
+  courseSchema,
+  lessonSchema,
+  moduleSchema,
+  type CertificateTemplateFormData,
+  type CourseFormData,
+  type LessonFormData,
+  type ModuleFormData,
+} from "@/src/lib/forms/course-schemas";
+import {
+  convertFileToBase64,
+  getLessonTypeIcon,
+  getLessonTypeText,
+} from "@/src/lib/helpers/course.helper";
 import {
   Accordion,
   AccordionContent,
@@ -21,22 +35,11 @@ import {
 import { Button } from "@base-church/ui/components/button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Award,
-  BookOpen,
-  CheckCircle,
-  Edit,
-  FileText,
-  Layers,
-  Play,
-  Plus,
-  Trash2,
-} from "lucide-react";
+import { Award, BookOpen, Edit, Layers, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
 import {
   CertificateForm,
   CourseHeader,
@@ -47,113 +50,51 @@ import {
   QuestionList,
 } from "../components";
 
-// Schemas de validação
-const courseSchema = z.object({
-  title: z
-    .string()
-    .min(1, "Título é obrigatório")
-    .min(3, "Título deve ter pelo menos 3 caracteres"),
-  description: z
-    .string()
-    .min(1, "Descrição é obrigatória")
-    .min(10, "Descrição deve ter pelo menos 10 caracteres"),
-  instructorId: z.string().min(1, "Instrutor é obrigatório"),
-  duration: z.number().min(1, "Duração deve ser maior que 0"),
-  level: z.enum(["beginner", "intermediate", "advanced"], {
-    required_error: "Nível é obrigatório",
-  }),
-  category: z.string().min(1, "Categoria é obrigatória"),
-  tags: z.string().optional(),
-  price: z.number().min(0, "Preço não pode ser negativo"),
-});
-
-const moduleSchema = z.object({
-  title: z.string().min(1, "Título do módulo é obrigatório"),
-  description: z.string().min(1, "Descrição do módulo é obrigatória"),
-});
-
-const lessonSchema = z.object({
-  title: z.string().min(1, "Título da lição é obrigatório"),
-  description: z.string().min(1, "Descrição da lição é obrigatória"),
-  content: z.string().optional(),
-  videoUrl: z.string().optional(),
-  duration: z.number().min(1, "Duração deve ser maior que 0"),
-  type: z.enum(["video", "text", "objective_quiz", "subjective_quiz"], {
-    required_error: "Tipo é obrigatório",
-  }),
-  isActivity: z.boolean().optional(),
-});
-
-const certificateTemplateSchema = z.object({
-  title: z.string().min(1, "Título do certificado é obrigatório"),
-  description: z.string().min(1, "Descrição do certificado é obrigatória"),
-  pdfFile: z.any().optional(),
-});
-
-type CourseFormData = z.infer<typeof courseSchema>;
-type ModuleFormData = z.infer<typeof moduleSchema>;
-type LessonFormData = z.infer<typeof lessonSchema>;
-type CertificateTemplateFormData = z.infer<typeof certificateTemplateSchema>;
-
-interface Module {
-  id?: string;
-  title: string;
-  description: string;
-  order: number;
-  lessons: Lesson[];
-}
-
-interface Question {
-  id?: string;
-  questionText: string;
-  points: number;
-  order: number;
-  explanation?: string;
-  type: "objective" | "subjective";
-  subjectiveAnswerType?: "text" | "file";
-  correctAnswer?: string;
-  options?: {
-    id?: string;
-    optionText: string;
-    isCorrect: boolean;
-    order: number;
-  }[];
-}
-
-interface Lesson {
-  id?: string;
-  title: string;
-  description: string;
-  content?: string;
-  videoUrl?: string;
-  youtubeEmbedId?: string;
-  duration: number;
-  order: number;
-  type: "video" | "text" | "objective_quiz" | "subjective_quiz";
-  isActivity?: boolean;
-  questions?: Question[];
-}
-
 export default function CreateCoursePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [courseId, setCourseId] = useState<string | null>(null);
-  const [modules, setModules] = useState<Module[]>([]);
-  const [showModuleForm, setShowModuleForm] = useState(false);
-  const [editingModule, setEditingModule] = useState<number | null>(null);
-  const [showLessonForm, setShowLessonForm] = useState<number | null>(null);
-  const [editingLesson, setEditingLesson] = useState<{
-    moduleIndex: number;
-    lessonIndex: number;
-  } | null>(null);
   const [showCertificateForm, setShowCertificateForm] = useState(false);
   const [editingCertificate, setEditingCertificate] = useState(false);
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
-  const [openModules, setOpenModules] = useState<string[]>([]);
-  const [showQuestionForm, setShowQuestionForm] = useState<{
-    moduleIndex: number;
-    lessonIndex: number;
-  } | null>(null);
   const router = useRouter();
+
+  // Hooks personalizados para gerenciamento de módulos, lições e questões
+  const {
+    modules,
+    isLoading: isLoadingModules,
+    showModuleForm,
+    setShowModuleForm,
+    editingModuleIndex,
+    addModule,
+    startEditModule,
+    cancelEditModule,
+    saveModule,
+    removeModuleByIndex,
+    setModules,
+  } = useCourseModules(courseId || "", {});
+
+  const {
+    isLoading: isLoadingLessons,
+    showLessonForm,
+    setShowLessonForm,
+    editingLesson,
+    startEditLesson,
+    cancelEditLesson,
+    addLesson,
+    saveLesson,
+    removeLessonByIndex,
+  } = useCourseLessons(modules, setModules);
+
+  const {
+    isLoading: isLoadingQuestions,
+    showQuestionForm,
+    setShowQuestionForm,
+    addQuestion,
+    removeQuestion,
+  } = useCourseQuestions(modules, setModules);
+
+  const { openItems: openModules, setItems: setOpenModules } =
+    useAccordionState();
 
   // Buscar líderes para o campo de instrutor
   const { data: leadersData, isLoading: leadersLoading } = useQuery({
@@ -169,7 +110,6 @@ export default function CreateCoursePage() {
       title: "",
       description: "",
       instructorId: "",
-      duration: 120,
       level: "beginner",
       category: "CREATIVITY",
       tags: "",
@@ -195,8 +135,7 @@ export default function CreateCoursePage() {
       content: "",
       videoUrl: "",
       duration: 15,
-      type: "video",
-      isActivity: false,
+      type: "VIDEO",
     },
   });
 
@@ -234,200 +173,6 @@ export default function CreateCoursePage() {
       }
     } catch (error) {
       toast.error("Erro ao criar curso");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Adicionar módulo
-  const handleAddModule = async (data: ModuleFormData) => {
-    if (!courseId) return;
-
-    setIsLoading(true);
-    try {
-      const result = await createModule(courseId, {
-        ...data,
-        order: modules.length + 1,
-      });
-
-      if (result.success && result.module) {
-        const newModule: Module = {
-          id: result.module.id,
-          title: data.title,
-          description: data.description,
-          order: modules.length + 1,
-          lessons: [],
-        };
-        setModules([...modules, newModule]);
-        moduleForm.reset();
-        setShowModuleForm(false);
-        toast.success("Módulo adicionado com sucesso!");
-      } else {
-        toast.error(result.error || "Erro ao criar módulo");
-      }
-    } catch (error) {
-      toast.error("Erro ao criar módulo");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Editar módulo
-  const handleEditModule = (moduleIndex: number) => {
-    const module = modules[moduleIndex];
-    if (module) {
-      moduleForm.reset({
-        title: module.title,
-        description: module.description,
-      });
-      setEditingModule(moduleIndex);
-    }
-  };
-
-  // Salvar edição do módulo
-  const handleSaveModuleEdit = async (
-    data: ModuleFormData,
-    moduleIndex: number,
-  ) => {
-    const updatedModules = [...modules];
-    if (updatedModules[moduleIndex]) {
-      updatedModules[moduleIndex] = {
-        ...updatedModules[moduleIndex],
-        title: data.title,
-        description: data.description,
-      };
-      setModules(updatedModules);
-      setEditingModule(null);
-      toast.success("Módulo atualizado com sucesso!");
-    }
-  };
-
-  // Editar lição
-  const handleEditLesson = (moduleIndex: number, lessonIndex: number) => {
-    const lesson = modules[moduleIndex]?.lessons[lessonIndex];
-    if (lesson) {
-      lessonForm.reset({
-        title: lesson.title,
-        description: lesson.description,
-        content: lesson.content || "",
-        videoUrl: lesson.videoUrl || "",
-        duration: lesson.duration,
-        type: lesson.type,
-      });
-      setEditingLesson({ moduleIndex, lessonIndex });
-    }
-  };
-
-  const handleSaveLessonEdit = async (
-    data: LessonFormData,
-    moduleIndex: number,
-    lessonIndex: number,
-  ) => {
-    const module = modules[moduleIndex];
-    if (!module || !module.id) return;
-
-    setIsLoading(true);
-    try {
-      const updatedModules = [...modules];
-      if (updatedModules[moduleIndex]?.lessons[lessonIndex]) {
-        updatedModules[moduleIndex].lessons[lessonIndex] = {
-          ...updatedModules[moduleIndex].lessons[lessonIndex],
-          title: data.title,
-          description: data.description,
-          content: data.content,
-          videoUrl: data.videoUrl,
-          duration: data.duration,
-          type: data.type,
-        };
-        setModules(updatedModules);
-        setEditingLesson(null);
-        toast.success("Lição atualizada com sucesso!");
-      }
-    } catch (error) {
-      toast.error("Erro ao atualizar lição");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Adicionar lição
-  const handleAddLesson = async (data: LessonFormData, moduleIndex: number) => {
-    if (!courseId) return;
-
-    const module = modules[moduleIndex];
-    if (!module || !module.id) return;
-
-    // Validar se está tentando adicionar uma atividade que não seja a última lição
-    const isQuiz =
-      data.type === "objective_quiz" || data.type === "subjective_quiz";
-    if (isQuiz && module.lessons.length > 0) {
-      const hasActivity = module.lessons.some((l) => l.isActivity);
-      if (hasActivity) {
-        toast.error(
-          "Este módulo já possui uma atividade. Cada módulo pode ter apenas uma atividade como última lição.",
-        );
-        return;
-      }
-    }
-
-    setIsLoading(true);
-    const youtubeEmbedId = extractYouTubeEmbedId(data.videoUrl || "");
-
-    // Mapear os tipos para o formato do banco
-    let lessonType: "VIDEO" | "TEXT" | "OBJECTIVE_QUIZ" | "SUBJECTIVE_QUIZ" =
-      "VIDEO";
-    if (data.type === "video") lessonType = "VIDEO";
-    else if (data.type === "text") lessonType = "TEXT";
-    else if (data.type === "objective_quiz") lessonType = "OBJECTIVE_QUIZ";
-    else if (data.type === "subjective_quiz") lessonType = "SUBJECTIVE_QUIZ";
-
-    try {
-      const result = await createLesson(module.id, {
-        ...data,
-        type: lessonType,
-        youtubeEmbedId: youtubeEmbedId || undefined,
-        order: module.lessons.length + 1,
-        isActivity: isQuiz,
-      });
-
-      if (result.success && result.lesson) {
-        const newLesson: Lesson = {
-          id: result.lesson.id,
-          title: data.title,
-          description: data.description,
-          content: data.content,
-          videoUrl: data.videoUrl,
-          youtubeEmbedId: youtubeEmbedId || undefined,
-          duration: data.duration,
-          order: module.lessons.length + 1,
-          type: data.type,
-          isActivity: isQuiz,
-          questions: [],
-        };
-
-        const updatedModules = [...modules];
-        if (updatedModules[moduleIndex]) {
-          updatedModules[moduleIndex].lessons.push(newLesson);
-          setModules(updatedModules);
-        }
-        lessonForm.reset();
-        setShowLessonForm(null);
-
-        if (isQuiz) {
-          toast.success("Atividade criada! Agora adicione as questões.");
-          // Abrir formulário de questões para a nova atividade
-          setShowQuestionForm({
-            moduleIndex,
-            lessonIndex: module.lessons.length,
-          });
-        } else {
-          toast.success("Lição adicionada com sucesso!");
-        }
-      } else {
-        toast.error(result.error || "Erro ao criar lição");
-      }
-    } catch (error) {
-      toast.error("Erro ao criar lição");
     } finally {
       setIsLoading(false);
     }
@@ -479,16 +224,6 @@ export default function CreateCoursePage() {
     }
   };
 
-  // Converter arquivo para base64
-  const convertFileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-    });
-  };
-
   // Finalizar curso
   const handleFinishCourse = async () => {
     if (!courseId) return;
@@ -506,35 +241,6 @@ export default function CreateCoursePage() {
       toast.error("Erro ao finalizar curso");
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const getLessonTypeIcon = (type: string) => {
-    switch (type) {
-      case "video":
-        return Play;
-      case "text":
-        return FileText;
-      case "objective_quiz":
-      case "subjective_quiz":
-        return CheckCircle;
-      default:
-        return FileText;
-    }
-  };
-
-  const getLessonTypeText = (type: string) => {
-    switch (type) {
-      case "video":
-        return "Vídeo";
-      case "text":
-        return "Texto";
-      case "objective_quiz":
-        return "Atividade Objetiva";
-      case "subjective_quiz":
-        return "Atividade Subjetiva";
-      default:
-        return "Texto";
     }
   };
 
@@ -582,8 +288,8 @@ export default function CreateCoursePage() {
             {showModuleForm && (
               <ModuleForm
                 form={moduleForm}
-                isLoading={isLoading}
-                onSubmit={handleAddModule}
+                isLoading={isLoadingModules}
+                onSubmit={(data) => addModule(data)}
                 onCancel={() => {
                   setShowModuleForm(false);
                   moduleForm.reset();
@@ -650,11 +356,18 @@ export default function CreateCoursePage() {
                           className="gap-1"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleEditModule(moduleIndex);
-                            setOpenModules([
-                              ...openModules,
-                              `module-${moduleIndex}`,
-                            ]);
+                            const module = modules[moduleIndex];
+                            if (module) {
+                              moduleForm.reset({
+                                title: module.title,
+                                description: module.description,
+                              });
+                              startEditModule(moduleIndex);
+                              setOpenModules([
+                                ...openModules,
+                                `module-${moduleIndex}`,
+                              ]);
+                            }
                           }}
                         >
                           <Edit className="h-3 w-3" />
@@ -666,10 +379,7 @@ export default function CreateCoursePage() {
                           className="gap-1"
                           onClick={(e) => {
                             e.stopPropagation();
-                            const updatedModules = modules.filter(
-                              (_, i) => i !== moduleIndex,
-                            );
-                            setModules(updatedModules);
+                            removeModuleByIndex(moduleIndex);
                           }}
                         >
                           <Trash2 className="h-3 w-3" />
@@ -680,16 +390,14 @@ export default function CreateCoursePage() {
                   </AccordionTrigger>
                   <AccordionContent className="dark-border">
                     {/* Module Edit Form */}
-                    {editingModule === moduleIndex && (
+                    {editingModuleIndex === moduleIndex && (
                       <div className="dark-border border-b p-6">
                         <ModuleForm
                           form={moduleForm}
-                          isLoading={isLoading}
-                          onSubmit={(data) =>
-                            handleSaveModuleEdit(data, moduleIndex)
-                          }
+                          isLoading={isLoadingModules}
+                          onSubmit={(data) => saveModule(data, moduleIndex)}
                           onCancel={() => {
-                            setEditingModule(null);
+                            cancelEditModule();
                             moduleForm.reset();
                           }}
                         />
@@ -700,8 +408,12 @@ export default function CreateCoursePage() {
                     {showLessonForm === moduleIndex && (
                       <LessonForm
                         form={lessonForm}
-                        isLoading={isLoading}
-                        onSubmit={(data) => handleAddLesson(data, moduleIndex)}
+                        isEditing={false}
+                        isLoading={isLoadingLessons}
+                        moduleIndex={moduleIndex}
+                        onSubmit={async (data) => {
+                          return await addLesson(data, moduleIndex);
+                        }}
                         onCancel={() => {
                           setShowLessonForm(null);
                           lessonForm.reset();
@@ -761,10 +473,24 @@ export default function CreateCoursePage() {
                                       variant="info"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        handleEditLesson(
-                                          moduleIndex,
-                                          lessonIndex,
-                                        );
+                                        const lesson =
+                                          modules[moduleIndex]?.lessons[
+                                            lessonIndex
+                                          ];
+                                        if (lesson) {
+                                          lessonForm.reset({
+                                            title: lesson.title,
+                                            description: lesson.description,
+                                            content: lesson.content || "",
+                                            videoUrl: lesson.videoUrl || "",
+                                            duration: lesson.duration,
+                                            type: lesson.type as any,
+                                          });
+                                          startEditLesson(
+                                            moduleIndex,
+                                            lessonIndex,
+                                          );
+                                        }
                                       }}
                                     >
                                       <Edit className="h-3 w-3" />
@@ -774,16 +500,10 @@ export default function CreateCoursePage() {
                                       variant="destructive"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        const updatedModules = [...modules];
-                                        if (updatedModules[moduleIndex]) {
-                                          updatedModules[moduleIndex].lessons =
-                                            updatedModules[
-                                              moduleIndex
-                                            ].lessons.filter(
-                                              (_, i) => i !== lessonIndex,
-                                            );
-                                          setModules(updatedModules);
-                                        }
+                                        removeLessonByIndex(
+                                          moduleIndex,
+                                          lessonIndex,
+                                        );
                                       }}
                                     >
                                       <Trash2 className="h-3 w-3" />
@@ -797,16 +517,19 @@ export default function CreateCoursePage() {
                                   // Formulário de edição
                                   <LessonForm
                                     form={lessonForm}
-                                    isLoading={isLoading}
-                                    onSubmit={(data) =>
-                                      handleSaveLessonEdit(
+                                    isEditing={false}
+                                    isLoading={isLoadingLessons}
+                                    moduleIndex={moduleIndex}
+                                    lessonIndex={lessonIndex}
+                                    onSubmit={async (data) => {
+                                      return await saveLesson(
                                         data,
                                         moduleIndex,
                                         lessonIndex,
-                                      )
-                                    }
+                                      );
+                                    }}
                                     onCancel={() => {
-                                      setEditingLesson(null);
+                                      cancelEditLesson();
                                       lessonForm.reset();
                                     }}
                                   />
@@ -933,105 +656,11 @@ export default function CreateCoursePage() {
                                                 lesson.questions?.length || 0
                                               }
                                               onSuccess={async (question) => {
-                                                // Verificar se a lição tem ID
-                                                if (!lesson.id) {
-                                                  toast.error(
-                                                    "Lição precisa ser criada primeiro",
-                                                  );
-                                                  return;
-                                                }
-
-                                                // Criar a questão no banco
-                                                setIsLoading(true);
-                                                try {
-                                                  let result;
-                                                  if (
-                                                    question.type ===
-                                                    "objective"
-                                                  ) {
-                                                    result =
-                                                      await createObjectiveQuestion(
-                                                        {
-                                                          lessonId: lesson.id,
-                                                          questionText:
-                                                            question.questionText,
-                                                          points:
-                                                            question.points,
-                                                          order: question.order,
-                                                          explanation:
-                                                            question.explanation,
-                                                          options:
-                                                            question.options ||
-                                                            [],
-                                                        },
-                                                      );
-                                                  } else {
-                                                    result =
-                                                      await createSubjectiveQuestion(
-                                                        {
-                                                          lessonId: lesson.id,
-                                                          questionText:
-                                                            question.questionText,
-                                                          points:
-                                                            question.points,
-                                                          order: question.order,
-                                                          explanation:
-                                                            question.explanation,
-                                                          subjectiveAnswerType:
-                                                            question.subjectiveAnswerType as
-                                                              | "TEXT"
-                                                              | "FILE",
-                                                          correctAnswer:
-                                                            question.correctAnswer,
-                                                        },
-                                                      );
-                                                  }
-
-                                                  if (
-                                                    result.success &&
-                                                    result.question
-                                                  ) {
-                                                    // Atualizar o estado local com a questão criada
-                                                    const updatedModules = [
-                                                      ...modules,
-                                                    ];
-                                                    if (
-                                                      !updatedModules[
-                                                        moduleIndex
-                                                      ]?.lessons[lessonIndex]
-                                                        ?.questions
-                                                    ) {
-                                                      updatedModules[
-                                                        moduleIndex
-                                                      ]!.lessons[
-                                                        lessonIndex
-                                                      ]!.questions = [];
-                                                    }
-
-                                                    updatedModules[
-                                                      moduleIndex
-                                                    ]?.lessons[
-                                                      lessonIndex
-                                                    ]?.questions!.push({
-                                                      ...question,
-                                                      id: result.question.id,
-                                                    });
-
-                                                    setModules(updatedModules);
-                                                    setShowQuestionForm(null);
-                                                  } else {
-                                                    toast.error(
-                                                      result.error ||
-                                                        "Erro ao criar questão no banco",
-                                                    );
-                                                  }
-                                                } catch (error) {
-                                                  toast.error(
-                                                    "Erro ao criar questão",
-                                                  );
-                                                } finally {
-                                                  setIsLoading(false);
-                                                }
+                                                await addQuestion(
+                                                  question,
+                                                  moduleIndex,
+                                                  lessonIndex,
+                                                );
                                               }}
                                               onCancel={() => {
                                                 setShowQuestionForm(null);
@@ -1043,27 +672,11 @@ export default function CreateCoursePage() {
                                         <QuestionList
                                           questions={lesson.questions || []}
                                           onDeleteQuestion={(index) => {
-                                            const updatedModules = [...modules];
-                                            if (
-                                              updatedModules[moduleIndex]
-                                                ?.lessons[lessonIndex]
-                                                ?.questions
-                                            ) {
-                                              updatedModules[
-                                                moduleIndex
-                                              ].lessons[lessonIndex].questions =
-                                                updatedModules[
-                                                  moduleIndex
-                                                ].lessons[
-                                                  lessonIndex
-                                                ].questions!.filter(
-                                                  (_, i) => i !== index,
-                                                );
-                                              setModules(updatedModules);
-                                              toast.success(
-                                                "Questão removida com sucesso!",
-                                              );
-                                            }
+                                            removeQuestion(
+                                              moduleIndex,
+                                              lessonIndex,
+                                              index,
+                                            );
                                           }}
                                         />
                                       </div>

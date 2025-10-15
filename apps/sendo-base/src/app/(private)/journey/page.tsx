@@ -231,7 +231,11 @@ export default function JornadaPage() {
               Nível {userData?.level || 1}
             </div>
             <div className="dark-text-tertiary text-sm">
-              {userData?.role === "ADMIN" ? "Administrador" : "Membro"}
+              {userData?.role === "ADMIN"
+                ? "Administrador"
+                : userData?.role === "LIDER"
+                  ? "Líder"
+                  : "Membro"}
             </div>
           </div>
         </div>

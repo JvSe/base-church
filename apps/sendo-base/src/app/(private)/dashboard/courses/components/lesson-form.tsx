@@ -25,6 +25,7 @@ import {
   Edit,
   FileText,
   Plus,
+  Save,
   Upload,
   Video,
 } from "lucide-react";
@@ -53,53 +54,88 @@ interface Question {
 
 interface LessonFormProps {
   form: UseFormReturn<any>;
+  isEditing?: boolean;
   isLoading: boolean;
-  onSubmit: (data: any, questions: Question[]) => void;
+  moduleIndex: number;
+  lessonIndex?: number;
+  onSubmit: (data: any) => Promise<boolean>;
   onCancel: () => void;
+  addQuestion?: (
+    question: Question,
+    moduleIndex: number,
+    lessonIndex: number,
+  ) => Promise<boolean>;
+  questions?: Question[];
+  onDeleteQuestion?: (
+    moduleIndex: number,
+    lessonIndex: number,
+    questionIndex: number,
+  ) => void;
 }
 
 export function LessonForm({
   form,
+  isEditing = false,
   isLoading,
+  moduleIndex,
+  lessonIndex,
   onSubmit,
   onCancel,
+  addQuestion,
+  questions: externalQuestions = [],
+  onDeleteQuestion,
 }: LessonFormProps) {
-  // Estados internos para gerenciar questões
-  const [questions, setQuestions] = useState<Question[]>([]);
+  // Estados internos para gerenciar questões locais (antes de salvar a lição)
+  const [localQuestions, setLocalQuestions] = useState<Question[]>([]);
   const [showQuestionForm, setShowQuestionForm] = useState(false);
+  const [isSavingQuestion, setIsSavingQuestion] = useState(false);
 
   // Watchers
   const selectedLessonType = form.watch("type");
 
   const isActivity =
-    selectedLessonType === "objective_quiz" ||
-    selectedLessonType === "subjective_quiz";
+    selectedLessonType === "OBJECTIVE_QUIZ" ||
+    selectedLessonType === "SUBJECTIVE_QUIZ";
+
+  // Se está editando, usa as questões externas (do banco)
+  // Se está criando, usa questões locais
+  const displayQuestions = isEditing ? externalQuestions : localQuestions;
 
   // Handlers de questões
   const handleDeleteQuestion = (index: number) => {
-    setQuestions(questions.filter((_, i) => i !== index));
-    toast.success("Questão removida!");
+    if (isEditing && onDeleteQuestion && typeof lessonIndex === "number") {
+      // Se está editando, deleta do banco
+      onDeleteQuestion(moduleIndex, lessonIndex, index);
+    } else {
+      // Se está criando, deleta localmente
+      setLocalQuestions(localQuestions.filter((_, i) => i !== index));
+      toast.success("Questão removida!");
+    }
   };
 
-  const handleSubmitLesson = (data: any) => {
-    // Validar se é atividade e não tem questões
-    // if (isActivity && questions.length === 0) {
-    //   toast.error("Adicione pelo menos uma questão para esta atividade!");
-    //   return;
-    // }
+  const handleSubmitLesson = async (data: any) => {
+    // Chamar o callback com os dados da lição
+    const success = await onSubmit(data);
 
-    // Chamar o callback com os dados da lição e as questões
-    onSubmit(data, questions);
+    if (success) {
+      // Limpar questões locais após salvar
+      setLocalQuestions([]);
+      setShowQuestionForm(false);
+    }
   };
 
   const handleCancel = () => {
-    // Limpar questões ao cancelar
-    setQuestions([]);
+    // Limpar questões locais ao cancelar
+    setLocalQuestions([]);
     setShowQuestionForm(false);
     onCancel();
   };
   return (
-    <FormSection title="Adicionar Nova Lição" icon={BookOpen} className="p-0">
+    <FormSection
+      title={isEditing ? "Editar Lição" : "Adicionar Nova Lição"}
+      icon={BookOpen}
+      className="p-0"
+    >
       <div className="dark-border border-b p-6">
         <Form {...form}>
           <form
@@ -221,7 +257,7 @@ export function LessonForm({
             />
 
             {/* Conditional fields based on type */}
-            {selectedLessonType === "video" && (
+            {selectedLessonType === "VIDEO" && (
               <FormField
                 control={form.control}
                 name="videoUrl"
@@ -243,7 +279,7 @@ export function LessonForm({
               />
             )}
 
-            {selectedLessonType === "text" && (
+            {selectedLessonType === "TEXT" && (
               <FormField
                 control={form.control}
                 name="content"
@@ -296,15 +332,16 @@ export function LessonForm({
                       Questões da Atividade
                     </h5>
 
-                    {!showQuestionForm && (
+                    {!showQuestionForm && isEditing && (
                       <Button
                         type="button"
                         size="sm"
                         variant="success"
                         onClick={() => setShowQuestionForm(true)}
+                        disabled={isSavingQuestion}
                       >
                         <Plus className="mr-2 h-3 w-3" />
-                        Adicionar Questão
+                        {isSavingQuestion ? "Salvando..." : "Adicionar Questão"}
                       </Button>
                     )}
                   </div>
@@ -313,10 +350,33 @@ export function LessonForm({
                   {showQuestionForm && (
                     <div className="mb-6">
                       <QuestionForm
-                        currentQuestionsCount={questions.length}
-                        onSuccess={(question) => {
-                          setQuestions([...questions, question]);
-                          setShowQuestionForm(false);
+                        currentQuestionsCount={displayQuestions.length}
+                        onSuccess={async (question) => {
+                          if (
+                            isEditing &&
+                            addQuestion &&
+                            typeof lessonIndex === "number"
+                          ) {
+                            // Se está editando, salva a questão no banco
+                            setIsSavingQuestion(true);
+                            const success = await addQuestion(
+                              question,
+                              moduleIndex,
+                              lessonIndex,
+                            );
+                            setIsSavingQuestion(false);
+
+                            if (success) {
+                              setShowQuestionForm(false);
+                            }
+                          } else {
+                            // Se está criando, salva localmente
+                            setLocalQuestions([...localQuestions, question]);
+                            setShowQuestionForm(false);
+                            toast.info(
+                              "Questão adicionada! Lembre-se de salvar a lição primeiro para poder adicionar questões ao banco.",
+                            );
+                          }
                         }}
                         onCancel={() => {
                           setShowQuestionForm(false);
@@ -325,9 +385,17 @@ export function LessonForm({
                     </div>
                   )}
 
+                  {/* Aviso se não está editando */}
+                  {!isEditing && (
+                    <div className="dark-warning-bg dark-warning mb-4 rounded-lg p-3 text-sm">
+                      ⚠️ Salve a lição primeiro para poder adicionar questões ao
+                      banco de dados.
+                    </div>
+                  )}
+
                   {/* Lista de Questões */}
                   <QuestionList
-                    questions={questions}
+                    questions={displayQuestions}
                     onDeleteQuestion={handleDeleteQuestion}
                   />
                 </div>
@@ -374,8 +442,17 @@ export function LessonForm({
                 Cancelar
               </Button>
               <Button type="submit" disabled={isLoading} variant="success">
-                <Plus className="mr-2 h-4 w-4" />
-                {isLoading ? "Adicionando..." : "Adicionar Lição"}
+                {isEditing ? (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    {isLoading ? "Salvando..." : "Salvar Lição"}
+                  </>
+                ) : (
+                  <>
+                    <Plus className="mr-2 h-4 w-4" />
+                    {isLoading ? "Adicionando..." : "Adicionar Lição"}
+                  </>
+                )}
               </Button>
             </div>
           </form>

@@ -220,7 +220,7 @@ export default function EventPage() {
   return (
     <div className="dark-bg-primary min-h-screen">
       {/* Background Pattern */}
-      <div className="opacity-3 fixed inset-0">
+      <div className="fixed inset-0 opacity-3">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
       </div>
 
@@ -626,7 +626,9 @@ export default function EventPage() {
                           <p className="dark-text-secondary mb-2">
                             {speaker.role === "ADMIN"
                               ? "Administrador"
-                              : "Membro"}
+                              : speaker.role === "LIDER"
+                                ? "Líder"
+                                : "Membro"}
                           </p>
                           <p className="dark-text-tertiary mb-4 text-sm">
                             {speaker.experience}
@@ -697,7 +699,9 @@ export default function EventPage() {
                               <div className="dark-text-tertiary text-xs">
                                 {review.role === "ADMIN"
                                   ? "Administrador"
-                                  : "Membro"}
+                                  : review.role === "LIDER"
+                                    ? "Líder"
+                                    : "Membro"}
                               </div>
                             </div>
                             <div className="flex items-center gap-1">

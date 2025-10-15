@@ -88,78 +88,53 @@ export function CourseInfoForm({
               )}
             />
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="instructorId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="dark-text-secondary text-sm font-medium">
-                      Instrutor *
-                    </FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      disabled={leadersLoading}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="dark-input h-10">
-                          <SelectValue
-                            placeholder={
-                              leadersLoading
-                                ? "Carregando..."
-                                : "Selecione um instrutor"
-                            }
-                          />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="dark-bg-secondary dark-border">
-                        {leadersData?.map((leader: any) => (
-                          <SelectItem
-                            key={leader.id}
-                            value={leader.id}
-                            className="dark-text-primary hover:dark-bg-tertiary"
-                          >
-                            <div className="flex items-center space-x-2">
-                              <span>{leader.name}</span>
-                              {leader.isPastor && (
-                                <span className="dark-primary text-xs font-medium">
-                                  (Pastor)
-                                </span>
-                              )}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="duration"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="dark-text-secondary text-sm font-medium">
-                      Duração (minutos) *
-                    </FormLabel>
+            <FormField
+              control={form.control}
+              name="instructorId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="dark-text-secondary text-sm font-medium">
+                    Instrutor *
+                  </FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    disabled={leadersLoading}
+                  >
                     <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="60"
-                        className="dark-input"
-                        onChange={(e) =>
-                          field.onChange(parseInt(e.target.value) || 0)
-                        }
-                      />
+                      <SelectTrigger className="dark-input h-10">
+                        <SelectValue
+                          placeholder={
+                            leadersLoading
+                              ? "Carregando..."
+                              : "Selecione um instrutor"
+                          }
+                        />
+                      </SelectTrigger>
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                    <SelectContent className="dark-bg-secondary dark-border">
+                      {leadersData?.map((leader: any) => (
+                        <SelectItem
+                          key={leader.id}
+                          value={leader.id}
+                          className="dark-text-primary hover:dark-bg-tertiary"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <span>{leader.name}</span>
+                            {leader.isPastor && (
+                              <span className="dark-primary text-xs font-medium">
+                                (Pastor)
+                              </span>
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <FormField

@@ -96,11 +96,7 @@ export function QuestionList({
                     className="gap-1"
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (
-                        confirm("Tem certeza que deseja excluir esta questão?")
-                      ) {
-                        onDeleteQuestion(index);
-                      }
+                      onDeleteQuestion(index);
                     }}
                   >
                     <Trash2 className="h-3 w-3" />

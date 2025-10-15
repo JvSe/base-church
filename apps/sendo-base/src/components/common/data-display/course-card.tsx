@@ -72,6 +72,7 @@ export function CourseCard({
   variant = "catalog",
   disabled = false,
 }: CourseCardProps) {
+  console.log("course", course);
   const href =
     variant === "catalog"
       ? course.isEnrolled

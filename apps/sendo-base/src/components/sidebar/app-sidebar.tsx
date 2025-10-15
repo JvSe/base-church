@@ -211,8 +211,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar className="rounded-xl" collapsible="icon" {...props}>
       {/* Header Simples */}
-      <SidebarHeader className="dark-border w-full flex-row justify-between border-b pb-5 pt-10">
-        <Link href="/profile" className="max-w-4/5 w-full flex-1">
+      <SidebarHeader className="dark-border w-full flex-row justify-between border-b pt-10 pb-5">
+        <Link href="/profile" className="w-full max-w-4/5 flex-1">
           <div className="flex cursor-pointer items-center gap-3 overflow-hidden transition-[margin,opacity,width] duration-300 ease-in-out group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:opacity-0">
             <div className="dark-primary-subtle-bg flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full">
               <Avatar className="h-full w-full">
@@ -267,7 +267,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {/* Navegação Administrativa - Apenas para Líderes */}
         {data.navAdmin.length > 0 && (
           <SidebarGroup>
-            <SidebarGroupLabel className="gap-2 px-0 text-xs font-semibold uppercase tracking-wider">
+            <SidebarGroupLabel className="gap-2 px-0 text-xs font-semibold tracking-wider uppercase">
               Administração
               <Separator className="bg-white opacity-5" />
             </SidebarGroupLabel>
@@ -305,7 +305,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
         {/* Navegação de Aprendizado */}
         <SidebarGroup>
-          <SidebarGroupLabel className="gap-2 px-0 text-xs font-semibold uppercase tracking-wider">
+          <SidebarGroupLabel className="gap-2 px-0 text-xs font-semibold tracking-wider uppercase">
             Aprendizado
             <Separator className="bg-white opacity-5" />
           </SidebarGroupLabel>
@@ -336,7 +336,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
         {/* Navegação da Comunidade */}
         <SidebarGroup>
-          <SidebarGroupLabel className="gap-2 px-0 text-xs font-semibold uppercase tracking-wider">
+          <SidebarGroupLabel className="gap-2 px-0 text-xs font-semibold tracking-wider uppercase">
             Comunidade
             <Separator className="bg-white opacity-5" />
           </SidebarGroupLabel>
@@ -367,7 +367,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
         {/* Navegação Secundária */}
         <SidebarGroup>
-          <SidebarGroupLabel className="gap-2 px-0 text-xs font-semibold uppercase tracking-wider">
+          <SidebarGroupLabel className="gap-2 px-0 text-xs font-semibold tracking-wider uppercase">
             Sistema
             <Separator className="bg-white opacity-5" />
           </SidebarGroupLabel>

@@ -547,9 +547,13 @@ export function HomeClientWrapper({
               <p className="dark-text-secondary mb-4 text-sm">
                 {user?.role === "ADMIN"
                   ? "Administrador"
-                  : (userData as any)?.role === "ADMIN"
-                    ? "Administrador"
-                    : "Membro"}
+                  : user?.role === "LIDER"
+                    ? "Líder"
+                    : (userData as any)?.role === "ADMIN"
+                      ? "Administrador"
+                      : (userData as any)?.role === "LIDER"
+                        ? "Líder"
+                        : "Membro"}
               </p>
               <div className="mb-4 flex items-center justify-center gap-4 text-sm">
                 <div className="text-center">

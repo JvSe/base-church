@@ -216,7 +216,7 @@ export default function CoursePage({ params }: CoursePageProps) {
   return (
     <div className="dark-bg-primary min-h-screen">
       {/* Background Pattern */}
-      <div className="opacity-3 fixed inset-0">
+      <div className="fixed inset-0 opacity-3">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
       </div>
 
@@ -261,9 +261,13 @@ export default function CoursePage({ params }: CoursePageProps) {
                         ? course.instructor?.isPastor
                           ? "Administrador (Pastor)"
                           : "Administrador"
-                        : course.instructor?.isPastor
-                          ? "Membro (Pastor)"
-                          : "Membro"}
+                        : course.instructor?.role === "LIDER"
+                          ? course.instructor?.isPastor
+                            ? "Líder (Pastor)"
+                            : "Líder"
+                          : course.instructor?.isPastor
+                            ? "Membro (Pastor)"
+                            : "Membro"}
                     </div>
                   </div>
                 </div>
@@ -584,9 +588,13 @@ export default function CoursePage({ params }: CoursePageProps) {
                         ? course.instructor?.isPastor
                           ? "Administrador (Pastor)"
                           : "Administrador"
-                        : course.instructor?.isPastor
-                          ? "Membro (Pastor)"
-                          : "Membro"}
+                        : course.instructor?.role === "LIDER"
+                          ? course.instructor?.isPastor
+                            ? "Líder (Pastor)"
+                            : "Líder"
+                          : course.instructor?.isPastor
+                            ? "Membro (Pastor)"
+                            : "Membro"}
                     </p>
                     <p className="dark-text-secondary leading-relaxed">
                       {course.instructor?.bio || "Biografia não disponível"}
@@ -632,9 +640,13 @@ export default function CoursePage({ params }: CoursePageProps) {
                                     ? review.user?.isPastor
                                       ? "Administrador (Pastor)"
                                       : "Administrador"
-                                    : review.user?.isPastor
-                                      ? "Membro (Pastor)"
-                                      : "Membro"}
+                                    : review.user?.role === "LIDER"
+                                      ? review.user?.isPastor
+                                        ? "Líder (Pastor)"
+                                        : "Líder"
+                                      : review.user?.isPastor
+                                        ? "Membro (Pastor)"
+                                        : "Membro"}
                                 </div>
                               </div>
                               <div className="flex items-center gap-1">

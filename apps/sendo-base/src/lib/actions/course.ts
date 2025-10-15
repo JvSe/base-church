@@ -2,7 +2,7 @@
 
 import { prisma } from "@base-church/db";
 import { revalidatePath } from "next/cache";
-import type { CourseFormData, LessonFormData } from "../types/index";
+import type { CourseFormData, LessonFormData } from "../forms/course-schemas";
 
 // Alias para o banco de dados
 const db = prisma;
@@ -257,6 +257,32 @@ export async function getCourseById(courseId: string) {
   }
 }
 
+// Função auxiliar para calcular a duração total do curso
+async function calculateCourseDuration(courseId: string): Promise<number> {
+  const modules = await db.module.findMany({
+    where: { courseId },
+    include: {
+      lessons: {
+        select: {
+          duration: true,
+        },
+      },
+    },
+  });
+
+  const totalDuration = modules.reduce(
+    (acc, module) =>
+      acc +
+      module.lessons.reduce(
+        (lessonAcc, lesson) => lessonAcc + (lesson.duration || 0),
+        0,
+      ),
+    0,
+  );
+
+  return totalDuration;
+}
+
 // CRUD de Cursos
 export async function createCourse(courseData: CourseFormData) {
   try {
@@ -286,14 +312,14 @@ export async function createCourse(courseData: CourseFormData) {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
 
-    // Criar curso
+    // Criar curso com duração inicial 0 (será calculada quando houver lições)
     const course = await db.course.create({
       data: {
         title: courseData.title,
         description: courseData.description,
         slug: slug,
         instructorId: courseData.instructorId,
-        duration: courseData.duration,
+        duration: 0, // Será calculado automaticamente quando houver lições
         level: courseData.level,
         price: courseData.price,
         category: courseData.category,
@@ -358,14 +384,13 @@ export async function updateCourse(
           .filter((tag) => tag.length > 0)
       : [];
 
-    // Atualizar curso
+    // Atualizar curso (duração é calculada automaticamente pelas lições)
     const course = await db.course.update({
       where: { id: courseId },
       data: {
         title: courseData.title,
         description: courseData.description,
         instructorId: courseData.instructorId,
-        duration: courseData.duration,
         level: courseData.level,
         price: courseData.price,
         category: courseData.category,
@@ -600,9 +625,18 @@ export async function deleteModule(moduleId: string) {
       return { success: false, error: "Módulo não encontrado" };
     }
 
+    const courseId = existingModule.courseId;
+
     // Excluir módulo (cascade vai excluir lições)
     await db.module.delete({
       where: { id: moduleId },
+    });
+
+    // Recalcular e atualizar a duração do curso
+    const totalDuration = await calculateCourseDuration(courseId);
+    await db.course.update({
+      where: { id: courseId },
+      data: { duration: totalDuration },
     });
 
     return {
@@ -638,11 +672,18 @@ export async function createLesson(
         videoUrl: lessonData.videoUrl || null,
         youtubeEmbedId: lessonData.youtubeEmbedId || null,
         duration: lessonData.duration,
-        order: lessonData.order,
+        order: lessonData.order || 1,
         type: lessonData.type,
         moduleId: moduleId,
         isActivity: lessonData.isActivity || false,
       },
+    });
+
+    // Recalcular e atualizar a duração do curso
+    const totalDuration = await calculateCourseDuration(module.courseId);
+    await db.course.update({
+      where: { id: module.courseId },
+      data: { duration: totalDuration },
     });
 
     return {
@@ -664,6 +705,9 @@ export async function updateLesson(
     // Verificar se a lição existe
     const existingLesson = await db.lesson.findUnique({
       where: { id: lessonId },
+      include: {
+        module: true,
+      },
     });
 
     if (!existingLesson) {
@@ -680,9 +724,18 @@ export async function updateLesson(
         videoUrl: lessonData.videoUrl || null,
         youtubeEmbedId: lessonData.youtubeEmbedId || null,
         duration: lessonData.duration,
-        order: lessonData.order,
+        order: lessonData.order || 1,
         type: lessonData.type,
       },
+    });
+
+    // Recalcular e atualizar a duração do curso
+    const totalDuration = await calculateCourseDuration(
+      existingLesson.module.courseId,
+    );
+    await db.course.update({
+      where: { id: existingLesson.module.courseId },
+      data: { duration: totalDuration },
     });
 
     return {
@@ -701,6 +754,9 @@ export async function deleteLesson(lessonId: string) {
     // Verificar se a lição existe
     const existingLesson = await db.lesson.findUnique({
       where: { id: lessonId },
+      include: {
+        module: true,
+      },
     });
 
     if (!existingLesson) {
@@ -710,6 +766,15 @@ export async function deleteLesson(lessonId: string) {
     // Excluir lição
     await db.lesson.delete({
       where: { id: lessonId },
+    });
+
+    // Recalcular e atualizar a duração do curso
+    const totalDuration = await calculateCourseDuration(
+      existingLesson.module.courseId,
+    );
+    await db.course.update({
+      where: { id: existingLesson.module.courseId },
+      data: { duration: totalDuration },
     });
 
     return {
@@ -728,6 +793,16 @@ export async function getCourseModules(courseId: string) {
       where: { courseId },
       include: {
         lessons: {
+          include: {
+            questions: {
+              include: {
+                options: {
+                  orderBy: { order: "asc" },
+                },
+              },
+              orderBy: { order: "asc" },
+            },
+          },
           orderBy: { order: "asc" },
         },
       },

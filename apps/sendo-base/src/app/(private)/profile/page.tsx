@@ -164,7 +164,11 @@ export default function ProfilePage() {
                 {userAuth?.name}
               </h1>
               <p className="dark-text-secondary mb-2 text-lg">
-                {userAuth?.role === "ADMIN" ? "Administrador" : "Membro"}
+                {userAuth?.role === "ADMIN"
+                  ? "Administrador"
+                  : userAuth?.role === "LIDER"
+                    ? "Líder"
+                    : "Membro"}
               </p>
               <p className="dark-text-tertiary mb-4 max-w-2xl">
                 {userAuth?.bio ||

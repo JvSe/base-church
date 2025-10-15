@@ -112,17 +112,8 @@ export type CourseWithModules = CourseWithInstructor & {
   reviews?: CourseReview[];
 };
 
-export type CourseFormData = {
-  title: string;
-  description: string;
-  instructorId: string;
-  duration: number;
-  level: string;
-  status: string;
-  price: number;
-  category: string;
-  tags: string;
-};
+// NOTA: CourseFormData foi movido para /lib/forms/course-schemas.ts
+// e é gerado automaticamente via Zod schema (z.infer)
 
 // ============================================================================
 // MODULE & LESSON TYPES
@@ -173,17 +164,8 @@ export type LessonWithProgress = Lesson & {
   progress?: LessonProgress[];
 };
 
-export type LessonFormData = {
-  title: string;
-  description: string;
-  content?: string;
-  videoUrl?: string;
-  youtubeEmbedId?: string;
-  duration: number;
-  order: number;
-  type: LessonType;
-  isActivity?: boolean;
-};
+// NOTA: LessonFormData foi movido para /lib/forms/course-schemas.ts
+// e é gerado automaticamente via Zod schema (z.infer)
 
 // ============================================================================
 // ENROLLMENT TYPES

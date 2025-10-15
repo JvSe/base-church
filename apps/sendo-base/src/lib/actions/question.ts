@@ -34,6 +34,7 @@ export interface CreateSubjectiveQuestionInput {
 export async function createObjectiveQuestion(
   data: CreateObjectiveQuestionInput,
 ) {
+  console.log("TO VINDO AQUI", data);
   try {
     // Validar que pelo menos uma opção está marcada como correta
     const hasCorrectAnswer = data.options.some((option) => option.isCorrect);

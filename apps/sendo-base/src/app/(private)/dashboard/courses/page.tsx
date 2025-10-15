@@ -1,7 +1,9 @@
+import { StatsCard } from "@/src/components/common/data-display/stats-card";
 import { getCourses } from "@/src/lib/actions";
+import { getStatsIconConfig } from "@/src/lib/helpers/course.helper";
 import type { CourseLevel, CourseStatus } from "@/src/lib/types/index";
 import { Button } from "@base-church/ui/components/button";
-import { Award, BookOpen, Plus, Search, TrendingUp, Users } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { CoursesListClient } from "./components/courses-list-client";
 
@@ -116,102 +118,45 @@ export default async function CoursesPage() {
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <div className="dark-card dark-shadow-sm rounded-xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="dark-text-tertiary text-sm font-medium">
-                  Total de Cursos
-                </p>
-                <p className="dark-text-primary text-2xl font-bold">
-                  {totalCourses}
-                </p>
-              </div>
-              <div className="dark-primary-subtle-bg rounded-xl p-3">
-                <BookOpen className="dark-primary" size={24} />
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-sm">
-              <TrendingUp className="dark-success mr-1" size={16} />
-              <span className="dark-success font-medium">
-                {totalCourses} cursos criados
-              </span>
-            </div>
-          </div>
+          <StatsCard
+            label="Total de Cursos"
+            value={totalCourses}
+            iconConfig={getStatsIconConfig("courses")}
+            trend={{
+              value: `${totalCourses} cursos criados`,
+              isPositive: true,
+            }}
+          />
 
-          <div className="dark-card dark-shadow-sm rounded-xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="dark-text-tertiary text-sm font-medium">
-                  Cursos Publicados
-                </p>
-                <p className="dark-text-primary text-2xl font-bold">
-                  {publishedCourses}
-                </p>
-              </div>
-              <div className="dark-success-bg rounded-xl p-3">
-                <TrendingUp className="dark-success" size={24} />
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-sm">
-              <TrendingUp className="dark-success mr-1" size={16} />
-              <span className="dark-success font-medium">
-                {totalCourses > 0
-                  ? Math.round((publishedCourses / totalCourses) * 100)
-                  : 0}
-                % publicados
-              </span>
-            </div>
-          </div>
+          <StatsCard
+            label="Cursos Publicados"
+            value={publishedCourses}
+            iconConfig={getStatsIconConfig("published")}
+            trend={{
+              value: `${totalCourses > 0 ? Math.round((publishedCourses / totalCourses) * 100) : 0}% publicados`,
+              isPositive: true,
+            }}
+          />
 
-          <div className="dark-card dark-shadow-sm rounded-xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="dark-text-tertiary text-sm font-medium">
-                  Total de Inscrições
-                </p>
-                <p className="dark-text-primary text-2xl font-bold">
-                  {totalStudents}
-                </p>
-              </div>
-              <div className="dark-secondary-subtle-bg rounded-xl p-3">
-                <Users className="dark-secondary" size={24} />
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-sm">
-              <TrendingUp className="dark-success mr-1" size={16} />
-              <span className="dark-success font-medium">
-                {totalCourses > 0
-                  ? Math.round(totalStudents / totalCourses)
-                  : 0}{" "}
-                por curso
-              </span>
-            </div>
-          </div>
+          <StatsCard
+            label="Total de Inscrições"
+            value={totalStudents}
+            iconConfig={getStatsIconConfig("students")}
+            trend={{
+              value: `${totalCourses > 0 ? Math.round(totalStudents / totalCourses) : 0} por curso`,
+              isPositive: true,
+            }}
+          />
 
-          <div className="dark-card dark-shadow-sm rounded-xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="dark-text-tertiary text-sm font-medium">
-                  Conclusões
-                </p>
-                <p className="dark-text-primary text-2xl font-bold">
-                  {totalCompletions}
-                </p>
-              </div>
-              <div className="dark-warning-bg rounded-xl p-3">
-                <Award className="dark-warning" size={24} />
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-sm">
-              <TrendingUp className="dark-success mr-1" size={16} />
-              <span className="dark-success font-medium">
-                {totalStudents > 0
-                  ? Math.round((totalCompletions / totalStudents) * 100)
-                  : 0}
-                % taxa
-              </span>
-            </div>
-          </div>
+          <StatsCard
+            label="Conclusões"
+            value={totalCompletions}
+            iconConfig={getStatsIconConfig("completions")}
+            trend={{
+              value: `${totalStudents > 0 ? Math.round((totalCompletions / totalStudents) * 100) : 0}% taxa`,
+              isPositive: true,
+            }}
+          />
         </div>
 
         {/* Client-side interactive components */}

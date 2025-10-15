@@ -3,17 +3,15 @@
 import { EmptyState } from "@/src/components/common/feedback/empty-state";
 import { getCategoryInfo } from "@/src/lib/constants";
 import { formatDate } from "@/src/lib/formatters";
+import {
+  formatDuration,
+  getStatusColor,
+  getStatusIcon,
+  getStatusText,
+} from "@/src/lib/helpers/course.helper";
 import { getLevelFormatted } from "@/src/lib/helpers/level.helper";
 import type { CourseLevel, CourseStatus } from "@/src/lib/types/index";
-import {
-  Award,
-  BookOpen,
-  CheckCircle,
-  Clock,
-  FileText,
-  Star,
-  Users,
-} from "lucide-react";
+import { Award, BookOpen, Clock, Star, Users } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -61,48 +59,6 @@ export function CoursesListClient({ courses }: CoursesListClientProps) {
         ),
     );
   }, [courses, searchTerm]);
-
-  function getStatusColor(status: CourseStatus) {
-    switch (status) {
-      case "published":
-        return "text-green-400 bg-green-400/20 border border-green-400/30";
-      case "draft":
-        return "text-yellow-400 bg-yellow-400/20 border border-yellow-400/30";
-      case "archived":
-        return "text-gray-400 bg-gray-400/20 border border-gray-400/30";
-    }
-  }
-
-  function getStatusText(status: CourseStatus) {
-    switch (status) {
-      case "published":
-        return "Publicado";
-      case "draft":
-        return "Rascunho";
-      case "archived":
-        return "Arquivado";
-    }
-  }
-
-  function getStatusIcon(status: CourseStatus) {
-    switch (status) {
-      case "published":
-        return CheckCircle;
-      case "draft":
-      case "archived":
-        return FileText;
-    }
-  }
-
-  function formatDuration(minutes: number) {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-
-    if (hours > 0) {
-      return `${hours}h ${mins}min`;
-    }
-    return `${mins}min`;
-  }
 
   return (
     <>
