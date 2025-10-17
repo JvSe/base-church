@@ -19,7 +19,7 @@ import {
 } from "@base-church/ui/components/select";
 import { Textarea } from "@base-church/ui/components/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FileText, Plus, Trash2, Type } from "lucide-react";
+import { FileText, Plus, Save, Trash2, Type } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -370,8 +370,8 @@ export function QuestionForm({
                 onClick={form.handleSubmit(handleAddQuestion)}
                 variant="success"
               >
-                <Plus className="mr-2 h-4 w-4" />
-                Adicionar Questão
+                <Save className="mr-2 h-4 w-4" />
+                Salvar Questão
               </Button>
             </div>
           </form>

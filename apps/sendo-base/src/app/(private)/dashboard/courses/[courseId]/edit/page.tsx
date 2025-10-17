@@ -124,11 +124,7 @@ export default function EditCoursePage(props: EditCoursePageProps) {
     saveModule,
     removeModule,
     setModules: setModulesState,
-  } = useCourseModules(courseId, {
-    onModuleChange: () => {
-      refetchModules();
-    },
-  });
+  } = useCourseModules(courseId);
 
   const {
     isLoading: isLoadingLessons,
@@ -140,15 +136,14 @@ export default function EditCoursePage(props: EditCoursePageProps) {
     addLesson,
     saveLesson,
     removeLesson,
-  } = useCourseLessons(modulesState, setModulesState, {
-    onLessonChange: () => {
-      refetchModules();
-    },
-  });
+  } = useCourseLessons(modulesState, setModulesState);
 
   const { addQuestion, removeQuestion } = useCourseQuestions(
     modulesState,
     setModulesState,
+    {
+      onQuestionChange: refetchModules,
+    },
   );
 
   const { openItems: openModules, setItems: setOpenModules } =
@@ -693,6 +688,7 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                       isEditing={false}
                       isLoading={isLoadingLessons}
                       moduleIndex={moduleIndex}
+                      lessonIndex={module.lessons.length + 1}
                       onSubmit={async (data) => {
                         return await addLesson(data, moduleIndex);
                       }}
@@ -700,6 +696,7 @@ export default function EditCoursePage(props: EditCoursePageProps) {
                         setShowLessonForm(null);
                         lessonForm.reset();
                       }}
+                      addQuestion={addQuestion}
                     />
                   )}
 

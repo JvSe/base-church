@@ -40,11 +40,11 @@ export function useCourseLessons(
   const addLesson = async (
     data: LessonFormData,
     moduleIndex: number,
-  ): Promise<boolean> => {
+  ): Promise<{ success: boolean; lesson?: Lesson | null }> => {
     const module = modules[moduleIndex];
     if (!module || !module.id) {
       toast.error("Módulo não encontrado");
-      return false;
+      return { success: false, lesson: null };
     }
 
     // Validar se está tentando adicionar uma atividade que não seja a última lição
@@ -56,7 +56,7 @@ export function useCourseLessons(
         toast.error(
           "Este módulo já possui uma atividade. Cada módulo pode ter apenas uma atividade como última lição.",
         );
-        return false;
+        return { success: false, lesson: null };
       }
     }
 
@@ -93,7 +93,7 @@ export function useCourseLessons(
         }
 
         setShowLessonForm(null);
-        onLessonChange?.();
+        // Não chama onLessonChange para evitar loops
 
         if (isQuiz) {
           toast.success("Atividade criada! Agora adicione as questões.");
@@ -101,14 +101,14 @@ export function useCourseLessons(
           toast.success("Lição adicionada com sucesso!");
         }
 
-        return true;
+        return { success: true, lesson: newLesson };
       }
 
       toast.error(result.error || "Erro ao criar lição");
-      return false;
+      return { success: false, lesson: null };
     } catch (error) {
       toast.error("Erro ao criar lição");
-      return false;
+      return { success: false, lesson: null };
     } finally {
       setIsLoading(false);
     }
@@ -169,7 +169,7 @@ export function useCourseLessons(
         }
 
         setEditingLesson(null);
-        onLessonChange?.();
+        // Não chama onLessonChange para evitar loops
         toast.success("Lição atualizada com sucesso!");
         return true;
       }
@@ -207,7 +207,7 @@ export function useCourseLessons(
           setModules(updatedModules);
         }
 
-        onLessonChange?.();
+        // Não chama onLessonChange para evitar loops
         toast.success(result.message);
         return true;
       }

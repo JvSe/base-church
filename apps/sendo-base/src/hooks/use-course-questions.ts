@@ -3,7 +3,7 @@ import {
   createSubjectiveQuestion,
   deleteQuestion,
 } from "@/src/lib/actions";
-import type { Question } from "@/src/lib/types/course.types";
+import type { Lesson, Question } from "@/src/lib/types/course.types";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -31,10 +31,9 @@ export function useCourseQuestions(
     question: Question,
     moduleIndex: number,
     lessonIndex: number,
+    lessonProps?: Lesson | null,
   ): Promise<boolean> => {
-    const lesson = modules[moduleIndex]?.lessons[lessonIndex];
-
-    console.log("lesson", lesson);
+    const lesson = lessonProps ?? modules[moduleIndex]?.lessons[lessonIndex];
 
     if (!lesson || !lesson.id) {
       toast.error("Lição precisa ser criada primeiro");
@@ -70,27 +69,29 @@ export function useCourseQuestions(
 
       if (result.success && result.question) {
         // Atualizar o estado local com a questão criada
-        const updatedModules = [...modules];
+        // const updatedModules = [...modules];
 
-        if (!updatedModules[moduleIndex]?.lessons[lessonIndex]?.questions) {
-          updatedModules[moduleIndex]!.lessons[lessonIndex]!.questions = [];
-        }
+        // if (!updatedModules[moduleIndex]?.lessons[lessonIndex]?.questions) {
+        //   updatedModules[moduleIndex]!.lessons[lessonIndex]!.questions = [];
+        // }
 
-        updatedModules[moduleIndex]?.lessons[lessonIndex]?.questions!.push({
-          ...question,
-          id: result.question.id,
-        });
+        // updatedModules[moduleIndex]?.lessons[lessonIndex]?.questions!.push({
+        //   ...question,
+        //   id: result.question.id,
+        // });
 
-        setModules(updatedModules);
+        // setModules(updatedModules);
         setShowQuestionForm(null);
         onQuestionChange?.();
         toast.success("Questão adicionada com sucesso!");
         return true;
       }
 
+      console.log("acabei caindo aqui");
       toast.error(result.error || "Erro ao criar questão no banco");
       return false;
     } catch (error) {
+      console.log("acabei caindo aqui 2", error);
       toast.error("Erro ao criar questão");
       return false;
     } finally {
@@ -130,14 +131,14 @@ export function useCourseQuestions(
 
         if (result.success) {
           // Atualizar o estado local após deletar do banco
-          const updatedModules = [...modules];
-          if (updatedModules[moduleIndex]?.lessons[lessonIndex]?.questions) {
-            updatedModules[moduleIndex].lessons[lessonIndex].questions =
-              updatedModules[moduleIndex].lessons[
-                lessonIndex
-              ].questions!.filter((_: any, i: number) => i !== questionIndex);
-            setModules(updatedModules);
-          }
+          // const updatedModules = [...modules];
+          // if (updatedModules[moduleIndex]?.lessons[lessonIndex]?.questions) {
+          //   updatedModules[moduleIndex].lessons[lessonIndex].questions =
+          //     updatedModules[moduleIndex].lessons[
+          //       lessonIndex
+          //     ].questions!.filter((_: any, i: number) => i !== questionIndex);
+          //   setModules(updatedModules);
+          // }
 
           onQuestionChange?.();
           toast.success("Questão removida com sucesso!");

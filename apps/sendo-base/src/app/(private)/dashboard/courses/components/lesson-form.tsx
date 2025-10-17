@@ -1,6 +1,7 @@
 "use client";
 
 import { FormSection } from "@/src/components/common/forms/form-section";
+import { Lesson } from "@/src/lib/types/course.types";
 import { Button } from "@base-church/ui/components/button";
 import {
   Form,
@@ -26,7 +27,6 @@ import {
   FileText,
   Plus,
   Save,
-  Upload,
   Video,
 } from "lucide-react";
 import { useState } from "react";
@@ -58,12 +58,15 @@ interface LessonFormProps {
   isLoading: boolean;
   moduleIndex: number;
   lessonIndex?: number;
-  onSubmit: (data: any) => Promise<boolean>;
+  onSubmit: (
+    data: any,
+  ) => Promise<{ success: boolean; lesson?: Lesson | null }> | Promise<boolean>;
   onCancel: () => void;
   addQuestion?: (
     question: Question,
     moduleIndex: number,
     lessonIndex: number,
+    lesson?: Lesson | null,
   ) => Promise<boolean>;
   questions?: Question[];
   onDeleteQuestion?: (
@@ -115,9 +118,32 @@ export function LessonForm({
 
   const handleSubmitLesson = async (data: any) => {
     // Chamar o callback com os dados da lição
-    const success = await onSubmit(data);
+    const { success, lesson } = (await onSubmit(data)) as {
+      success: boolean;
+      lesson?: Lesson | null;
+    };
 
     if (success) {
+      console.log("localQuestions", localQuestions);
+      console.log("moduleIndex", moduleIndex);
+      console.log("lessonIndex", lessonIndex);
+      const questionsSuccess = await Promise.all([
+        ...localQuestions.map(async (question) => {
+          return await addQuestion?.(
+            question,
+            moduleIndex,
+            lessonIndex || 0,
+            lesson,
+          );
+        }),
+      ]);
+
+      if (questionsSuccess.some((success) => !success)) {
+        console.log("Erro ao salvar questões", questionsSuccess);
+        toast.error("Erro ao salvar questões");
+        return;
+      }
+
       // Limpar questões locais após salvar
       setLocalQuestions([]);
       setShowQuestionForm(false);
@@ -332,7 +358,7 @@ export function LessonForm({
                       Questões da Atividade
                     </h5>
 
-                    {!showQuestionForm && isEditing && (
+                    {!showQuestionForm && (
                       <Button
                         type="button"
                         size="sm"
@@ -373,9 +399,9 @@ export function LessonForm({
                             // Se está criando, salva localmente
                             setLocalQuestions([...localQuestions, question]);
                             setShowQuestionForm(false);
-                            toast.info(
-                              "Questão adicionada! Lembre-se de salvar a lição primeiro para poder adicionar questões ao banco.",
-                            );
+                            // toast.info(
+                            //   "Questão adicionada! Lembre-se de salvar a lição primeiro para poder adicionar questões ao banco.",
+                            // );
                           }
                         }}
                         onCancel={() => {
@@ -403,7 +429,7 @@ export function LessonForm({
             )}
 
             {/* File Upload Section */}
-            <div className="dark-card dark-shadow-sm rounded-lg p-4">
+            {/* <div className="dark-card dark-shadow-sm rounded-lg p-4">
               <h3 className="dark-text-primary mb-3 font-semibold">
                 Materiais Complementares
               </h3>
@@ -430,7 +456,7 @@ export function LessonForm({
                   Selecionar Arquivos
                 </Button>
               </div>
-            </div>
+            </div> */}
 
             <div className="flex justify-end space-x-4 pt-6">
               <Button
@@ -442,17 +468,8 @@ export function LessonForm({
                 Cancelar
               </Button>
               <Button type="submit" disabled={isLoading} variant="success">
-                {isEditing ? (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    {isLoading ? "Salvando..." : "Salvar Lição"}
-                  </>
-                ) : (
-                  <>
-                    <Plus className="mr-2 h-4 w-4" />
-                    {isLoading ? "Adicionando..." : "Adicionar Lição"}
-                  </>
-                )}
+                <Save className="mr-2 h-4 w-4" />
+                {isLoading ? "Salvando..." : "Salvar Lição"}
               </Button>
             </div>
           </form>

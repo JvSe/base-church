@@ -33,8 +33,13 @@ export function useCourseModules(
   );
   const [showModuleForm, setShowModuleForm] = useState(false);
 
-  // Atualizar módulos quando initialModules mudar
-  const updateModules = (newModules: Module[]) => {
+  // Atualizar módulos internamente (sem notificar callback)
+  const updateModulesInternal = (newModules: Module[]) => {
+    setModules(newModules);
+  };
+
+  // Atualizar módulos e notificar callback (apenas após operações que precisam sync com servidor)
+  const updateModulesWithCallback = (newModules: Module[]) => {
     setModules(newModules);
     onModuleChange?.(newModules);
   };
@@ -59,7 +64,7 @@ export function useCourseModules(
           lessons: [],
         };
 
-        updateModules([...modules, newModule]);
+        updateModulesInternal([...modules, newModule]);
         setShowModuleForm(false);
         toast.success("Módulo adicionado com sucesso!");
         return true;
@@ -117,7 +122,7 @@ export function useCourseModules(
           updatedModules[moduleIndex].description = data.description;
         }
 
-        updateModules(updatedModules);
+        updateModulesInternal(updatedModules);
         setEditingModuleIndex(null);
         toast.success("Módulo atualizado com sucesso!");
         return true;
@@ -148,7 +153,7 @@ export function useCourseModules(
       const result = await deleteModule(moduleId);
       if (result.success) {
         const updatedModules = modules.filter((_, i) => i !== moduleIndex);
-        updateModules(updatedModules);
+        updateModulesInternal(updatedModules);
         toast.success(result.message);
         return true;
       }
@@ -166,7 +171,7 @@ export function useCourseModules(
    */
   const removeModuleByIndex = (moduleIndex: number) => {
     const updatedModules = modules.filter((_, i) => i !== moduleIndex);
-    updateModules(updatedModules);
+    updateModulesInternal(updatedModules);
     toast.success("Módulo removido!");
   };
 
@@ -177,7 +182,7 @@ export function useCourseModules(
     const updatedModules = [...modules];
     if (updatedModules[moduleIndex]) {
       updatedModules[moduleIndex].lessons = lessons;
-      updateModules(updatedModules);
+      updateModulesInternal(updatedModules);
     }
   };
 
@@ -194,6 +199,6 @@ export function useCourseModules(
     removeModule,
     removeModuleByIndex,
     updateModuleLessons,
-    setModules: updateModules,
+    setModules: updateModulesInternal,
   };
 }
