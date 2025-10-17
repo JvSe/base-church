@@ -103,6 +103,8 @@ model User {
   notifications       Notification[]
   forumPosts          ForumPost[]
   forumComments       ForumComment[]
+  forumPostLikes      ForumPostLike[]
+  forumPostViews      ForumPostView[]
   eventEnrollments    EventEnrollment[]
   eventReviews        EventReview[]
   courseReviews       CourseReview[]
@@ -353,12 +355,16 @@ model ForumPost {
   content     String
   category    String?
   isPublished Boolean  @default(true)
+  likesCount  Int      @default(0) // Cache do total de likes
+  viewsCount  Int      @default(0) // Cache do total de views
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   // Relations
-  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   comments ForumComment[]
+  likes    ForumPostLike[]
+  views    ForumPostView[]
 
   @@map("forum_posts")
 }
@@ -376,6 +382,34 @@ model ForumComment {
   post ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@map("forum_comments")
+}
+
+model ForumPostLike {
+  id        String   @id @default(uuid())
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId]) // Um usuário só pode curtir uma vez
+  @@map("forum_post_likes")
+}
+
+model ForumPostView {
+  id       String   @id @default(uuid())
+  userId   String
+  postId   String
+  viewedAt DateTime @default(now())
+
+  // Relations
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId]) // Um usuário só é contado uma vez
+  @@map("forum_post_views")
 }
 
 // New models for the complete prototype

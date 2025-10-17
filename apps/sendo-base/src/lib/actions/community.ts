@@ -170,7 +170,7 @@ export async function enrollInEvent(userId: string, eventId: string) {
 }
 
 // Forum Actions
-export async function getForumPosts() {
+export async function getForumPosts(userId?: string) {
   try {
     const posts = await prisma.forumPost.findMany({
       where: { isPublished: true },
@@ -188,13 +188,82 @@ export async function getForumPosts() {
             comments: true,
           },
         },
+        ...(userId && {
+          likes: {
+            where: { userId },
+            select: { id: true },
+          },
+        }),
       },
       orderBy: { createdAt: "desc" },
     });
 
-    return { success: true, posts };
+    // Add isLikedByUser flag
+    const postsWithLikes = posts.map((post) => ({
+      ...post,
+      isLikedByUser: userId ? (post.likes?.length ?? 0) > 0 : false,
+      likes: undefined, // Remove the likes array from response
+    }));
+
+    return { success: true, posts: postsWithLikes };
   } catch (error) {
     return { success: false, error: "Failed to fetch forum posts" };
+  }
+}
+
+export async function getForumPostById(postId: string, userId?: string) {
+  try {
+    const post = await prisma.forumPost.findUnique({
+      where: { id: postId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            image: true,
+          },
+        },
+        comments: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                username: true,
+                image: true,
+              },
+            },
+          },
+          orderBy: { createdAt: "desc" },
+        },
+        _count: {
+          select: {
+            comments: true,
+          },
+        },
+        ...(userId && {
+          likes: {
+            where: { userId },
+            select: { id: true },
+          },
+        }),
+      },
+    });
+
+    if (!post) {
+      return { success: false, error: "Post not found" };
+    }
+
+    const postWithLike = {
+      ...post,
+      isLikedByUser: userId ? (post.likes?.length ?? 0) > 0 : false,
+      likes: undefined,
+    };
+
+    return { success: true, post: postWithLike };
+  } catch (error) {
+    return { success: false, error: "Failed to fetch post" };
   }
 }
 
@@ -221,6 +290,11 @@ export async function createForumPost(
             image: true,
           },
         },
+        _count: {
+          select: {
+            comments: true,
+          },
+        },
       },
     });
 
@@ -228,6 +302,262 @@ export async function createForumPost(
     return { success: true, post };
   } catch (error) {
     return { success: false, error: "Failed to create post" };
+  }
+}
+
+export async function updateForumPost(
+  postId: string,
+  userId: string,
+  data: {
+    title?: string;
+    content?: string;
+    category?: string;
+  },
+) {
+  try {
+    // Verify ownership
+    const existingPost = await prisma.forumPost.findUnique({
+      where: { id: postId },
+      select: { userId: true },
+    });
+
+    if (!existingPost || existingPost.userId !== userId) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const post = await prisma.forumPost.update({
+      where: { id: postId },
+      data,
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            image: true,
+          },
+        },
+        _count: {
+          select: {
+            comments: true,
+          },
+        },
+      },
+    });
+
+    revalidatePath("/forum");
+    revalidatePath(`/forum/${postId}`);
+    return { success: true, post };
+  } catch (error) {
+    return { success: false, error: "Failed to update post" };
+  }
+}
+
+export async function deleteForumPost(postId: string, userId: string) {
+  try {
+    // Verify ownership
+    const existingPost = await prisma.forumPost.findUnique({
+      where: { id: postId },
+      select: { userId: true },
+    });
+
+    if (!existingPost || existingPost.userId !== userId) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    await prisma.forumPost.delete({
+      where: { id: postId },
+    });
+
+    revalidatePath("/forum");
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: "Failed to delete post" };
+  }
+}
+
+export async function createForumComment(
+  userId: string,
+  postId: string,
+  content: string,
+) {
+  try {
+    const comment = await prisma.forumComment.create({
+      data: {
+        userId,
+        postId,
+        content,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            image: true,
+          },
+        },
+      },
+    });
+
+    revalidatePath("/forum");
+    revalidatePath(`/forum/${postId}`);
+    return { success: true, comment };
+  } catch (error) {
+    return { success: false, error: "Failed to create comment" };
+  }
+}
+
+export async function updateForumComment(
+  commentId: string,
+  userId: string,
+  content: string,
+) {
+  try {
+    // Verify ownership
+    const existingComment = await prisma.forumComment.findUnique({
+      where: { id: commentId },
+      select: { userId: true, postId: true },
+    });
+
+    if (!existingComment || existingComment.userId !== userId) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const updatedComment = await prisma.forumComment.update({
+      where: { id: commentId },
+      data: { content },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            image: true,
+          },
+        },
+      },
+    });
+
+    revalidatePath("/forum");
+    revalidatePath(`/forum/${existingComment.postId}`);
+    return { success: true, comment: updatedComment };
+  } catch (error) {
+    return { success: false, error: "Failed to update comment" };
+  }
+}
+
+export async function deleteForumComment(commentId: string, userId: string) {
+  try {
+    // Verify ownership
+    const existingComment = await prisma.forumComment.findUnique({
+      where: { id: commentId },
+      select: { userId: true, postId: true },
+    });
+
+    if (!existingComment || existingComment.userId !== userId) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    await prisma.forumComment.delete({
+      where: { id: commentId },
+    });
+
+    revalidatePath("/forum");
+    revalidatePath(`/forum/${existingComment.postId}`);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: "Failed to delete comment" };
+  }
+}
+
+// Forum Like Actions
+export async function toggleForumPostLike(postId: string, userId: string) {
+  try {
+    // Check if user already liked the post
+    const existingLike = await prisma.forumPostLike.findUnique({
+      where: {
+        userId_postId: {
+          userId,
+          postId,
+        },
+      },
+    });
+
+    if (existingLike) {
+      // Unlike: Remove like and decrement counter
+      await prisma.$transaction([
+        prisma.forumPostLike.delete({
+          where: { id: existingLike.id },
+        }),
+        prisma.forumPost.update({
+          where: { id: postId },
+          data: { likesCount: { decrement: 1 } },
+        }),
+      ]);
+
+      revalidatePath("/forum");
+      revalidatePath(`/forum/${postId}`);
+      return { success: true, liked: false };
+    } else {
+      // Like: Create like and increment counter
+      await prisma.$transaction([
+        prisma.forumPostLike.create({
+          data: {
+            userId,
+            postId,
+          },
+        }),
+        prisma.forumPost.update({
+          where: { id: postId },
+          data: { likesCount: { increment: 1 } },
+        }),
+      ]);
+
+      revalidatePath("/forum");
+      revalidatePath(`/forum/${postId}`);
+      return { success: true, liked: true };
+    }
+  } catch (error) {
+    console.error("Toggle like error:", error);
+    return { success: false, error: "Failed to toggle like" };
+  }
+}
+
+// Forum View Actions
+export async function registerForumPostView(postId: string, userId: string) {
+  try {
+    // Check if user already viewed this post
+    const existingView = await prisma.forumPostView.findUnique({
+      where: {
+        userId_postId: {
+          userId,
+          postId,
+        },
+      },
+    });
+
+    // Only register if it's a new view
+    if (!existingView) {
+      await prisma.$transaction([
+        prisma.forumPostView.create({
+          data: {
+            userId,
+            postId,
+          },
+        }),
+        prisma.forumPost.update({
+          where: { id: postId },
+          data: { viewsCount: { increment: 1 } },
+        }),
+      ]);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Register view error:", error);
+    // Não retornar erro aqui para não quebrar a página se falhar
+    return { success: false, error: "Failed to register view" };
   }
 }
 
