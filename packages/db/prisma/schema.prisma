@@ -628,3 +628,115 @@ model StudentAnswer {
   @@unique([userId, questionId]) // Um aluno só pode responder cada questão uma vez
   @@map("student_answers")
 }
+
+// ============================================================================
+// HELP SYSTEM MODELS
+// ============================================================================
+
+// Categorias de FAQ
+model HelpCategory {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  icon        String // Nome do ícone Lucide
+  color       String // Classe de cor
+  bgColor     String // Classe de cor de fundo
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  questions HelpQuestion[]
+
+  @@map("help_categories")
+}
+
+// Perguntas do FAQ
+model HelpQuestion {
+  id         String   @id @default(uuid())
+  categoryId String
+  question   String
+  answer     String?  @db.Text // Resposta detalhada (opcional)
+  order      Int      @default(0)
+  isActive   Boolean  @default(true)
+  views      Int      @default(0)
+  helpful    Int      @default(0) // Contador de "foi útil"
+  notHelpful Int      @default(0) // Contador de "não foi útil"
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  category HelpCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@map("help_questions")
+}
+
+// Artigos de ajuda populares
+model HelpArticle {
+  id          String   @id @default(uuid())
+  title       String
+  slug        String   @unique
+  content     String   @db.Text
+  category    String
+  excerpt     String?
+  views       Int      @default(0)
+  helpful     Int      @default(0) // Porcentagem de útil (0-100)
+  isPublished Boolean  @default(true)
+  isFeatured  Boolean  @default(false) // Artigo popular
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  feedbacks    HelpArticleFeedback[]
+  articleViews HelpArticleView[]
+
+  @@map("help_articles")
+}
+
+// Feedback de artigos (rastreia votos únicos)
+model HelpArticleFeedback {
+  id        String   @id @default(uuid())
+  articleId String
+  userId    String
+  isHelpful Boolean // true = útil, false = não útil
+  createdAt DateTime @default(now())
+
+  // Relations
+  article HelpArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, articleId]) // Um usuário só pode votar uma vez por artigo
+  @@map("help_article_feedbacks")
+}
+
+// Visualizações de artigos (rastreia views únicos)
+model HelpArticleView {
+  id        String   @id @default(uuid())
+  articleId String
+  userId    String
+  viewedAt  DateTime @default(now())
+
+  // Relations
+  article HelpArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, articleId]) // Um usuário só é contado uma vez
+  @@map("help_article_views")
+}
+
+// Opções de suporte
+model SupportOption {
+  id           String   @id @default(uuid())
+  title        String
+  description  String
+  icon         String // Nome do ícone Lucide
+  action       String // Texto do botão ou ação
+  contactInfo  String? // Email, telefone, URL, etc
+  responseTime String // Tempo de resposta estimado
+  isAvailable  Boolean  @default(true)
+  order        Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("support_options")
+}

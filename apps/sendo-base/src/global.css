@@ -1,2 +1,5 @@
 @import "tailwindcss";
 @import "@base-church/ui/globals.css";
+
+/* Highlight.js theme for code syntax highlighting */
+@import "highlight.js/styles/github-dark.css";
