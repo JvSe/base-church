@@ -37,7 +37,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { Award, BookOpen, Edit, Layers, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import {
@@ -56,6 +56,11 @@ export default function CreateCoursePage() {
   const [showCertificateForm, setShowCertificateForm] = useState(false);
   const [editingCertificate, setEditingCertificate] = useState(false);
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [openCourseInfo, setOpenCourseInfo] = useState<string[]>([
+    "course-info",
+  ]);
+  const [isEditingCourseInfo, setIsEditingCourseInfo] = useState(false);
   const router = useRouter();
 
   // Hooks personalizados para gerenciamento de módulos, lições e questões
@@ -95,6 +100,15 @@ export default function CreateCoursePage() {
 
   const { openItems: openModules, setItems: setOpenModules } =
     useAccordionState();
+  const { openItems: openLessons, setItems: setOpenLessons } =
+    useAccordionState();
+
+  // Abrir seção de módulos por padrão quando curso for criado
+  useEffect(() => {
+    if (courseId && !openModules.includes("modules-section")) {
+      setOpenModules(["modules-section"]);
+    }
+  }, [courseId]);
 
   // Buscar líderes para o campo de instrutor
   const { data: leadersData, isLoading: leadersLoading } = useQuery({
@@ -159,9 +173,16 @@ export default function CreateCoursePage() {
   const handleCreateCourse = async (data: CourseFormData) => {
     setIsLoading(true);
     try {
+      // Converter banner para base64 se houver
+      let bannerUrl = "";
+      if (bannerFile) {
+        bannerUrl = await convertFileToBase64(bannerFile);
+      }
+
       const result = await createCourse({
         ...data,
         tags: data.tags || "",
+        image: bannerUrl,
       });
 
       if (result.success && result.course) {
@@ -259,53 +280,101 @@ export default function CreateCoursePage() {
         form={courseForm}
         courseId={courseId}
         isLoading={isLoading}
+        isEditing={isEditingCourseInfo || !courseId}
         leadersData={leadersData || []}
         leadersLoading={leadersLoading}
-        onSubmit={handleCreateCourse}
+        onSubmit={async (data) => {
+          await handleCreateCourse(data);
+          if (courseId) {
+            setIsEditingCourseInfo(false);
+            setOpenCourseInfo([]);
+          }
+        }}
+        accordionValue={openCourseInfo}
+        onAccordionChange={setOpenCourseInfo}
+        onToggleEdit={() => {
+          setIsEditingCourseInfo(!isEditingCourseInfo);
+          if (!isEditingCourseInfo) {
+            setOpenCourseInfo(["course-info"]);
+          }
+        }}
+        showEditButton={courseId ? !isEditingCourseInfo : false}
+        bannerFile={bannerFile}
+        setBannerFile={setBannerFile}
+        existingBanner={null}
       />
 
       {/* Modules Section - Only show after course is created */}
       {courseId && (
-        <div className="space-y-6">
-          {/* Add Module Button */}
-          <div className="dark-glass dark-shadow-sm rounded-xl p-6">
-            <div className="flex items-center justify-between">
-              <h2 className="dark-text-primary flex items-center gap-2 text-xl font-bold">
-                <Layers className="dark-primary" size={24} />
-                Módulos do Curso ({modules.length})
-              </h2>
-              <Button
-                variant="success"
-                onClick={() => setShowModuleForm(!showModuleForm)}
+        <div className="dark-glass dark-shadow-sm rounded-xl">
+          <Accordion
+            type="multiple"
+            className="space-y-0"
+            value={openModules}
+            onValueChange={setOpenModules}
+          >
+            <AccordionItem value="modules-section" className="border-0">
+              <AccordionTrigger
+                arrow={false}
+                className="dark-card hover:dark-bg-secondary p-6 transition-all"
               >
-                <Plus className="mr-2 h-4 w-4" />
-                Adicionar Módulo
-              </Button>
-            </div>
+                <div className="flex w-full items-center justify-between">
+                  <h2 className="dark-text-primary flex items-center gap-2 text-xl font-bold">
+                    <Layers className="dark-primary" size={24} />
+                    Módulos do Curso ({modules.length})
+                  </h2>
+                  <Button
+                    variant="success"
+                    onClick={() => {
+                      setShowModuleForm(!showModuleForm);
+                      if (!showModuleForm) {
+                        const newModuleIndex = modules.length;
+                        setOpenModules([
+                          ...openModules,
+                          `module-${newModuleIndex}`,
+                        ]);
+                      }
+                    }}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Adicionar Módulo
+                  </Button>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="dark-border p-4">
+                <Accordion
+                  type="multiple"
+                  className="space-y-4"
+                  value={openModules}
+                  onValueChange={setOpenModules}
+                >
+                  {/* Module Form */}
+                  {showModuleForm && (
+                    <ModuleForm
+                      form={moduleForm}
+                      isLoading={isLoadingModules}
+                      onSubmit={async (data) => {
+                        const success = await addModule(data);
+                        if (success) {
+                          setShowModuleForm(false);
+                          moduleForm.reset();
+                          const newModuleIndex = modules.length;
+                          setOpenModules([
+                            "modules-section",
+                            `module-${newModuleIndex}`,
+                          ]);
+                        }
+                      }}
+                      onCancel={() => {
+                        setShowModuleForm(false);
+                        moduleForm.reset();
+                      }}
+                    />
+                  )}
 
-            {/* Module Form */}
-            {showModuleForm && (
-              <ModuleForm
-                form={moduleForm}
-                isLoading={isLoadingModules}
-                onSubmit={(data) => addModule(data)}
-                onCancel={() => {
-                  setShowModuleForm(false);
-                  moduleForm.reset();
-                }}
-              />
-            )}
-          </div>
-
-          {/* Modules List */}
-          {modules.length > 0 && (
-            <Accordion
-              type="multiple"
-              className="space-y-4"
-              value={openModules}
-              onValueChange={setOpenModules}
-            >
-              {modules.map((module, moduleIndex) => (
+                  {/* Existing Modules */}
+                  {modules.length > 0 ? (
+                    modules.map((module, moduleIndex) => (
                 <AccordionItem
                   key={moduleIndex}
                   value={`module-${moduleIndex}`}
@@ -342,6 +411,7 @@ export default function CreateCoursePage() {
                             setShowLessonForm(moduleIndex);
                             setOpenModules([
                               ...openModules,
+                              "modules-section",
                               `module-${moduleIndex}`,
                             ]);
                           }}
@@ -355,15 +425,16 @@ export default function CreateCoursePage() {
                           className="gap-1"
                           onClick={(e) => {
                             e.stopPropagation();
-                            const module = modules[moduleIndex];
-                            if (module) {
+                            const mod = modules[moduleIndex];
+                            if (mod) {
                               moduleForm.reset({
-                                title: module.title,
-                                description: module.description,
+                                title: mod.title,
+                                description: mod.description,
                               });
                               startEditModule(moduleIndex);
                               setOpenModules([
                                 ...openModules,
+                                "modules-section",
                                 `module-${moduleIndex}`,
                               ]);
                             }
@@ -426,14 +497,30 @@ export default function CreateCoursePage() {
                         <h4 className="dark-text-primary mb-3 font-medium">
                           Lições ({module.lessons.length})
                         </h4>
-                        <Accordion type="multiple" className="space-y-3">
+                        <Accordion
+                          type="multiple"
+                          className="space-y-3"
+                          value={openLessons.filter((lesson) =>
+                            lesson.startsWith(`lesson-${moduleIndex}-`),
+                          )}
+                          onValueChange={(value) => {
+                            const otherLessons = openLessons.filter(
+                              (lesson) =>
+                                !lesson.startsWith(`lesson-${moduleIndex}-`),
+                            );
+                            setOpenLessons([...otherLessons, ...value]);
+                          }}
+                        >
                           {module.lessons.map((lesson, lessonIndex) => (
                             <AccordionItem
                               key={lessonIndex}
                               value={`lesson-${moduleIndex}-${lessonIndex}`}
                               className="dark-card dark-shadow-sm rounded-lg"
                             >
-                              <AccordionTrigger className="hover:dark-bg-secondary p-4 transition-colors">
+                              <AccordionTrigger
+                                arrow={false}
+                                className="hover:dark-bg-secondary p-4 transition-colors"
+                              >
                                 <div className="flex w-full items-center justify-between">
                                   <div className="flex items-center gap-3">
                                     <div className="dark-secondary-subtle-bg rounded-lg p-2">
@@ -470,33 +557,45 @@ export default function CreateCoursePage() {
                                     <Button
                                       size="sm"
                                       variant="info"
+                                      className="gap-1"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        const lesson =
+                                        const les =
                                           modules[moduleIndex]?.lessons[
                                             lessonIndex
                                           ];
-                                        if (lesson) {
+                                        if (les) {
                                           lessonForm.reset({
-                                            title: lesson.title,
-                                            description: lesson.description,
-                                            content: lesson.content || "",
-                                            videoUrl: lesson.videoUrl || "",
-                                            duration: lesson.duration,
-                                            type: lesson.type as any,
+                                            title: les.title,
+                                            description: les.description,
+                                            content: les.content || "",
+                                            videoUrl: les.videoUrl || "",
+                                            duration: les.duration,
+                                            type: les.type as any,
                                           });
                                           startEditLesson(
                                             moduleIndex,
                                             lessonIndex,
                                           );
+                                          setOpenModules([
+                                            ...openModules,
+                                            "modules-section",
+                                            `module-${moduleIndex}`,
+                                          ]);
+                                          setOpenLessons([
+                                            ...openLessons,
+                                            `lesson-${moduleIndex}-${lessonIndex}`,
+                                          ]);
                                         }
                                       }}
                                     >
                                       <Edit className="h-3 w-3" />
+                                      Editar Lição
                                     </Button>
                                     <Button
                                       size="sm"
                                       variant="destructive"
+                                      className="gap-1"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         removeLessonByIndex(
@@ -506,6 +605,7 @@ export default function CreateCoursePage() {
                                       }}
                                     >
                                       <Trash2 className="h-3 w-3" />
+                                      Excluir Lição
                                     </Button>
                                   </div>
                                 </div>
@@ -690,12 +790,40 @@ export default function CreateCoursePage() {
                     )}
                   </AccordionContent>
                 </AccordionItem>
-              ))}
-            </Accordion>
-          )}
+                    ))
+                  ) : (
+                    <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
+                      <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                        <Layers className="dark-text-tertiary" size={32} />
+                      </div>
+                      <h3 className="dark-text-primary mb-2 text-lg font-semibold">
+                        Nenhum módulo cadastrado
+                      </h3>
+                      <p className="dark-text-secondary mb-4 text-sm">
+                        Comece adicionando o primeiro módulo ao curso
+                      </p>
+                      <Button
+                        variant="success"
+                        onClick={() => {
+                          setShowModuleForm(true);
+                          setOpenModules(["modules-section"]);
+                        }}
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        Adicionar Primeiro Módulo
+                      </Button>
+                    </div>
+                  )}
+                </Accordion>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      )}
 
-          {/* Certificate Section */}
-          <div className="dark-glass dark-shadow-sm rounded-xl p-6">
+      {/* Certificate Section */}
+      {courseId && (
+        <div className="dark-glass dark-shadow-sm rounded-xl p-6">
             <div className="flex items-center justify-between">
               <h2 className="dark-text-primary flex items-center gap-2 text-xl font-bold">
                 <Award className="dark-primary" size={24} />

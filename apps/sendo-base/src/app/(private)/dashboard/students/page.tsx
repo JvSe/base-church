@@ -104,6 +104,7 @@ export default function StudentsPage() {
   const [showEnrollments, setShowEnrollments] = useState<
     Record<string, boolean>
   >({});
+  const [pendingInitialized, setPendingInitialized] = useState(false);
 
   const { user, isAuthenticated, isLoading: userLoading } = useAuth();
 
@@ -386,6 +387,49 @@ export default function StudentsPage() {
         return "Desconhecido";
     }
   };
+
+  // Abrir automaticamente matrículas de alunos com pendências
+  useEffect(() => {
+    if (
+      allEnrollmentsData &&
+      filteredStudents.length > 0 &&
+      !pendingInitialized
+    ) {
+      const studentsWithPending: Record<string, boolean> = {};
+      let firstStudentWithPending: Student | null = null;
+
+      filteredStudents.forEach((student) => {
+        const hasPending = allEnrollmentsData.some(
+          (enrollment) =>
+            enrollment.studentId === student.id &&
+            enrollment.status === "pending",
+        );
+
+        if (hasPending) {
+          studentsWithPending[student.id] = true;
+          // Guardar o primeiro aluno com pendência
+          if (!firstStudentWithPending) {
+            firstStudentWithPending = student;
+          }
+        }
+      });
+
+      // Atualizar showEnrollments e selectedStudent apenas se houver alunos com pendências
+      if (Object.keys(studentsWithPending).length > 0) {
+        setShowEnrollments((prev) => ({
+          ...prev,
+          ...studentsWithPending,
+        }));
+
+        // Selecionar o primeiro aluno com pendência para carregar suas matrículas
+        if (firstStudentWithPending) {
+          setSelectedStudent(firstStudentWithPending);
+        }
+
+        setPendingInitialized(true);
+      }
+    }
+  }, [allEnrollmentsData, filteredStudents, pendingInitialized]);
 
   // Função para obter matrículas pendentes de um aluno específico
   const getStudentPendingEnrollments = (studentId: string) => {

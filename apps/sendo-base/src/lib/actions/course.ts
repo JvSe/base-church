@@ -325,7 +325,7 @@ export async function createCourse(courseData: CourseFormData) {
         category: courseData.category,
         tags: tagsArray,
         isFeatured: false,
-        image: null,
+        image: courseData.image || null,
       },
     });
 
@@ -398,6 +398,7 @@ export async function updateCourse(
         price: courseData.price,
         category: courseData.category,
         tags: tagsArray,
+        image: courseData.image || existingCourse.image,
       },
     });
 

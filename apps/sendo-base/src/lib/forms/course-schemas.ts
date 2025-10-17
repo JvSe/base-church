@@ -17,6 +17,7 @@ export const courseSchema = z.object({
   category: z.string().min(1, "Categoria é obrigatória"),
   tags: z.string().optional(),
   price: z.number().min(0, "Preço não pode ser negativo"),
+  image: z.string().optional(),
 });
 
 export type CourseFormData = z.infer<typeof courseSchema>;

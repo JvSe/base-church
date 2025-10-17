@@ -76,6 +76,9 @@ export default function EditCoursePage(props: EditCoursePageProps) {
   const [showCertificateForm, setShowCertificateForm] = useState(false);
   const [isEditingCertificate, setIsEditingCertificate] = useState(false);
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [openCourseInfo, setOpenCourseInfo] = useState<string[]>([]);
+  const [isEditingCourseInfo, setIsEditingCourseInfo] = useState(false);
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -263,6 +266,13 @@ export default function EditCoursePage(props: EditCoursePageProps) {
     }
   }, [modulesData]);
 
+  // Abrir seção de módulos por padrão
+  useEffect(() => {
+    if (!openModules.includes("modules-section")) {
+      setOpenModules([...openModules, "modules-section"]);
+    }
+  }, []);
+
   // Atualizar template de certificado quando os dados chegarem
   useEffect(() => {
     if (courseData) {
@@ -292,10 +302,20 @@ export default function EditCoursePage(props: EditCoursePageProps) {
   const handleUpdateCourse = async (data: CourseFormData) => {
     setIsLoading(true);
     try {
-      const result = await updateCourse(courseId, data);
+      // Converter banner para base64 se houver novo arquivo
+      let bannerUrl = courseData?.image || "";
+      if (bannerFile) {
+        bannerUrl = await convertFileToBase64(bannerFile);
+      }
+
+      const result = await updateCourse(courseId, {
+        ...data,
+        image: bannerUrl,
+      });
 
       if (result.success) {
         toast.success(result.message);
+        queryClient.invalidateQueries({ queryKey: ["course", courseId] });
       } else {
         toast.error(result.error);
       }
@@ -534,548 +554,627 @@ export default function EditCoursePage(props: EditCoursePageProps) {
         isEditing={true}
         leadersData={leadersData || []}
         leadersLoading={leadersLoading}
-        onSubmit={handleUpdateCourse}
+        onSubmit={async (data) => {
+          await handleUpdateCourse(data);
+          setIsEditingCourseInfo(false);
+          setOpenCourseInfo([]);
+        }}
+        accordionValue={openCourseInfo}
+        onAccordionChange={setOpenCourseInfo}
+        onToggleEdit={() => {
+          setIsEditingCourseInfo(!isEditingCourseInfo);
+          if (!isEditingCourseInfo) {
+            setOpenCourseInfo(["course-info"]);
+          }
+        }}
+        showEditButton={!isEditingCourseInfo}
+        bannerFile={bannerFile}
+        setBannerFile={setBannerFile}
+        existingBanner={courseData?.image}
       />
 
       {/* Modules Section */}
-      <div className="space-y-6">
-        {/* Add Module Button */}
-        <div className="dark-glass dark-shadow-sm rounded-xl p-6">
-          <div className="flex items-center justify-between">
-            <h2 className="dark-text-primary flex items-center gap-2 text-xl font-bold">
-              <Layers className="dark-primary" size={24} />
-              Módulos do Curso ({modulesState.length})
-            </h2>
+      <div className="dark-glass dark-shadow-sm rounded-xl">
+        <Accordion
+          type="multiple"
+          className="space-y-0"
+          value={openModules}
+          onValueChange={setOpenModules}
+        >
+          <AccordionItem value="modules-section" className="border-0">
+            <AccordionTrigger
+              arrow={false}
+              className="dark-card hover:dark-bg-secondary p-6 transition-all"
+            >
+              <div className="flex w-full items-center justify-between">
+                <h2 className="dark-text-primary flex items-center gap-2 text-xl font-bold">
+                  <Layers className="dark-primary" size={24} />
+                  Módulos do Curso ({modulesState.length})
+                </h2>
+                <Button
+                  variant="success"
+                  onClick={() => {
+                    setShowModuleForm(!showModuleForm);
+                    if (!showModuleForm) {
+                      const newModuleIndex = modulesState.length;
+                      setOpenModules([
+                        ...openModules,
+                        `module-${newModuleIndex}`,
+                      ]);
+                    }
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Adicionar Módulo
+                </Button>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="dark-border p-4">
+              <Accordion
+                type="multiple"
+                className="space-y-4"
+                value={openModules}
+                onValueChange={setOpenModules}
+              >
+                {/* New Module Form Accordion */}
+
+                {showModuleForm && (
+                  <ModuleForm
+                    form={moduleForm}
+                    isLoading={isLoadingModules}
+                    onSubmit={async (data) => {
+                      const success = await addModule(data);
+                      if (success) {
+                        setShowModuleForm(false);
+                        moduleForm.reset();
+                        // Remove o accordion "new-module" e abre o módulo recém-criado
+                        const newModuleIndex = modulesState.length;
+                        setOpenModules([
+                          "modules-section",
+                          `module-${newModuleIndex}`,
+                        ]);
+                      }
+                    }}
+                    onCancel={() => {
+                      setShowModuleForm(false);
+                      moduleForm.reset();
+                      setOpenModules(
+                        openModules.filter((id) => id !== "new-module"),
+                      );
+                    }}
+                  />
+                )}
+
+                {/* Existing Modules */}
+                {modulesState.length > 0 ? (
+                  modulesState.map((module, moduleIndex) => (
+                    <AccordionItem
+                      key={moduleIndex}
+                      value={`module-${moduleIndex}`}
+                      className="dark-glass dark-shadow-sm rounded-xl"
+                    >
+                      <AccordionTrigger
+                        arrow={false}
+                        className="dark-card hover:dark-bg-secondary p-4 transition-all"
+                      >
+                        <div className="flex w-full items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="dark-primary-subtle-bg rounded-xl p-2">
+                              <Layers className="dark-primary" size={20} />
+                            </div>
+                            <div className="text-left">
+                              <h3 className="dark-text-primary font-semibold">
+                                {module.title}
+                              </h3>
+                              <p className="dark-text-secondary text-sm">
+                                {module.description}
+                              </p>
+                              <p className="dark-text-tertiary mt-1 text-xs">
+                                {module.lessons.length} lição(ões)
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="success"
+                              className="gap-1"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShowLessonForm(moduleIndex);
+                                setOpenModules([
+                                  ...openModules,
+                                  `module-${moduleIndex}`,
+                                ]);
+                              }}
+                            >
+                              <Plus className="h-3 w-3" />
+                              Adicionar nova lição
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="info"
+                              className="gap-1"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const mod = modulesState[moduleIndex];
+                                if (mod) {
+                                  moduleForm.reset({
+                                    title: mod.title,
+                                    description: mod.description,
+                                  });
+                                  startEditModule(moduleIndex);
+                                  setOpenModules([
+                                    ...openModules,
+                                    `module-${moduleIndex}`,
+                                  ]);
+                                }
+                              }}
+                            >
+                              <Edit className="h-3 w-3" />
+                              Editar módulo
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              className="gap-1"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeModule(module.id, moduleIndex);
+                              }}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                              Excluir módulo
+                            </Button>
+                          </div>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="dark-border">
+                        {/* Module Edit Form */}
+                        {editingModuleIndex === moduleIndex && (
+                          <div className="dark-border border-b p-6">
+                            <ModuleForm
+                              form={moduleForm}
+                              isLoading={isLoadingModules}
+                              onSubmit={(data) => saveModule(data, moduleIndex)}
+                              onCancel={() => {
+                                cancelEditModule();
+                                moduleForm.reset();
+                              }}
+                            />
+                          </div>
+                        )}
+
+                        {/* Lesson Form */}
+                        {showLessonForm === moduleIndex && (
+                          <LessonForm
+                            form={lessonForm}
+                            isEditing={false}
+                            isLoading={isLoadingLessons}
+                            moduleIndex={moduleIndex}
+                            lessonIndex={module.lessons.length + 1}
+                            onSubmit={async (data) => {
+                              return await addLesson(data, moduleIndex);
+                            }}
+                            onCancel={() => {
+                              setShowLessonForm(null);
+                              lessonForm.reset();
+                            }}
+                            addQuestion={addQuestion}
+                          />
+                        )}
+
+                        {/* Lessons List */}
+                        {module.lessons.length > 0 && (
+                          <div className="p-4">
+                            <h4 className="dark-text-primary mb-3 font-medium">
+                              Lições ({module.lessons.length})
+                            </h4>
+                            <Accordion
+                              type="multiple"
+                              className="space-y-3"
+                              value={openLessons.filter((lesson) =>
+                                lesson.startsWith(`lesson-${moduleIndex}-`),
+                              )}
+                              onValueChange={(value) => {
+                                const otherLessons = openLessons.filter(
+                                  (lesson) =>
+                                    !lesson.startsWith(
+                                      `lesson-${moduleIndex}-`,
+                                    ),
+                                );
+                                setOpenLessons([...otherLessons, ...value]);
+                              }}
+                            >
+                              {module.lessons.map((lesson, lessonIndex) => (
+                                <AccordionItem
+                                  key={lessonIndex}
+                                  value={`lesson-${moduleIndex}-${lessonIndex}`}
+                                  className="dark-card dark-shadow-sm rounded-lg"
+                                >
+                                  <AccordionTrigger
+                                    arrow={false}
+                                    className="hover:dark-bg-secondary p-4 transition-colors"
+                                  >
+                                    <div className="flex w-full items-center justify-between">
+                                      <div className="flex items-center gap-3">
+                                        <div className="dark-secondary-subtle-bg rounded-lg p-2">
+                                          {(() => {
+                                            const LessonIcon =
+                                              getLessonTypeIcon(lesson.type);
+                                            return (
+                                              <LessonIcon
+                                                className="dark-secondary"
+                                                size={16}
+                                              />
+                                            );
+                                          })()}
+                                        </div>
+                                        <div className="text-left">
+                                          <h5 className="dark-text-primary font-medium">
+                                            {lesson.title}
+                                          </h5>
+                                          <p className="dark-text-secondary text-sm">
+                                            {lesson.description}
+                                          </p>
+                                          <div className="mt-1 flex items-center gap-4">
+                                            <span className="dark-text-tertiary text-xs">
+                                              Tipo:{" "}
+                                              {getLessonTypeText(lesson.type)}
+                                            </span>
+                                            <span className="dark-text-tertiary text-xs">
+                                              Duração: {lesson.duration}min
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div className="flex gap-2">
+                                        <Button
+                                          size="sm"
+                                          variant="info"
+                                          className="gap-1"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            const les =
+                                              modulesState[moduleIndex]
+                                                ?.lessons[lessonIndex];
+                                            if (les) {
+                                              lessonForm.reset({
+                                                title: les.title,
+                                                description: les.description,
+                                                content: les.content || "",
+                                                videoUrl: les.videoUrl || "",
+                                                duration: les.duration,
+                                                type: les.type as any,
+                                              });
+                                              startEditLesson(
+                                                moduleIndex,
+                                                lessonIndex,
+                                              );
+                                              setOpenModules([
+                                                ...openModules,
+                                                `module-${moduleIndex}`,
+                                              ]);
+                                              setOpenLessons([
+                                                ...openLessons,
+                                                `lesson-${moduleIndex}-${lessonIndex}`,
+                                              ]);
+                                            }
+                                          }}
+                                        >
+                                          <Edit className="h-3 w-3" />
+                                          Editar Lição
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          variant="destructive"
+                                          className="gap-1"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            removeLesson(
+                                              lesson.id,
+                                              moduleIndex,
+                                              lessonIndex,
+                                            );
+                                          }}
+                                        >
+                                          <Trash2 className="h-3 w-3" />
+                                          Excluir Lição
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </AccordionTrigger>
+                                  <AccordionContent className="p-4">
+                                    {editingLesson?.moduleIndex ===
+                                      moduleIndex &&
+                                    editingLesson?.lessonIndex ===
+                                      lessonIndex ? (
+                                      // Formulário de edição
+                                      <LessonForm
+                                        form={lessonForm}
+                                        isEditing={true}
+                                        isLoading={isLoadingLessons}
+                                        moduleIndex={moduleIndex}
+                                        lessonIndex={lessonIndex}
+                                        onSubmit={async (data) => {
+                                          return await saveLesson(
+                                            data,
+                                            moduleIndex,
+                                            lessonIndex,
+                                          );
+                                        }}
+                                        onCancel={() => {
+                                          cancelEditLesson();
+                                          lessonForm.reset();
+                                        }}
+                                        addQuestion={addQuestion}
+                                        questions={lesson.questions || []}
+                                        onDeleteQuestion={removeQuestion}
+                                      />
+                                    ) : (
+                                      // Visualização da lição
+                                      <div className="space-y-4">
+                                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                          <div>
+                                            <h6 className="dark-text-primary mb-2 font-medium">
+                                              Tipo de Conteúdo
+                                            </h6>
+                                            <div className="flex items-center space-x-2">
+                                              {(() => {
+                                                const LessonIcon =
+                                                  getLessonTypeIcon(
+                                                    lesson.type,
+                                                  );
+                                                return (
+                                                  <LessonIcon
+                                                    className="dark-secondary"
+                                                    size={16}
+                                                  />
+                                                );
+                                              })()}
+                                              <span className="dark-text-secondary text-sm">
+                                                {getLessonTypeText(lesson.type)}
+                                              </span>
+                                            </div>
+                                          </div>
+                                          <div>
+                                            <h6 className="dark-text-primary mb-2 font-medium">
+                                              Duração
+                                            </h6>
+                                            <p className="dark-text-secondary text-sm">
+                                              {lesson.duration} minutos
+                                            </p>
+                                          </div>
+                                        </div>
+
+                                        {!lesson.content &&
+                                          !lesson.videoUrl &&
+                                          lesson.questions?.length === 0 && (
+                                            <div className="dark-card dark-shadow-sm rounded-lg p-6 text-center">
+                                              <div className="dark-bg-secondary mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full">
+                                                <BookOpen
+                                                  className="dark-text-tertiary"
+                                                  size={20}
+                                                />
+                                              </div>
+                                              <h6 className="dark-text-primary mb-2 font-medium">
+                                                Conteúdo não definido
+                                              </h6>
+                                              <p className="dark-text-tertiary text-sm">
+                                                Esta lição ainda não possui
+                                                conteúdo específico definido.
+                                              </p>
+                                            </div>
+                                          )}
+
+                                        {lesson.videoUrl && (
+                                          <div>
+                                            <h6 className="dark-text-primary mb-2 font-medium">
+                                              Vídeo da Lição
+                                            </h6>
+                                            <a
+                                              href={lesson.videoUrl}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="dark-text-secondary hover:dark-text-primary text-sm underline"
+                                            >
+                                              {lesson.videoUrl}
+                                            </a>
+                                          </div>
+                                        )}
+
+                                        {lesson.content && (
+                                          <div>
+                                            <h6 className="dark-text-primary mb-2 font-medium">
+                                              Conteúdo da Lição
+                                            </h6>
+                                            <div className="dark-card dark-shadow-sm rounded-lg p-4">
+                                              <p className="dark-text-secondary text-sm whitespace-pre-wrap">
+                                                {lesson.content}
+                                              </p>
+                                            </div>
+                                          </div>
+                                        )}
+
+                                        {/* Questões (para atividades) */}
+                                        {lesson.questions &&
+                                          lesson.questions.length > 0 && (
+                                            <div className="mt-6 space-y-4">
+                                              <div className="flex items-center justify-between">
+                                                <h6 className="dark-text-primary font-medium">
+                                                  Questões da Atividade
+                                                </h6>
+                                              </div>
+
+                                              <QuestionList
+                                                questions={
+                                                  lesson.questions || []
+                                                }
+                                                onDeleteQuestion={(index) => {
+                                                  removeQuestion(
+                                                    moduleIndex,
+                                                    lessonIndex,
+                                                    index,
+                                                  );
+                                                }}
+                                              />
+                                            </div>
+                                          )}
+                                      </div>
+                                    )}
+                                  </AccordionContent>
+                                </AccordionItem>
+                              ))}
+                            </Accordion>
+                          </div>
+                        )}
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))
+                ) : (
+                  <div className="dark-card dark-shadow-sm rounded-xl p-8 text-center">
+                    <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                      <Layers className="dark-text-tertiary" size={32} />
+                    </div>
+                    <h3 className="dark-text-primary mb-2 text-lg font-semibold">
+                      Nenhum módulo cadastrado
+                    </h3>
+                    <p className="dark-text-secondary mb-4 text-sm">
+                      Comece adicionando o primeiro módulo ao curso
+                    </p>
+                    <Button
+                      variant="success"
+                      onClick={() => {
+                        setShowModuleForm(true);
+                        setOpenModules([
+                          ...openModules,
+                          "modules-section",
+                          "new-module",
+                        ]);
+                      }}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Criar Primeiro Módulo
+                    </Button>
+                  </div>
+                )}
+              </Accordion>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </div>
+
+      {/* Certificate Section */}
+      <div className="dark-glass dark-shadow-sm rounded-xl p-6">
+        <div className="flex items-center justify-between">
+          <h2 className="dark-text-primary flex items-center gap-2 text-xl font-bold">
+            <Award className="dark-primary" size={24} />
+            Template de Certificado
+          </h2>
+          {courseData?.certificateTemplate ? (
+            <div className="flex gap-2">
+              <Button
+                variant="info"
+                onClick={() => {
+                  setShowCertificateForm(true);
+                  setIsEditingCertificate(true);
+                }}
+              >
+                <Edit className="mr-2 h-4 w-4" />
+                Editar Template
+              </Button>
+            </div>
+          ) : (
             <Button
               variant="success"
               onClick={() => {
-                setShowModuleForm(!showModuleForm);
-                if (!showModuleForm) {
-                  const newModuleIndex = modulesState.length;
-                  setOpenModules([...openModules, `module-${newModuleIndex}`]);
-                }
+                setShowCertificateForm(true);
+                setIsEditingCertificate(false);
               }}
             >
               <Plus className="mr-2 h-4 w-4" />
-              Adicionar Módulo
+              Adicionar Template
             </Button>
-          </div>
-
-          {/* Module Form */}
-          {showModuleForm && (
-            <ModuleForm
-              form={moduleForm}
-              isLoading={isLoadingModules}
-              onSubmit={(data) => addModule(data)}
-              onCancel={() => {
-                setShowModuleForm(false);
-                moduleForm.reset();
-              }}
-            />
           )}
         </div>
 
-        {/* Modules List */}
-        {modulesState.length > 0 && (
-          <Accordion
-            type="multiple"
-            className="space-y-4"
-            value={openModules}
-            onValueChange={setOpenModules}
-          >
-            {modulesState.map((module, moduleIndex) => (
-              <AccordionItem
-                key={moduleIndex}
-                value={`module-${moduleIndex}`}
-                className="dark-glass dark-shadow-sm rounded-xl"
-              >
-                <AccordionTrigger
-                  arrow={false}
-                  className="dark-card hover:dark-bg-secondary p-4 transition-all"
-                >
-                  <div className="flex w-full items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="dark-primary-subtle-bg rounded-xl p-2">
-                        <Layers className="dark-primary" size={20} />
-                      </div>
-                      <div className="text-left">
-                        <h3 className="dark-text-primary font-semibold">
-                          {module.title}
-                        </h3>
-                        <p className="dark-text-secondary text-sm">
-                          {module.description}
-                        </p>
-                        <p className="dark-text-tertiary mt-1 text-xs">
-                          {module.lessons.length} lição(ões)
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="success"
-                        className="gap-1"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowLessonForm(moduleIndex);
-                          setOpenModules([
-                            ...openModules,
-                            `module-${moduleIndex}`,
-                          ]);
-                        }}
-                      >
-                        <Plus className="h-3 w-3" />
-                        Adicionar nova lição
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="info"
-                        className="gap-1"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const mod = modulesState[moduleIndex];
-                          if (mod) {
-                            moduleForm.reset({
-                              title: mod.title,
-                              description: mod.description,
-                            });
-                            startEditModule(moduleIndex);
-                            setOpenModules([
-                              ...openModules,
-                              `module-${moduleIndex}`,
-                            ]);
-                          }
-                        }}
-                      >
-                        <Edit className="h-3 w-3" />
-                        Editar módulo
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        className="gap-1"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeModule(module.id, moduleIndex);
-                        }}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                        Excluir módulo
-                      </Button>
-                    </div>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="dark-border">
-                  {/* Module Edit Form */}
-                  {editingModuleIndex === moduleIndex && (
-                    <div className="dark-border border-b p-6">
-                      <ModuleForm
-                        form={moduleForm}
-                        isLoading={isLoadingModules}
-                        onSubmit={(data) => saveModule(data, moduleIndex)}
-                        onCancel={() => {
-                          cancelEditModule();
-                          moduleForm.reset();
-                        }}
-                      />
-                    </div>
-                  )}
-
-                  {/* Lesson Form */}
-                  {showLessonForm === moduleIndex && (
-                    <LessonForm
-                      form={lessonForm}
-                      isEditing={false}
-                      isLoading={isLoadingLessons}
-                      moduleIndex={moduleIndex}
-                      lessonIndex={module.lessons.length + 1}
-                      onSubmit={async (data) => {
-                        return await addLesson(data, moduleIndex);
-                      }}
-                      onCancel={() => {
-                        setShowLessonForm(null);
-                        lessonForm.reset();
-                      }}
-                      addQuestion={addQuestion}
-                    />
-                  )}
-
-                  {/* Lessons List */}
-                  {module.lessons.length > 0 && (
-                    <div className="p-4">
-                      <h4 className="dark-text-primary mb-3 font-medium">
-                        Lições ({module.lessons.length})
-                      </h4>
-                      <Accordion
-                        type="multiple"
-                        className="space-y-3"
-                        value={openLessons.filter((lesson) =>
-                          lesson.startsWith(`lesson-${moduleIndex}-`),
-                        )}
-                        onValueChange={(value) => {
-                          const otherLessons = openLessons.filter(
-                            (lesson) =>
-                              !lesson.startsWith(`lesson-${moduleIndex}-`),
-                          );
-                          setOpenLessons([...otherLessons, ...value]);
-                        }}
-                      >
-                        {module.lessons.map((lesson, lessonIndex) => (
-                          <AccordionItem
-                            key={lessonIndex}
-                            value={`lesson-${moduleIndex}-${lessonIndex}`}
-                            className="dark-card dark-shadow-sm rounded-lg"
-                          >
-                            <AccordionTrigger
-                              arrow={false}
-                              className="hover:dark-bg-secondary p-4 transition-colors"
-                            >
-                              <div className="flex w-full items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                  <div className="dark-secondary-subtle-bg rounded-lg p-2">
-                                    {(() => {
-                                      const LessonIcon = getLessonTypeIcon(
-                                        lesson.type,
-                                      );
-                                      return (
-                                        <LessonIcon
-                                          className="dark-secondary"
-                                          size={16}
-                                        />
-                                      );
-                                    })()}
-                                  </div>
-                                  <div className="text-left">
-                                    <h5 className="dark-text-primary font-medium">
-                                      {lesson.title}
-                                    </h5>
-                                    <p className="dark-text-secondary text-sm">
-                                      {lesson.description}
-                                    </p>
-                                    <div className="mt-1 flex items-center gap-4">
-                                      <span className="dark-text-tertiary text-xs">
-                                        Tipo: {getLessonTypeText(lesson.type)}
-                                      </span>
-                                      <span className="dark-text-tertiary text-xs">
-                                        Duração: {lesson.duration}min
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="flex gap-2">
-                                  <Button
-                                    size="sm"
-                                    variant="info"
-                                    className="gap-1"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const les =
-                                        modulesState[moduleIndex]?.lessons[
-                                          lessonIndex
-                                        ];
-                                      if (les) {
-                                        lessonForm.reset({
-                                          title: les.title,
-                                          description: les.description,
-                                          content: les.content || "",
-                                          videoUrl: les.videoUrl || "",
-                                          duration: les.duration,
-                                          type: les.type as any,
-                                        });
-                                        startEditLesson(
-                                          moduleIndex,
-                                          lessonIndex,
-                                        );
-                                        setOpenModules([
-                                          ...openModules,
-                                          `module-${moduleIndex}`,
-                                        ]);
-                                        setOpenLessons([
-                                          ...openLessons,
-                                          `lesson-${moduleIndex}-${lessonIndex}`,
-                                        ]);
-                                      }
-                                    }}
-                                  >
-                                    <Edit className="h-3 w-3" />
-                                    Editar Lição
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    className="gap-1"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      removeLesson(
-                                        lesson.id,
-                                        moduleIndex,
-                                        lessonIndex,
-                                      );
-                                    }}
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                    Excluir Lição
-                                  </Button>
-                                </div>
-                              </div>
-                            </AccordionTrigger>
-                            <AccordionContent className="p-4">
-                              {editingLesson?.moduleIndex === moduleIndex &&
-                              editingLesson?.lessonIndex === lessonIndex ? (
-                                // Formulário de edição
-                                <LessonForm
-                                  form={lessonForm}
-                                  isEditing={true}
-                                  isLoading={isLoadingLessons}
-                                  moduleIndex={moduleIndex}
-                                  lessonIndex={lessonIndex}
-                                  onSubmit={async (data) => {
-                                    return await saveLesson(
-                                      data,
-                                      moduleIndex,
-                                      lessonIndex,
-                                    );
-                                  }}
-                                  onCancel={() => {
-                                    cancelEditLesson();
-                                    lessonForm.reset();
-                                  }}
-                                  addQuestion={addQuestion}
-                                  questions={lesson.questions || []}
-                                  onDeleteQuestion={removeQuestion}
-                                />
-                              ) : (
-                                // Visualização da lição
-                                <div className="space-y-4">
-                                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                    <div>
-                                      <h6 className="dark-text-primary mb-2 font-medium">
-                                        Tipo de Conteúdo
-                                      </h6>
-                                      <div className="flex items-center space-x-2">
-                                        {(() => {
-                                          const LessonIcon = getLessonTypeIcon(
-                                            lesson.type,
-                                          );
-                                          return (
-                                            <LessonIcon
-                                              className="dark-secondary"
-                                              size={16}
-                                            />
-                                          );
-                                        })()}
-                                        <span className="dark-text-secondary text-sm">
-                                          {getLessonTypeText(lesson.type)}
-                                        </span>
-                                      </div>
-                                    </div>
-                                    <div>
-                                      <h6 className="dark-text-primary mb-2 font-medium">
-                                        Duração
-                                      </h6>
-                                      <p className="dark-text-secondary text-sm">
-                                        {lesson.duration} minutos
-                                      </p>
-                                    </div>
-                                  </div>
-
-                                  {!lesson.content &&
-                                    !lesson.videoUrl &&
-                                    lesson.questions?.length === 0 && (
-                                      <div className="dark-card dark-shadow-sm rounded-lg p-6 text-center">
-                                        <div className="dark-bg-secondary mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full">
-                                          <BookOpen
-                                            className="dark-text-tertiary"
-                                            size={20}
-                                          />
-                                        </div>
-                                        <h6 className="dark-text-primary mb-2 font-medium">
-                                          Conteúdo não definido
-                                        </h6>
-                                        <p className="dark-text-tertiary text-sm">
-                                          Esta lição ainda não possui conteúdo
-                                          específico definido.
-                                        </p>
-                                      </div>
-                                    )}
-
-                                  {lesson.videoUrl && (
-                                    <div>
-                                      <h6 className="dark-text-primary mb-2 font-medium">
-                                        Vídeo da Lição
-                                      </h6>
-                                      <a
-                                        href={lesson.videoUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="dark-text-secondary hover:dark-text-primary text-sm underline"
-                                      >
-                                        {lesson.videoUrl}
-                                      </a>
-                                    </div>
-                                  )}
-
-                                  {lesson.content && (
-                                    <div>
-                                      <h6 className="dark-text-primary mb-2 font-medium">
-                                        Conteúdo da Lição
-                                      </h6>
-                                      <div className="dark-card dark-shadow-sm rounded-lg p-4">
-                                        <p className="dark-text-secondary text-sm whitespace-pre-wrap">
-                                          {lesson.content}
-                                        </p>
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {/* Questões (para atividades) */}
-                                  {lesson.questions &&
-                                    lesson.questions.length > 0 && (
-                                      <div className="mt-6 space-y-4">
-                                        <div className="flex items-center justify-between">
-                                          <h6 className="dark-text-primary font-medium">
-                                            Questões da Atividade
-                                          </h6>
-                                        </div>
-
-                                        <QuestionList
-                                          questions={lesson.questions || []}
-                                          onDeleteQuestion={(index) => {
-                                            removeQuestion(
-                                              moduleIndex,
-                                              lessonIndex,
-                                              index,
-                                            );
-                                          }}
-                                        />
-                                      </div>
-                                    )}
-                                </div>
-                              )}
-                            </AccordionContent>
-                          </AccordionItem>
-                        ))}
-                      </Accordion>
-                    </div>
-                  )}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        )}
-
-        {/* Certificate Section */}
-        <div className="dark-glass dark-shadow-sm rounded-xl p-6">
-          <div className="flex items-center justify-between">
-            <h2 className="dark-text-primary flex items-center gap-2 text-xl font-bold">
-              <Award className="dark-primary" size={24} />
-              Template de Certificado
-            </h2>
-            {courseData?.certificateTemplate ? (
-              <div className="flex gap-2">
-                <Button
-                  variant="info"
-                  onClick={() => {
-                    setShowCertificateForm(true);
-                    setIsEditingCertificate(true);
-                  }}
-                >
-                  <Edit className="mr-2 h-4 w-4" />
-                  Editar Template
-                </Button>
-              </div>
-            ) : (
-              <Button
-                variant="success"
-                onClick={() => {
-                  setShowCertificateForm(true);
-                  setIsEditingCertificate(false);
-                }}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Adicionar Template
-              </Button>
-            )}
-          </div>
-
-          {/* Mostrar template existente se não estiver editando */}
-          {courseData?.certificateTemplate && !showCertificateForm && (
-            <div className="mt-6">
-              <div className="dark-card dark-shadow-sm rounded-xl p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="dark-text-primary mb-2 text-lg font-semibold">
-                      {courseData.certificateTemplate.title}
-                    </h3>
-                    <p className="dark-text-secondary mb-4 text-sm">
-                      {courseData.certificateTemplate.description}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <div
-                        className={`rounded-full px-2 py-1 text-xs font-medium ${
-                          courseData.certificateTemplate.isActive
-                            ? "dark-success-bg dark-success"
-                            : "dark-warning-bg dark-warning"
-                        }`}
-                      >
-                        {courseData.certificateTemplate.isActive
-                          ? "Ativo"
-                          : "Inativo"}
-                      </div>
-                      {courseData.certificateTemplate.templateUrl && (
-                        <div className="dark-info-bg dark-info rounded-full px-2 py-1 text-xs font-medium">
-                          Certificado Disponível
-                        </div>
-                      )}
-                    </div>
-                  </div>
+        {/* Mostrar template existente se não estiver editando */}
+        {courseData?.certificateTemplate && !showCertificateForm && (
+          <div className="mt-6">
+            <div className="dark-card dark-shadow-sm rounded-xl p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h3 className="dark-text-primary mb-2 text-lg font-semibold">
+                    {courseData.certificateTemplate.title}
+                  </h3>
+                  <p className="dark-text-secondary mb-4 text-sm">
+                    {courseData.certificateTemplate.description}
+                  </p>
                   <div className="flex items-center gap-2">
+                    <div
+                      className={`rounded-full px-2 py-1 text-xs font-medium ${
+                        courseData.certificateTemplate.isActive
+                          ? "dark-success-bg dark-success"
+                          : "dark-warning-bg dark-warning"
+                      }`}
+                    >
+                      {courseData.certificateTemplate.isActive
+                        ? "Ativo"
+                        : "Inativo"}
+                    </div>
                     {courseData.certificateTemplate.templateUrl && (
-                      <ImageViewer
-                        imageBase64={courseData.certificateTemplate.templateUrl}
-                        imageUrl={courseData.certificateTemplate.templateUrl}
-                        title={`Template: ${courseData.certificateTemplate.title}`}
-                        fileName={`template-${courseData.certificateTemplate.id}.png`}
-                      >
-                        <Button
-                          className="dark-glass dark-border hover:dark-border-hover"
-                          size="sm"
-                        >
-                          <CheckCircle className="mr-1 h-3 w-3" />
-                          Ver Certificado
-                        </Button>
-                      </ImageViewer>
+                      <div className="dark-info-bg dark-info rounded-full px-2 py-1 text-xs font-medium">
+                        Certificado Disponível
+                      </div>
                     )}
                   </div>
                 </div>
+                <div className="flex items-center gap-2">
+                  {courseData.certificateTemplate.templateUrl && (
+                    <ImageViewer
+                      imageBase64={courseData.certificateTemplate.templateUrl}
+                      imageUrl={courseData.certificateTemplate.templateUrl}
+                      title={`Template: ${courseData.certificateTemplate.title}`}
+                      fileName={`template-${courseData.certificateTemplate.id}.png`}
+                    >
+                      <Button
+                        className="dark-glass dark-border hover:dark-border-hover"
+                        size="sm"
+                      >
+                        <CheckCircle className="mr-1 h-3 w-3" />
+                        Ver Certificado
+                      </Button>
+                    </ImageViewer>
+                  )}
+                </div>
               </div>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Certificate Form */}
-          {showCertificateForm && (
-            <CertificateForm
-              form={certificateTemplateForm}
-              isLoading={isLoading}
-              isEditing={isEditingCertificate}
-              courseTitle={courseTitle}
-              courseDescription={courseDescription}
-              certificateFile={certificateFile}
-              setCertificateFile={setCertificateFile}
-              onSubmit={
-                isEditingCertificate
-                  ? handleUpdateCertificateTemplate
-                  : handleCreateCertificateTemplate
-              }
-              onCancel={() => {
-                setShowCertificateForm(false);
-                setIsEditingCertificate(false);
-                certificateTemplateForm.reset();
-                setCertificateFile(null);
-              }}
-            />
-          )}
-        </div>
+        {/* Certificate Form */}
+        {showCertificateForm && (
+          <CertificateForm
+            form={certificateTemplateForm}
+            isLoading={isLoading}
+            isEditing={isEditingCertificate}
+            courseTitle={courseTitle}
+            courseDescription={courseDescription}
+            certificateFile={certificateFile}
+            setCertificateFile={setCertificateFile}
+            onSubmit={
+              isEditingCertificate
+                ? handleUpdateCertificateTemplate
+                : handleCreateCertificateTemplate
+            }
+            onCancel={() => {
+              setShowCertificateForm(false);
+              setIsEditingCertificate(false);
+              certificateTemplateForm.reset();
+              setCertificateFile(null);
+            }}
+          />
+        )}
       </div>
     </PageLayout>
   );

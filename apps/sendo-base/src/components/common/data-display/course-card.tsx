@@ -14,6 +14,7 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 /**
@@ -57,6 +58,7 @@ type Course = {
   totalLessons?: number;
   lastAccessed?: string;
   status?: string;
+  image?: string;
 };
 
 type CourseCardProps = {
@@ -114,7 +116,16 @@ export function CourseCard({
           {/* Image/Thumbnail */}
           <div className="relative">
             <div className="dark-bg-tertiary flex h-48 w-full items-center justify-center">
-              <BookOpen className="dark-text-tertiary" size={48} />
+              {course.image ? (
+                <Image
+                  src={course.image}
+                  alt={course.title}
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <BookOpen className="dark-text-tertiary" size={48} />
+              )}
             </div>
 
             {/* Level Badge */}
@@ -317,9 +328,20 @@ export function CourseCard({
         <div className="flex items-center space-x-4">
           {/* Thumbnail */}
           <div className="relative">
-            <div className="dark-bg-tertiary flex h-20 w-20 items-center justify-center rounded-lg">
-              <BookOpen className="dark-text-tertiary" size={24} />
-            </div>
+            {course.image ? (
+              <div className="dark-bg-tertiary flex h-20 w-40 items-center justify-center overflow-hidden rounded-xl">
+                <Image
+                  src={course.image}
+                  alt={course.title}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            ) : (
+              <div className="dark-bg-tertiary flex h-20 w-20 items-center justify-center rounded-lg">
+                <BookOpen className="dark-text-tertiary" size={24} />
+              </div>
+            )}
             {course.isFeatured && (
               <div className="absolute -top-2 -right-2">
                 <div className="dark-gradient-primary flex h-6 w-6 items-center justify-center rounded-full">
