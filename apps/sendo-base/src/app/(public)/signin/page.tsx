@@ -41,16 +41,9 @@ export default function SignInPage() {
       const result = await signIn(data);
 
       if (result.success) {
-        // Definir cookie de sessão
-        if (result.sessionCookie) {
-          document.cookie = result.sessionCookie;
-        }
-
         if (result.user) {
           setUser(result.user);
         }
-
-        console.log("result.user", result.user);
 
         const userApprovalStatus = (result.user as any)?.approvalStatus;
         if (userApprovalStatus === "APPROVED") {

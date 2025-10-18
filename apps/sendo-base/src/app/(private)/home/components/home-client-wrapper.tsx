@@ -1,7 +1,9 @@
 "use client";
 
+import { GoalsCard } from "@/src/components/home";
 import { NotificationsButton } from "@/src/components/notifications";
 import { useAuth } from "@/src/hooks";
+import type { UserGoal } from "@/src/lib/types/goals";
 import { Button } from "@base-church/ui/components/button";
 import {
   Activity,
@@ -11,12 +13,12 @@ import {
   Clock,
   Flame,
   PlayCircle,
-  Plus,
   Star,
   Target,
   TrendingUp,
   User,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 type UserData = {
@@ -32,6 +34,7 @@ type UserData = {
     studentsImpacted?: number;
     longestStreak?: number;
   } | null;
+  goal?: UserGoal | null;
   currentStreak?: number | null;
   totalPoints?: number | null;
   level?: number | null;
@@ -57,6 +60,9 @@ export function HomeClientWrapper({
   eventsData,
 }: HomeClientWrapperProps) {
   const { user } = useAuth();
+
+  console.log("userData", userData);
+  console.log("user", user);
 
   function getGreeting() {
     const hour = new Date().getHours();
@@ -239,7 +245,9 @@ export function HomeClientWrapper({
             </div>
             <div className="mt-4 flex items-center text-sm">
               <Target className="dark-success mr-1" size={16} />
-              <span className="dark-success font-medium">Meta: 30 dias</span>
+              <span className="dark-success font-medium">
+                Meta: {userData?.goal?.dailyStudyHours} horas por dia
+              </span>
             </div>
           </div>
         </div>
@@ -267,15 +275,32 @@ export function HomeClientWrapper({
               <div className="flex flex-col gap-4">
                 {activeEnrollments.length > 0 ? (
                   activeEnrollments.map((enrollment: any, index: number) => (
-                    <Link key={index} href={`/courses/${enrollment.courseId}`}>
+                    <Link
+                      key={index}
+                      href={`/contents/course/${enrollment.courseId}`}
+                    >
                       <div className="dark-card dark-shadow-sm group cursor-pointer rounded-xl p-4 transition-all hover:shadow-md">
                         <div className="mb-4 flex items-start gap-4">
-                          <div className="dark-bg-tertiary flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-lg">
-                            <BookOpen
-                              className="dark-text-tertiary"
-                              size={24}
-                            />
+                          <div className="relative">
+                            {enrollment.course?.image ? (
+                              <div className="dark-bg-tertiary flex h-20 w-40 items-center justify-center overflow-hidden rounded-2xl">
+                                <Image
+                                  src={enrollment.course.image}
+                                  alt={enrollment.course.title}
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                            ) : (
+                              <div className="dark-bg-tertiary flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-lg">
+                                <BookOpen
+                                  className="dark-text-tertiary"
+                                  size={24}
+                                />
+                              </div>
+                            )}
                           </div>
+
                           <div className="flex-1">
                             <h3 className="dark-text-primary group-hover:dark-primary mb-1 font-semibold transition-colors">
                               {enrollment.course?.title || "Curso sem título"}
@@ -597,74 +622,11 @@ export function HomeClientWrapper({
             </div>
 
             {/* Goals */}
-            <div className="dark-glass dark-shadow-sm rounded-xl p-6">
-              <h3 className="dark-text-primary mb-4 flex items-center gap-2 font-semibold">
-                <Target className="dark-warning" size={20} />
-                Metas da Semana
-              </h3>
-
-              <div className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="dark-text-secondary text-sm font-medium">
-                      Estudar 5h/semana
-                    </span>
-                    <span className="dark-primary text-sm font-semibold">
-                      {(userData as any)?.stats?.hoursStudied || 0}/5h
-                    </span>
-                  </div>
-                  <div className="dark-bg-tertiary h-2 w-full rounded-full">
-                    <div
-                      className="dark-gradient-secondary h-2 rounded-full transition-all duration-300"
-                      style={{
-                        width: `${Math.min((((userData as any)?.stats?.hoursStudied || 0) / 5) * 100, 100)}%`,
-                      }}
-                    />
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Activity className="dark-success" size={12} />
-                    <span className="dark-success text-xs font-medium">
-                      {(userData as any)?.stats?.hoursStudied &&
-                      (userData as any).stats.hoursStudied >= 5
-                        ? "Meta atingida! 🎉"
-                        : `Faltam ${5 - ((userData as any)?.stats?.hoursStudied || 0)}h`}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="dark-text-secondary text-sm font-medium">
-                      Concluir 2 cursos
-                    </span>
-                    <span className="dark-primary text-sm font-semibold">
-                      {completedCourses}/2
-                    </span>
-                  </div>
-                  <div className="dark-bg-tertiary h-2 w-full rounded-full">
-                    <div
-                      className="dark-gradient-primary h-2 rounded-full transition-all duration-300"
-                      style={{
-                        width: `${Math.min((completedCourses / 2) * 100, 100)}%`,
-                      }}
-                    />
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Target className="dark-warning" size={12} />
-                    <span className="dark-warning text-xs font-medium">
-                      {completedCourses >= 2
-                        ? "Meta atingida! 🎉"
-                        : `${2 - completedCourses} curso${2 - completedCourses > 1 ? "s" : ""} restante${2 - completedCourses > 1 ? "s" : ""}`}
-                    </span>
-                  </div>
-                </div>
-
-                <Button variant="success" className="w-full text-sm">
-                  <Plus className="mr-1" size={14} />
-                  Definir Nova Meta
-                </Button>
-              </div>
-            </div>
+            <GoalsCard
+              goal={(userData as any)?.goal || null}
+              hoursStudiedThisWeek={(userData as any)?.stats?.hoursStudied || 0}
+              coursesCompletedThisMonth={completedCourses}
+            />
 
             {/* Recent Achievements */}
             <div className="dark-glass dark-shadow-sm rounded-xl p-6">

@@ -1106,17 +1106,6 @@ export default function StudentsPage() {
                             size="sm"
                             className="dark-glass dark-border hover:dark-border-hover"
                             onClick={() => {
-                              // TODO: Implementar envio de email
-                              toast.info("Funcionalidade em desenvolvimento");
-                            }}
-                          >
-                            <Mail className="mr-2 h-3 w-3" />
-                            Enviar Email
-                          </Button>
-                          <Button
-                            size="sm"
-                            className="dark-glass dark-border hover:dark-border-hover"
-                            onClick={() => {
                               const newStatus =
                                 student.approvalStatus === "APPROVED"
                                   ? "REJECTED"
@@ -1124,7 +1113,7 @@ export default function StudentsPage() {
                               handleUpdateStudentStatus(student.id, newStatus);
                             }}
                           >
-                            {student.status === "active"
+                            {student.approvalStatus === "APPROVED"
                               ? "Desativar"
                               : "Ativar"}
                           </Button>

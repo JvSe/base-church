@@ -110,6 +110,7 @@ model User {
   courseReviews       CourseReview[]
   achievements        UserAchievement[]
   stats               UserStats?
+  goal                UserGoal?
   instructorCourses   Course[]          @relation("CourseInstructor")
   instructorEvents    Event[]           @relation("EventInstructor")
   approvedEnrollments Enrollment[]      @relation("EnrollmentApprover")
@@ -544,6 +545,22 @@ model UserStats {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_stats")
+}
+
+model UserGoal {
+  id                   String   @id @default(uuid())
+  userId               String   @unique
+  dailyStudyHours      Float    @default(1) // Horas por dia
+  monthlyCoursesTarget Int      @default(1) // Cursos por mês
+  weeklyStudyHours     Float    @default(5) // Calculado: dailyStudyHours * 7
+  isActive             Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_goals")
 }
 
 model Tag {

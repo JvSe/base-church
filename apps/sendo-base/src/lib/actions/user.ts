@@ -69,6 +69,7 @@ export async function getUserProfile(userId: string) {
           },
         },
         stats: true,
+        goal: true,
         achievements: {
           include: {
             achievement: true,
@@ -86,6 +87,7 @@ export async function getUserProfile(userId: string) {
 export type UpdateUserProfileInput = {
   name?: string;
   cpf?: string;
+  email?: string;
   birthDate?: string;
   bio?: string;
   phone?: string;
@@ -170,23 +172,53 @@ export async function updateUserPassword({
   newPassword: string;
 }) {
   try {
-    // In a real app, you would verify the current password here
-    // For now, we'll just update the password
-    // You should hash the new password before storing it
+    // Get user with password
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, password: true },
+    });
 
+    if (!user || !user.password) {
+      return { success: false, error: "Usuário não encontrado" };
+    }
+
+    // Verify current password
+    const bcrypt = await import("bcryptjs");
+    const isPasswordValid = await bcrypt.compare(
+      currentPassword,
+      user.password,
+    );
+
+    if (!isPasswordValid) {
+      return { success: false, error: "Senha atual incorreta" };
+    }
+
+    // Validate new password
+    if (newPassword.length < 6) {
+      return {
+        success: false,
+        error: "A nova senha deve ter pelo menos 6 caracteres",
+      };
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {
-        // password: hashedNewPassword, // Hash this in production
+        password: hashedPassword,
         updatedAt: new Date(),
       },
     });
 
     revalidatePath("/profile");
-    revalidatePath("/profile/edit");
+    revalidatePath("/profile/account/access");
     return { success: true, user: updatedUser };
   } catch (error) {
-    return { success: false, error: "Failed to update password" };
+    console.error("Update password error:", error);
+    return { success: false, error: "Erro ao atualizar senha" };
   }
 }
 

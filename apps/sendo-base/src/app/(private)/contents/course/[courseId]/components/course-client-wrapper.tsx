@@ -5,6 +5,7 @@ import {
   CourseDetailTabs,
   CourseStatsSidebar,
 } from "@/src/components/course-detail";
+import { Course } from "@/src/lib/types/index";
 import { use, useState } from "react";
 import {
   calculateCourseProgress,
@@ -108,6 +109,7 @@ export function CourseClientWrapper({ params }: CourseClientWrapperProps) {
         {/* Course Header with Progress Card */}
         <CourseDetailHeader course={course} reviewsCount={reviews.length}>
           <CourseProgressCard
+            course={course as unknown as Course}
             courseId={courseId}
             progress={courseProgress}
             nextLessonId={nextLesson?.id || null}

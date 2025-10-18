@@ -3,6 +3,7 @@
 import { prisma } from "@base-church/db";
 import { revalidatePath } from "next/cache";
 import type { CourseFormData, LessonFormData } from "../forms/course-schemas";
+import { updateStreakOnLessonCompletion } from "../helpers/streak.helper";
 
 // Alias para o banco de dados
 const db = prisma;
@@ -905,6 +906,9 @@ export async function updateLessonProgress(
 
     // Update enrollment progress if lesson is completed
     if (data.isCompleted) {
+      // Atualizar streak do usuário (incrementa se for primeira aula do dia)
+      await updateStreakOnLessonCompletion(userId);
+
       const lesson = await prisma.lesson.findUnique({
         where: { id: lessonId },
         include: {

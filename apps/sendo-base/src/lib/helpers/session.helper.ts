@@ -4,6 +4,7 @@ import type { NextRequest } from "next/server";
 
 const SESSION_COOKIE_NAME = "sendo-base-session";
 const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 dias em millisegundos
+const SESSION_MAX_AGE = 7 * 24 * 60 * 60; // 7 dias em segundos
 
 export type SessionData = {
   userId: string;
@@ -15,11 +16,10 @@ export type SessionData = {
 };
 
 /**
- * Cria uma sessão para o usuário
+ * Cria e seta uma sessão para o usuário usando a API de cookies do Next.js
  * @param userData - Dados do usuário para a sessão
- * @returns Cookie string para ser definido
  */
-export function createSession(userData: SessionData): string {
+export async function createSession(userData: SessionData): Promise<void> {
   const sessionData = {
     ...userData,
     expiresAt: Date.now() + SESSION_DURATION,
@@ -29,7 +29,15 @@ export function createSession(userData: SessionData): string {
     "base64",
   );
 
-  return `${SESSION_COOKIE_NAME}=${cookieValue}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${SESSION_DURATION / 1000}`;
+  const cookieStore = await cookies();
+
+  cookieStore.set(SESSION_COOKIE_NAME, cookieValue, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: SESSION_MAX_AGE,
+    path: "/",
+  });
 }
 
 /**
@@ -145,9 +153,9 @@ export function getSessionFromCookies(
 }
 
 /**
- * Remove a sessão do usuário (logout)
- * @returns Cookie string para ser definido (limpa o cookie)
+ * Remove a sessão do usuário (logout) usando a API de cookies do Next.js
  */
-export function clearSession(): string {
-  return `${SESSION_COOKIE_NAME}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0`;
+export async function clearSession(): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.delete(SESSION_COOKIE_NAME);
 }

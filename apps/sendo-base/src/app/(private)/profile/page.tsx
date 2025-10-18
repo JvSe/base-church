@@ -16,18 +16,16 @@ import { useQuery } from "@tanstack/react-query";
 import {
   BookOpen,
   Calendar,
-  Download,
   Edit,
   Flame,
   Mail,
-  MessageCircle,
   Phone,
   Plus,
-  Share,
   Target,
   Trophy,
   Zap,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -298,8 +296,27 @@ export default function ProfilePage() {
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           <div className="mb-2 flex items-center gap-3">
-                            <div className="dark-bg-tertiary rounded-lg p-2">
-                              <BookOpen className="dark-text-primary h-4 w-4" />
+                            <div className="relative">
+                              {enrollment.course?.image ? (
+                                <div className="dark-bg-tertiary flex h-20 w-40 items-center justify-center overflow-hidden rounded-xl">
+                                  <Image
+                                    src={enrollment.course.image}
+                                    alt={
+                                      enrollment.course.title ||
+                                      "Curso sem imagem"
+                                    }
+                                    fill
+                                    className="rounded-lg object-cover"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="dark-bg-tertiary flex h-20 w-20 items-center justify-center rounded-lg">
+                                  <BookOpen
+                                    className="dark-text-tertiary"
+                                    size={24}
+                                  />
+                                </div>
+                              )}
                             </div>
                             <div>
                               <h3 className="dark-text-primary font-semibold">
@@ -523,7 +540,7 @@ export default function ProfilePage() {
           </Section>
 
           {/* Quick Actions */}
-          <Section title="Ações Rápidas">
+          {/* <Section title="Ações Rápidas">
             <div className="space-y-2">
               <Button className="dark-btn-primary w-full justify-start">
                 <BookOpen className="mr-2" size={16} />
@@ -542,7 +559,7 @@ export default function ProfilePage() {
                 Falar com Mentor
               </Button>
             </div>
-          </Section>
+          </Section> */}
         </div>
       </div>
     </PageLayout>

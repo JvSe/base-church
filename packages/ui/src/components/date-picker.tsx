@@ -5,9 +5,9 @@ import * as React from "react";
 import { Calendar } from "@base-church/ui/components/calendar";
 import { Input } from "@base-church/ui/components/input";
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
 } from "@base-church/ui/components/popover";
 import { ptBR } from "date-fns/locale";
 import { Matcher } from "react-day-picker";
@@ -114,7 +114,7 @@ const DatePickerRef: React.ForwardRefRenderFunction<
       <PopoverContent
         onPointerDownOutside={setFalse}
         onEscapeKeyDown={setFalse}
-        className="-ml-[290px] mt-[12px] bg-white p-0 dark:bg-dark-background"
+        className="-ml-[290px] mt-[12px] bg-white p-0 dark:dark-glass"
       >
         <Calendar
           mode="single"
@@ -122,6 +122,7 @@ const DatePickerRef: React.ForwardRefRenderFunction<
           onSelect={handleSelectDay as unknown as any}
           locale={ptBR}
           disabled={disabledDate}
+          captionLayout="dropdown"
         />
       </PopoverContent>
     </Popover>

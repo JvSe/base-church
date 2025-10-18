@@ -23,7 +23,7 @@ export function LessonSidebar({
         {/* Progress Circle */}
         <div className="mb-4 flex items-center justify-center">
           <div className="relative h-16 w-16">
-            <svg className="h-16 w-16 -rotate-90" viewBox="0 0 36 36">
+            <svg className="h-16 w-16" viewBox="0 0 36 36">
               {/* Background circle */}
               <path
                 d="M18 2.0845

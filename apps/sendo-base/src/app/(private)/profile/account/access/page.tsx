@@ -1,31 +1,20 @@
 "use client";
 
 import { useAuth } from "@/src/hooks";
-import {
-  getUserProfile,
-  updateUserEmail,
-  updateUserPassword,
-} from "@/src/lib/actions";
+import { updateUserPassword } from "@/src/lib/actions";
 import { Button } from "@base-church/ui/components/button";
 import { Input } from "@base-church/ui/components/input";
 import { Label } from "@base-church/ui/components/label";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { Eye, EyeOff, Key, Save, Shield, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 export default function ProfileEditAccessPage() {
-  const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [isEditingPassword, setIsEditingPassword] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  const [emailData, setEmailData] = useState({
-    currentEmail: "",
-    newEmail: "",
-    confirmEmail: "",
-  });
 
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
@@ -33,63 +22,27 @@ export default function ProfileEditAccessPage() {
     confirmPassword: "",
   });
 
-  const queryClient = useQueryClient();
-
   const { user } = useAuth();
-  const { data: userAuth, isLoading } = useQuery({
-    queryKey: ["user", user?.id],
-    queryFn: () => getUserProfile(user!.id),
-    select: (data) => data.user,
-    enabled: !!user?.id,
-  });
-
-  // Update email data when user data is loaded
-  useEffect(() => {
-    if (userAuth) {
-      setEmailData((prev) => ({ ...prev, currentEmail: userAuth.email || "" }));
-    }
-  }, [userAuth]);
-
-  const updateEmailMutation = useMutation({
-    mutationFn: updateUserEmail,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["user"] });
-      setIsEditingEmail(false);
-      setEmailData((prev) => ({ ...prev, newEmail: "", confirmEmail: "" }));
-      toast.success("Email atualizado com sucesso!");
-    },
-    onError: (error: any) => {
-      toast.error(error.message || "Erro ao atualizar email");
-    },
-  });
 
   const updatePasswordMutation = useMutation({
     mutationFn: updateUserPassword,
-    onSuccess: () => {
-      setIsEditingPassword(false);
-      setPasswordData({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-      toast.success("Senha atualizada com sucesso!");
+    onSuccess: (result) => {
+      if (result.success) {
+        setIsEditingPassword(false);
+        setPasswordData({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+        toast.success("Senha atualizada com sucesso!");
+      } else {
+        toast.error(result.error || "Erro ao atualizar senha");
+      }
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Erro ao atualizar senha");
+    onError: () => {
+      toast.error("Erro ao atualizar senha. Tente novamente.");
     },
   });
-
-  const handleEmailSave = () => {
-    if (emailData.newEmail !== emailData.confirmEmail) {
-      toast.error("Os emails não coincidem");
-      return;
-    }
-
-    updateEmailMutation.mutate({
-      userId: user!.id,
-      newEmail: emailData.newEmail,
-    });
-  };
 
   const handlePasswordSave = () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
@@ -102,16 +55,16 @@ export default function ProfileEditAccessPage() {
       return;
     }
 
+    if (!user?.id) {
+      toast.error("Usuário não identificado");
+      return;
+    }
+
     updatePasswordMutation.mutate({
-      userId: user!.id,
+      userId: user.id,
       currentPassword: passwordData.currentPassword,
       newPassword: passwordData.newPassword,
     });
-  };
-
-  const handleEmailCancel = () => {
-    setEmailData((prev) => ({ ...prev, newEmail: "", confirmEmail: "" }));
-    setIsEditingEmail(false);
   };
 
   const handlePasswordCancel = () => {
@@ -123,26 +76,9 @@ export default function ProfileEditAccessPage() {
     setIsEditingPassword(false);
   };
 
-  if (isLoading) {
-    return (
-      <div className="dark-glass dark-shadow-sm rounded-xl p-8 text-center">
-        <div className="dark-bg-secondary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-          <Shield className="dark-text-tertiary" size={32} />
-        </div>
-        <h3 className="dark-text-primary mb-2 text-xl font-semibold">
-          Carregando dados...
-        </h3>
-        <p className="dark-text-secondary">
-          Buscando suas informações de acesso
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       {/* Header */}
-
       <div className="flex items-center justify-between">
         <div>
           <h1 className="dark-text-primary text-2xl font-bold">
@@ -342,8 +278,7 @@ export default function ProfileEditAccessPage() {
           <div className="flex items-start space-x-3">
             <div className="dark-primary-subtle-bg mt-1 flex h-2 w-2 rounded-full" />
             <p className="dark-text-secondary text-sm">
-              Mantenha seu email de acesso sempre atualizado para receber
-              notificações importantes
+              Altere sua senha periodicamente para manter sua conta mais segura
             </p>
           </div>
         </div>

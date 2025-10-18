@@ -8,6 +8,7 @@ import {
   verifyPassword,
 } from "../helpers/auth.helper";
 import { clearSession, createSession } from "../helpers/session.helper";
+import { checkAndUpdateLoginStreak } from "../helpers/streak.helper";
 
 // Alias para o banco de dados
 const db = prisma;
@@ -72,8 +73,18 @@ export async function signUp(data: SignUpInput) {
       },
     });
 
-    // Criar sessão
-    const sessionCookie = createSession({
+    // Inicializar UserStats para o novo usuário
+    await prisma.userStats.create({
+      data: {
+        userId: user.id,
+        currentStreak: 0,
+        longestStreak: 0,
+        lastActivityAt: new Date(),
+      },
+    });
+
+    // Criar sessão (agora seta o cookie diretamente)
+    await createSession({
       userId: user.id,
       cpf: user.cpf!,
       name: user.name!,
@@ -93,7 +104,7 @@ export async function signUp(data: SignUpInput) {
       approvalStatus: user.approvalStatus,
     };
 
-    return { success: true, user: userData, sessionCookie };
+    return { success: true, user: userData };
   } catch (error) {
     console.error("[SENDO-BASE-ERROR]:", error);
     return {
@@ -128,8 +139,11 @@ export async function signIn(data: SignInInput) {
       return { success: false, error: "CPF ou senha incorretos" };
     }
 
-    // Criar sessão
-    const sessionCookie = createSession({
+    // Verificar e atualizar streak (zera se passou 24h)
+    await checkAndUpdateLoginStreak(user.id);
+
+    // Criar sessão (agora seta o cookie diretamente)
+    await createSession({
       userId: user.id,
       cpf: user.cpf!,
       name: user.name!,
@@ -152,7 +166,6 @@ export async function signIn(data: SignInInput) {
     return {
       success: true,
       user: userData,
-      sessionCookie,
     };
   } catch (error) {
     console.error("[SIGNIN-ERROR]:", error);
@@ -165,8 +178,8 @@ export async function signIn(data: SignInInput) {
 
 export async function signOut() {
   try {
-    const sessionCookie = clearSession();
-    return { success: true, sessionCookie };
+    await clearSession();
+    return { success: true };
   } catch (error) {
     console.error("Sign out error:", error);
     return { success: false, error: "Erro interno do servidor" };

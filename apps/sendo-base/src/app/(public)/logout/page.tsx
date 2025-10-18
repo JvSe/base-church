@@ -17,11 +17,6 @@ export default function LogoutPage() {
         const result = await signOut();
 
         if (result.success) {
-          // Limpar cookie de sessão
-          if (result.sessionCookie) {
-            document.cookie = result.sessionCookie;
-          }
-
           toast.success("Logout realizado com sucesso!");
           setTimeout(() => {
             router.push("/signin");

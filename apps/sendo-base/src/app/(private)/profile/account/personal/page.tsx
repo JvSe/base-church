@@ -15,6 +15,7 @@ import {
   PersonalDataScheme,
   personalSchema,
 } from "@/src/lib/forms/profile/personal-data.scheme";
+import { formatPhone } from "@/src/lib/helpers";
 import {
   cleanCep,
   fetchCepData,
@@ -93,6 +94,7 @@ export default function ProfileEditPersonalPage() {
       data: {
         name: data.name,
         cpf: data.cpf,
+        email: data.email || undefined,
         birthDate: data.birthDate
           ? new Date(data.birthDate).toISOString()
           : undefined,
@@ -130,6 +132,7 @@ export default function ProfileEditPersonalPage() {
       formPersonalData.reset({
         name: userAuth.name || "",
         cpf: userAuth.cpf || "",
+        email: userAuth.email || "",
         birthDate: userAuth.birthDate
           ? dayjs(userAuth.birthDate).toDate()
           : undefined,
@@ -213,6 +216,7 @@ export default function ProfileEditPersonalPage() {
       formPersonalData.reset({
         name: userAuth.name || "",
         cpf: userAuth.cpf || "",
+        email: userAuth.email || "",
         birthDate: userAuth.birthDate
           ? dayjs(userAuth.birthDate).toDate()
           : undefined,
@@ -316,25 +320,35 @@ export default function ProfileEditPersonalPage() {
                     CPF *
                   </FormLabel>
                   <FormControl>
-                    <div className="flex gap-2">
-                      <Input
-                        {...field}
-                        value={formatDocument(field.value)}
-                        disabled
-                        className="dark-input flex-1"
-                        placeholder="000.000.000-00"
-                      />
-                      {isEditingPersonal && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="dark-border-secondary dark-text-secondary hover:dark-bg-tertiary"
-                        >
-                          Alterar
-                        </Button>
-                      )}
-                    </div>
+                    <Input
+                      {...field}
+                      value={formatDocument(field.value)}
+                      disabled
+                      className="dark-input"
+                      placeholder="000.000.000-00"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={formPersonalData.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="dark-text-secondary text-sm font-medium">
+                    Email
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="email"
+                      disabled={!isEditingPersonal}
+                      className="dark-input"
+                      placeholder="seu@email.com"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -372,6 +386,7 @@ export default function ProfileEditPersonalPage() {
                   <FormControl>
                     <Input
                       {...field}
+                      value={formatPhone(field.value)}
                       disabled={!isEditingPersonal}
                       className="dark-input"
                       placeholder="(11) 99999-9999"
