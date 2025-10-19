@@ -5,12 +5,16 @@ import { getSessionFromRequest } from "./lib/helpers/session.helper";
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Permitir acesso direto a assets estáticos
+  if (pathname.startsWith("/assets")) {
+    return NextResponse.next();
+  }
+
   // Rotas públicas que não precisam de autenticação
   const publicRoutes = [
     "/signin",
     "/signup",
     "/logout",
-    "/",
     "/forgot-password",
     "/reset-password",
     "/pending-approval",
@@ -19,13 +23,18 @@ export function middleware(request: NextRequest) {
     pathname.startsWith(route),
   );
 
+  // Verificar se o usuário está autenticado
+  const session = getSessionFromRequest(request);
+
+  // Redirecionar página inicial para login se não estiver autenticado
+  if (pathname === "/" && !session) {
+    return NextResponse.redirect(new URL("/signin", request.url));
+  }
+
   // Se é uma rota pública, permitir acesso
   if (isPublicRoute) {
     return NextResponse.next();
   }
-
-  // Verificar se o usuário está autenticado
-  const session = getSessionFromRequest(request);
 
   // Se não está autenticado e tentando acessar rota privada, redirecionar para login
   if (!session) {
