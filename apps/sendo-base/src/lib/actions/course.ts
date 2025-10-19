@@ -1131,17 +1131,35 @@ export async function getLessonWithProgress(lessonId: string, userId: string) {
             }),
           );
 
+        // Verificar se todas as aulas regulares (não-atividades) do módulo foram assistidas
+        const allRegularLessonsWatched = module.lessons
+          .filter((l) => !l.isActivity) // Apenas aulas regulares
+          .every((l) => {
+            const lessonProgress = progressMap.get(l.id);
+            return lessonProgress && lessonProgress.isWatched;
+          });
+
         return {
           ...module,
-          lessons: module.lessons.map((moduleLesson) => ({
-            ...moduleLesson,
-            ...(progressMap.get(moduleLesson.id) || {
-              isCompleted: false,
-              isWatched: false,
-            }),
-            // Add locked status for certificate lessons
-            isLocked: hasPreviousIncompleteActivity,
-          })),
+          lessons: module.lessons.map((moduleLesson) => {
+            // Determinar se a lição deve estar bloqueada
+            let isLocked = hasPreviousIncompleteActivity;
+
+            // Se a lição é uma atividade, verificar se todas as aulas regulares foram assistidas
+            if (moduleLesson.isActivity && !allRegularLessonsWatched) {
+              isLocked = true;
+            }
+
+            return {
+              ...moduleLesson,
+              ...(progressMap.get(moduleLesson.id) || {
+                isCompleted: false,
+                isWatched: false,
+              }),
+              // Add locked status
+              isLocked,
+            };
+          }),
           // Add locked status for certificate modules
           isLocked:
             module.title === "Certificado de Conclusão" ||
