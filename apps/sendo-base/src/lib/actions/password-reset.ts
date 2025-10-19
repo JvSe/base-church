@@ -3,6 +3,7 @@
 import { prisma } from "@base-church/db";
 import crypto from "crypto";
 import { revalidatePath } from "next/cache";
+import { cleanCpf, isValidCpf } from "../helpers/auth.helper";
 import { hashPassword } from "../helpers/auth.helper";
 
 /**
@@ -168,6 +169,76 @@ export async function resetPassword(token: string, newPassword: string) {
     return {
       success: false,
       error: "Erro ao resetar senha",
+    };
+  }
+}
+
+/**
+ * Solicita recuperação de senha usando CPF
+ */
+export async function requestPasswordReset(cpf: string) {
+  try {
+    // Validar CPF
+    if (!isValidCpf(cpf)) {
+      return {
+        success: false,
+        error: "CPF inválido",
+      };
+    }
+
+    const cleanCpfValue = cleanCpf(cpf);
+
+    // Buscar usuário pelo CPF
+    const user = await prisma.user.findUnique({
+      where: { cpf: cleanCpfValue },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        cpf: true,
+        password: true,
+      },
+    });
+
+    if (!user) {
+      return {
+        success: false,
+        error: "Usuário não encontrado",
+      };
+    }
+
+    // Verificar se usuário tem senha (já completou cadastro)
+    if (!user.password) {
+      return {
+        success: false,
+        error: "Este usuário ainda não completou o cadastro",
+      };
+    }
+
+    // Gerar link de reset
+    const result = await generatePasswordResetLink(user.id);
+
+    if (!result.success) {
+      return {
+        success: false,
+        error: result.error || "Erro ao gerar link de recuperação",
+      };
+    }
+
+    // TODO: Implementar envio real de email
+    // Por enquanto, apenas logamos o link no console
+    console.log(`[PASSWORD_RESET] Link para ${user.email}: ${result.resetLink}`);
+
+    return {
+      success: true,
+      message: "Link de recuperação gerado com sucesso",
+      email: user.email, // Para debug, não enviar em produção
+    };
+  } catch (error) {
+    console.error("[REQUEST_PASSWORD_RESET_ERROR]:", error);
+    return {
+      success: false,
+      error: "Erro ao solicitar recuperação de senha",
     };
   }
 }

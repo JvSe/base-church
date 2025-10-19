@@ -31,11 +31,11 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-export default function CompleteSignupPage() {
+function CompleteSignupContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [isValidating, setIsValidating] = useState(true);
   const [tokenError, setTokenError] = useState<string | null>(null);
@@ -327,5 +327,24 @@ export default function CompleteSignupPage() {
         emails with updates.
       </p>
     </div>
+  );
+}
+
+export default function CompleteSignupPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="dark-bg-primary flex min-h-screen items-center justify-center p-4">
+          <div className="dark-glass dark-border w-full max-w-md rounded-2xl p-8 text-center shadow-2xl">
+            <Loader2 className="mx-auto mb-4 h-12 w-12 animate-spin text-blue-500" />
+            <p className="dark-text-primary text-lg font-semibold">
+              Carregando...
+            </p>
+          </div>
+        </div>
+      }
+    >
+      <CompleteSignupContent />
+    </Suspense>
   );
 }

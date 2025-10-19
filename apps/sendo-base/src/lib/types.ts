@@ -6,3 +6,6 @@ type Teacher = {
 };
 
 export { type Teacher };
+
+// Exportar todos os tipos do diretório types/
+export * from "./types/index";

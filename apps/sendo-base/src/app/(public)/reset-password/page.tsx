@@ -19,7 +19,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, Key, Loader2, Lock, User } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -41,7 +41,7 @@ const resetPasswordSchema = z
 
 type ResetPasswordScheme = z.infer<typeof resetPasswordSchema>;
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [isValidating, setIsValidating] = useState(true);
   const [tokenError, setTokenError] = useState<string | null>(null);
@@ -77,7 +77,7 @@ export default function ResetPasswordPage() {
       if (result.success && result.user) {
         setUserData({
           name: result.user.name || "Usuário",
-          email: result.user.email,
+          email: result.user.email || undefined,
         });
         setTokenError(null);
       } else {
@@ -310,5 +310,24 @@ export default function ResetPasswordPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="dark-bg-primary flex min-h-screen items-center justify-center p-4">
+          <div className="dark-glass dark-border w-full max-w-md rounded-2xl p-8 text-center shadow-2xl">
+            <Loader2 className="mx-auto mb-4 h-12 w-12 animate-spin text-blue-500" />
+            <p className="dark-text-primary text-lg font-semibold">
+              Carregando...
+            </p>
+          </div>
+        </div>
+      }
+    >
+      <ResetPasswordContent />
+    </Suspense>
   );
 }

@@ -10,12 +10,6 @@ import {
 import { clearSession, createSession } from "../helpers/session.helper";
 import { checkAndUpdateLoginStreak } from "../helpers/streak.helper";
 
-// Alias para o banco de dados
-const db = prisma;
-
-// Alias para a função de limpeza de CPF
-const cleanCpfNumber = cleanCpf;
-
 // Authentication Types
 export type SignUpInput = {
   name: string;
@@ -182,84 +176,6 @@ export async function signOut() {
     return { success: true };
   } catch (error) {
     console.error("Sign out error:", error);
-    return { success: false, error: "Erro interno do servidor" };
-  }
-}
-
-// ===== RECUPERAÇÃO DE SENHA =====
-
-export async function requestPasswordReset(cpf: string) {
-  try {
-    // Limpar CPF
-    const cleanCpf = cleanCpfNumber(cpf);
-
-    if (!cleanCpf) {
-      return { success: false, error: "CPF inválido" };
-    }
-
-    // Buscar usuário pelo CPF
-    const user = await db.user.findUnique({
-      where: { cpf: cleanCpf },
-      select: { id: true, name: true, email: true, cpf: true },
-    });
-
-    if (!user) {
-      return { success: false, error: "Usuário não encontrado" };
-    }
-
-    // Gerar token de recuperação (em produção, usar crypto.randomBytes)
-    const resetToken =
-      Math.random().toString(36).substring(2, 15) +
-      Math.random().toString(36).substring(2, 15);
-
-    // Salvar token no banco (em produção, criar tabela de reset tokens)
-    // Por enquanto, vamos simular o envio do email
-    console.log(`Token de recuperação para ${user.email}: ${resetToken}`);
-
-    // TODO: Implementar envio real de email
-    // await sendPasswordResetEmail(user.email, resetToken);
-
-    return {
-      success: true,
-      message: "Email de recuperação enviado com sucesso",
-      email: user.email, // Para debug, não enviar em produção
-    };
-  } catch (error) {
-    console.error("Request password reset error:", error);
-    return { success: false, error: "Erro interno do servidor" };
-  }
-}
-
-export async function resetPassword(token: string, newPassword: string) {
-  try {
-    // Validar senha
-    if (newPassword.length < 8) {
-      return {
-        success: false,
-        error: "Senha deve ter pelo menos 8 caracteres",
-      };
-    }
-
-    // Hash da nova senha
-    const hashedPassword = await hashPassword(newPassword);
-
-    // Em produção, validar token e buscar usuário
-    // Por enquanto, vamos simular a redefinição
-    console.log(`Redefinindo senha com token: ${token}`);
-
-    // TODO: Implementar validação real do token
-    // const user = await validateResetToken(token);
-    // await db.user.update({
-    //   where: { id: user.id },
-    //   data: { password: hashedPassword }
-    // });
-
-    return {
-      success: true,
-      message: "Senha redefinida com sucesso",
-    };
-  } catch (error) {
-    console.error("Reset password error:", error);
     return { success: false, error: "Erro interno do servidor" };
   }
 }
