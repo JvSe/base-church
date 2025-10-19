@@ -3,13 +3,8 @@
 import { Bell } from "lucide-react";
 import { useNotifications } from "./hook";
 import { NotificationsDropdown } from "./notifications-dropdown";
-import { NotificationsDropdownVariants } from "./notifications-dropdown-variants";
 
-export function NotificationsButton({
-  variant,
-}: {
-  variant?: "modern" | "minimalist" | "card" | "timeline";
-}) {
+export function NotificationsButton() {
   const {
     notifications,
     isLoading,
@@ -17,12 +12,9 @@ export function NotificationsButton({
     markAsRead,
     markAllAsRead,
     clearAll,
-    isMarkingAsRead,
-    isMarkingAllAsRead,
-    isClearing,
   } = useNotifications();
 
-  // Mostrar loading se estiver carregando
+  // Mostrar loading
   if (isLoading) {
     return (
       <div className="dark-glass dark-border hover:dark-border-hover relative animate-pulse rounded-lg p-3">
@@ -31,22 +23,9 @@ export function NotificationsButton({
     );
   }
 
-  // Mostrar erro se houver
+  // Mostrar erro (mas não quebrar a UI)
   if (error) {
     console.error("Erro ao carregar notificações:", error);
-    // Mesmo com erro, mostrar o botão vazio para não quebrar a UI
-  }
-
-  if (variant) {
-    return (
-      <NotificationsDropdownVariants
-        notifications={notifications}
-        onMarkAsRead={markAsRead}
-        onMarkAllAsRead={markAllAsRead}
-        onClearAll={clearAll}
-        variant={variant}
-      />
-    );
   }
 
   return (

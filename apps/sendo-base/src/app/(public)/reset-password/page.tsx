@@ -1,20 +1,25 @@
 "use client";
 
-import { resetPassword } from "@/src/lib/actions";
+import { PasswordInput } from "@/src/components/password-input";
+import {
+  resetPassword,
+  validateResetToken,
+} from "@/src/lib/actions/password-reset";
 import { Button } from "@base-church/ui/components/button";
 import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from "@base-church/ui/components/form";
-import { Input } from "@base-church/ui/components/input";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { AlertCircle, Key, Loader2, Lock, User } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -23,34 +28,33 @@ const resetPasswordSchema = z
   .object({
     password: z
       .string()
-      .min(1, { message: "Senha é obrigatória" })
-      .min(8, { message: "Senha deve ter pelo menos 8 caracteres" })
-      .regex(/[A-Z]/, {
-        message: "Senha deve conter pelo menos uma letra maiúscula",
-      })
-      .regex(/[a-z]/, {
-        message: "Senha deve conter pelo menos uma letra minúscula",
-      })
-      .regex(/\d/, { message: "Senha deve conter pelo menos um número" })
-      .regex(/[!@#$%^&*(),.?":{}|<>]/, {
-        message: "Senha deve conter pelo menos um caractere especial",
-      }),
-    confirmPassword: z
-      .string()
-      .min(1, { message: "Confirmação de senha é obrigatória" }),
+      .min(8, "Senha deve ter no mínimo 8 caracteres")
+      .regex(/[A-Z]/, "Senha deve conter pelo menos uma letra maiúscula")
+      .regex(/[a-z]/, "Senha deve conter pelo menos uma letra minúscula")
+      .regex(/[0-9]/, "Senha deve conter pelo menos um número"),
+    confirmPassword: z.string().min(1, "Confirme sua senha"),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Senhas não coincidem",
+    message: "As senhas não coincidem",
     path: ["confirmPassword"],
   });
 
-type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
+type ResetPasswordScheme = z.infer<typeof resetPasswordSchema>;
 
 export default function ResetPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const [passwordReset, setPasswordReset] = useState(false);
+  const [isValidating, setIsValidating] = useState(true);
+  const [tokenError, setTokenError] = useState<string | null>(null);
+  const [userData, setUserData] = useState<{
+    name: string;
+    email?: string;
+  } | null>(null);
 
-  const form = useForm<ResetPasswordFormData>({
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
+
+  const form = useForm<ResetPasswordScheme>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
       password: "",
@@ -58,183 +62,253 @@ export default function ResetPasswordPage() {
     },
   });
 
-  const onSubmit = async (data: ResetPasswordFormData) => {
+  // Validar token ao carregar a página
+  useEffect(() => {
+    async function validateToken() {
+      if (!token) {
+        setTokenError("Token não fornecido");
+        setIsValidating(false);
+        return;
+      }
+
+      setIsValidating(true);
+      const result = await validateResetToken(token);
+
+      if (result.success && result.user) {
+        setUserData({
+          name: result.user.name || "Usuário",
+          email: result.user.email,
+        });
+        setTokenError(null);
+      } else {
+        setTokenError(result.error || "Token inválido");
+      }
+
+      setIsValidating(false);
+    }
+
+    validateToken();
+  }, [token]);
+
+  const onSubmit = async (data: ResetPasswordScheme) => {
+    if (!token) return;
+
     setIsLoading(true);
     try {
-      // Em produção, o token viria da URL ou de um parâmetro
-      const token = "mock-token"; // TODO: Extrair token da URL
-
       const result = await resetPassword(token, data.password);
 
       if (result.success) {
-        setPasswordReset(true);
-        toast.success(result.message);
+        toast.success("Senha alterada com sucesso!", {
+          description: "Você pode fazer login com sua nova senha.",
+        });
+        router.push("/signin");
       } else {
-        toast.error(result.error);
+        toast.error("Erro ao alterar senha", {
+          description: result.error,
+        });
       }
     } catch (error) {
-      toast.error("Erro ao redefinir senha");
+      toast.error("Erro ao alterar senha", {
+        description: "Tente novamente mais tarde",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (passwordReset) {
+  // Loading state
+  if (isValidating) {
     return (
-      <div className="flex w-[330px] flex-1 flex-col justify-center sm:w-[384px]">
-        <div className="mt-auto mb-auto flex flex-col gap-5">
-          <Image
-            src="/assets/svg/sendo-base.svg"
-            alt="Sendo Base Logo"
-            width={100}
-            height={100}
-            className="w-[90px] md:w-[220px]"
-          />
+      <div className="dark-bg-primary flex min-h-screen items-center justify-center p-4">
+        <div className="dark-glass dark-border w-full max-w-md rounded-2xl p-8 text-center shadow-2xl">
+          <Loader2 className="mx-auto mb-4 h-12 w-12 animate-spin text-blue-500" />
+          <p className="dark-text-primary text-lg font-semibold">
+            Validando link...
+          </p>
+          <p className="dark-text-secondary mt-2 text-sm">Aguarde um momento</p>
+        </div>
+      </div>
+    );
+  }
 
-          <div className="flex flex-col gap-4">
-            <div className="mb-10 text-center">
-              <h1 className="mt-8 mb-2 text-2xl lg:text-3xl">
-                Senha Redefinida!
-              </h1>
-              <h2 className="text-foreground-light text-sm">
-                Sua senha foi alterada com sucesso
-              </h2>
+  // Token error state
+  if (tokenError) {
+    return (
+      <div className="dark-bg-primary flex min-h-screen items-center justify-center p-4">
+        <div className="dark-glass dark-border w-full max-w-md rounded-2xl p-8 text-center shadow-2xl">
+          <div className="mb-4 flex justify-center">
+            <div className="rounded-full bg-red-100 p-4 dark:bg-red-900/30">
+              <AlertCircle className="h-12 w-12 text-red-600 dark:text-red-400" />
             </div>
-
-            <div className="dark-card dark-shadow-sm rounded-xl p-6 text-center">
-              <div className="dark-success-bg mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-                <svg
-                  className="dark-success h-8 w-8"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              </div>
-
-              <h3 className="dark-text-primary mb-2 text-lg font-semibold">
-                Tudo certo!
-              </h3>
-              <p className="dark-text-secondary text-sm">
-                Sua senha foi redefinida com sucesso. Agora você pode fazer
-                login com sua nova senha.
-              </p>
-            </div>
-
-            <Link href="/signin">
-              <Button className="dark-btn-primary w-full">Fazer Login</Button>
-            </Link>
           </div>
+          <h1 className="dark-text-primary mb-2 text-2xl font-bold">
+            Link Inválido
+          </h1>
+          <p className="dark-text-secondary mb-6 text-sm">{tokenError}</p>
+          <Button
+            onClick={() => router.push("/signin")}
+            className="w-full"
+            variant="outline"
+          >
+            Ir para Login
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex w-[330px] flex-1 flex-col justify-center sm:w-[384px]">
-      <div className="mt-auto mb-auto flex flex-col gap-5">
-        <Image
-          src="/assets/svg/sendo-base.svg"
-          alt="Sendo Base Logo"
-          width={100}
-          height={100}
-          className="w-[90px] md:w-[220px]"
-        />
-
-        <div className="flex flex-col gap-4">
-          <div className="mb-10">
-            <h1 className="mt-8 mb-2 text-2xl lg:text-3xl">Nova Senha</h1>
-            <h2 className="text-foreground-light text-sm">
-              Digite sua nova senha abaixo
-            </h2>
+    <div className="dark-bg-primary flex min-h-screen items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="mb-8 text-center">
+          <div className="mb-6 flex justify-center">
+            <div className="relative h-20 w-20">
+              <Image
+                src="/assets/svg/send-base.svg"
+                alt="Logo"
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
           </div>
         </div>
 
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="flex flex-col gap-4"
-          >
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-foreground text-sm font-medium">
-                    Nova Senha
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type="password"
-                      placeholder="••••••••"
-                      className="dark-input"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        {/* Card Principal */}
+        <div className="dark-glass dark-border rounded-2xl p-8 shadow-2xl">
+          {/* Header */}
+          <div className="mb-6 text-center">
+            <div className="mb-4 flex justify-center">
+              <div className="rounded-full bg-blue-100 p-3 dark:bg-blue-900/30">
+                <Key className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+              </div>
+            </div>
+            <h1 className="dark-text-primary mb-2 text-2xl font-bold">
+              Redefinir Senha
+            </h1>
+            <p className="dark-text-secondary text-sm">
+              Olá, <span className="font-semibold">{userData?.name}</span>!
+              <br />
+              Crie uma nova senha para acessar sua conta.
+            </p>
+          </div>
 
-            <FormField
-              control={form.control}
-              name="confirmPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-foreground text-sm font-medium">
-                    Confirmar Nova Senha
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type="password"
-                      placeholder="••••••••"
-                      className="dark-input"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          {/* User Info Card */}
+          {userData && (
+            <div className="dark-bg-secondary mb-6 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <div className="rounded-full bg-blue-100 p-2 dark:bg-blue-900/30">
+                  <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div className="flex-1">
+                  <p className="dark-text-primary text-sm font-semibold">
+                    {userData.name}
+                  </p>
+                  {userData.email && (
+                    <p className="dark-text-secondary mt-1 text-xs">
+                      {userData.email}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
-            <Button
-              type="submit"
-              className="bg-primary-2 mt-4 font-semibold"
-              size="lg"
-              disabled={isLoading}
+          {/* Form */}
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              {/* Nova Senha */}
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="dark-text-primary text-sm font-semibold">
+                      Nova Senha
+                    </FormLabel>
+                    <FormControl>
+                      <PasswordInput
+                        {...field}
+                        placeholder="Digite sua nova senha"
+                        disabled={isLoading}
+                        className="dark-glass dark-border"
+                      />
+                    </FormControl>
+                    <FormDescription className="text-xs">
+                      Mínimo 8 caracteres, com maiúscula, minúscula e número
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Confirmar Nova Senha */}
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="dark-text-primary text-sm font-semibold">
+                      Confirmar Nova Senha
+                    </FormLabel>
+                    <FormControl>
+                      <PasswordInput
+                        {...field}
+                        placeholder="Confirme sua nova senha"
+                        disabled={isLoading}
+                        className="dark-glass dark-border"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading}
+                size="lg"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Alterando senha...
+                  </>
+                ) : (
+                  <>
+                    <Lock className="mr-2 h-4 w-4" />
+                    Alterar Senha
+                  </>
+                )}
+              </Button>
+            </form>
+          </Form>
+
+          {/* Security Note */}
+          <div className="dark-bg-secondary mt-6 rounded-lg p-3">
+            <p className="dark-text-tertiary text-center text-xs">
+              🔒 Sua nova senha será criptografada e armazenada com segurança
+            </p>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-6 text-center">
+          <p className="dark-text-tertiary text-xs">
+            Lembrou sua senha?{" "}
+            <button
+              onClick={() => router.push("/signin")}
+              className="text-blue-600 hover:underline dark:text-blue-400"
+              type="button"
             >
-              {isLoading ? "Redefinindo..." : "Redefinir Senha"}
-            </Button>
-          </form>
-        </Form>
-
-        <div className="space-y-3">
-          <Link href="/signin">
-            <Button
-              className="dark-glass dark-border hover:dark-border-hover w-full"
-              variant="outline"
-            >
-              Voltar ao Login
-            </Button>
-          </Link>
+              Fazer login
+            </button>
+          </p>
         </div>
       </div>
-
-      <p className="text-foreground-lighter mt-auto text-center text-xs sm:mx-auto sm:max-w-sm">
-        Lembrou da senha?{" "}
-        <Link
-          className="text-foreground hover:text-foreground-light underline transition"
-          href="/signin"
-        >
-          Fazer login
-        </Link>
-      </p>
     </div>
   );
 }

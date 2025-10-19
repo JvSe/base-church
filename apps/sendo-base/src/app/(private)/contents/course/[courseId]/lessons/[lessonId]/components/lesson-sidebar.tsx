@@ -2,7 +2,13 @@
 
 import { formatDuration } from "@/src/lib/formatters";
 import { Button } from "@base-church/ui/components/button";
-import { Award, CheckCircle, Circle, Lock, Menu } from "lucide-react";
+import {
+  Award,
+  CheckCircle,
+  Circle,
+  Lock,
+  PanelRightClose,
+} from "lucide-react";
 import Link from "next/link";
 
 type LessonSidebarProps = {
@@ -57,7 +63,7 @@ export function LessonSidebar({
         </div>
 
         {/* Course Info */}
-        <div className="flex flex-row text-left">
+        <div className="flex w-full flex-row justify-between text-left">
           <div>
             <h4 className="text-lg leading-tight font-bold text-white">
               {course.title}
@@ -81,7 +87,7 @@ export function LessonSidebar({
               onClick={onToggleSidebar}
               className="dark-text-secondary hover:dark-text-primary"
             >
-              <Menu size={16} />
+              <PanelRightClose size={24} />
             </Button>
           </div>
         </div>

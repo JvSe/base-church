@@ -83,6 +83,11 @@ model User {
   approvedBy           String? // ID do líder/pastor que aprovou
   rejectionReason      String? // Motivo da rejeição se aplicável
 
+  // Invite/Activation fields
+  inviteToken          String?   @unique // Token único para completar cadastro
+  inviteTokenExpiresAt DateTime? // Data de expiração do token
+  isInvitePending      Boolean   @default(false) // Se true, usuário precisa completar cadastro
+
   // Address fields
   cep          String? // CEP (postal code)
   street       String? // Logradouro (street name)

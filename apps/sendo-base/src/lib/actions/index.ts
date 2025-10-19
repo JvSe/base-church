@@ -6,5 +6,8 @@ export * from "./dashboard";
 export * from "./enrollment";
 export * from "./goals";
 export * from "./help";
+export * from "./invite";
+export * from "./invite-helpers";
+export * from "./password-reset";
 export * from "./question";
 export * from "./user";

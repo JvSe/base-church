@@ -2,7 +2,6 @@
 export { useNotifications } from "./hook";
 export { NotificationsButton } from "./notifications-button";
 export { NotificationsDropdown } from "./notifications-dropdown";
-export { NotificationsDropdownVariants } from "./notifications-dropdown-variants";
 
 // Exportar helpers para criar notificações
 export {

@@ -150,7 +150,7 @@ export function HomeClientWrapper({
             </div>
 
             <div className="flex items-center gap-3">
-              <NotificationsButton variant="modern" />
+              <NotificationsButton />
             </div>
           </div>
         </div>

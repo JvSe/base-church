@@ -10,6 +10,7 @@ import { useAuth } from "@/src/hooks";
 import {
   approveEnrollment,
   deleteStudent,
+  generateAccessLink,
   getAllStudents,
   getStudentEnrollments,
   getStudentStats,
@@ -45,6 +46,7 @@ import {
   Download,
   Eye,
   Filter,
+  Link2,
   Loader2,
   Mail,
   Phone,
@@ -105,6 +107,9 @@ export default function StudentsPage() {
     Record<string, boolean>
   >({});
   const [pendingInitialized, setPendingInitialized] = useState(false);
+  const [generatingLinkFor, setGeneratingLinkFor] = useState<string | null>(
+    null,
+  );
 
   const { user, isAuthenticated, isLoading: userLoading } = useAuth();
 
@@ -280,6 +285,48 @@ export default function StudentsPage() {
       }
     } catch (error) {
       toast.error("Erro ao excluir aluno");
+    }
+  };
+
+  const handleGenerateAccessLink = async (
+    studentId: string,
+    studentName: string,
+  ) => {
+    setGeneratingLinkFor(studentId);
+
+    try {
+      const result = await generateAccessLink(studentId, user?.id || "");
+
+      if (result.success && "inviteLink" in result && result.inviteLink) {
+        // Copiar para clipboard
+        await navigator.clipboard.writeText(result.inviteLink);
+
+        // Mensagens diferentes baseadas no tipo de link
+        const isPasswordReset =
+          "linkType" in result && result.linkType === "password-reset";
+        const title = isPasswordReset
+          ? "Link de reset de senha copiado!"
+          : "Link de acesso copiado!";
+        const description = isPasswordReset
+          ? `O link de reset de senha para ${studentName} foi copiado. O usuário poderá redefinir sua senha com este link. Válido por 7 dias.`
+          : `O link de acesso para ${studentName} foi copiado. O usuário poderá completar o cadastro com CPF e senha. Válido por 7 dias.`;
+
+        // Mostrar toast de sucesso
+        toast.success(title, {
+          description,
+          duration: 5000,
+        });
+      } else {
+        toast.error("Erro ao gerar link", {
+          description: result.error || "Tente novamente mais tarde",
+        });
+      }
+    } catch (error) {
+      toast.error("Erro ao gerar link de acesso", {
+        description: "Verifique sua conexão e tente novamente",
+      });
+    } finally {
+      setGeneratingLinkFor(null);
     }
   };
 
@@ -1102,6 +1149,26 @@ export default function StudentsPage() {
 
                         {/* Ações */}
                         <div className="dark-border flex justify-end gap-2 border-t pt-4">
+                          <Button
+                            size="sm"
+                            className="gap-2"
+                            onClick={() =>
+                              handleGenerateAccessLink(student.id, student.name)
+                            }
+                            disabled={generatingLinkFor === student.id}
+                          >
+                            {generatingLinkFor === student.id ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Gerando...
+                              </>
+                            ) : (
+                              <>
+                                <Link2 className="h-4 w-4" />
+                                Gerar Link
+                              </>
+                            )}
+                          </Button>
                           <Button
                             size="sm"
                             className="dark-glass dark-border hover:dark-border-hover"

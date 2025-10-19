@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/src/hooks";
 import { Button } from "@base-church/ui/components/button";
+import { PanelRightOpen } from "lucide-react";
 import Link from "next/link";
 import { use, useState } from "react";
 import { useLessonProgress } from "../../../hooks/use-lesson-progress";
@@ -102,7 +103,7 @@ export default function LessonPage(props: LessonPageProps) {
         </div>
 
         {/* Sidebar */}
-        {isSidebarOpen && (
+        {isSidebarOpen ? (
           <div className="flex flex-col overflow-hidden">
             <LessonSidebar
               onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -111,6 +112,15 @@ export default function LessonPage(props: LessonPageProps) {
             />
             <CertificateCard course={course} certificate={certificate} />
           </div>
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="dark-text-secondary hover:dark-text-primary mr-4 -ml-4"
+          >
+            <PanelRightOpen size={24} />
+          </Button>
         )}
       </div>
     </div>

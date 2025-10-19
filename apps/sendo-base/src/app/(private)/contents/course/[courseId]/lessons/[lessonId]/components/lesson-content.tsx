@@ -118,7 +118,7 @@ export function LessonContent({
   }, [isUpdatingProgress]);
 
   // Show completion fallback when updating progress
-  if (!isVideoEnded) {
+  if (isVideoEnded) {
     return <LessonCompletionFallback />;
   }
   // VIDEO Lesson
