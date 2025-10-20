@@ -3,7 +3,7 @@
 import { LoadingState } from "@/src/components/common/feedback/loading-state";
 import { PageHeader } from "@/src/components/common/layout/page-header";
 import { PageLayout } from "@/src/components/common/layout/page-layout";
-import { useAuth } from "@/src/hooks";
+import { useAuth, usePageTitle } from "@/src/hooks";
 import { getCourses, getUserProfile } from "@/src/lib/actions";
 import { Button } from "@base-church/ui/components/button";
 import { useQuery } from "@tanstack/react-query";
@@ -24,6 +24,8 @@ import Link from "next/link";
 import { useState } from "react";
 
 export default function JornadaPage() {
+  usePageTitle("Jornada");
+
   const [activeStep, setActiveStep] = useState(1);
   const { user } = useAuth();
 

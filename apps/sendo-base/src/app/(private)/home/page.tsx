@@ -1,7 +1,12 @@
 import { getEvents, getUserProfile } from "@/src/lib/actions";
 import { getSessionFromCookies } from "@/src/lib/helpers/session.helper";
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { HomeClientWrapper } from "./components/home-client-wrapper";
+
+export const metadata: Metadata = {
+  title: "Início",
+};
 
 export default async function DashboardPage() {
   // Get session from cookies

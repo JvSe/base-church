@@ -5,6 +5,7 @@ import { ErrorState } from "@/src/components/common/feedback/error-state";
 import { LoadingState } from "@/src/components/common/feedback/loading-state";
 import { PageHeader } from "@/src/components/common/layout/page-header";
 import { PageLayout } from "@/src/components/common/layout/page-layout";
+import { usePageTitle } from "@/src/hooks";
 import { getEvents } from "@/src/lib/actions";
 import { formatDateTime, formatTime } from "@/src/lib/formatters";
 import { Button } from "@base-church/ui/components/button";
@@ -35,6 +36,8 @@ import Link from "next/link";
 import { useState } from "react";
 
 export default function EventosPage() {
+  usePageTitle("Eventos");
+
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 

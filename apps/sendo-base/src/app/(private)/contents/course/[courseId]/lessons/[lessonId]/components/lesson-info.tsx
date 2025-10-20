@@ -5,14 +5,11 @@ import { Button } from "@base-church/ui/components/button";
 import { cn } from "@base-church/ui/lib/utils";
 import {
   Award,
-  Bookmark,
   Check,
   CheckCircle,
   Circle,
   Clock,
   Loader2,
-  MessageCircle,
-  Star,
 } from "lucide-react";
 
 type LessonInfoProps = {
@@ -110,9 +107,9 @@ export function LessonInfo({
               </div>
             )}
 
-          <Button variant="ghost" size="sm" className="hover:dark-bg-tertiary">
+          {/* <Button variant="ghost" size="sm" className="hover:dark-bg-tertiary">
             <Bookmark className="dark-text-primary" size={16} />
-          </Button>
+          </Button> */}
         </div>
       </div>
 
@@ -122,11 +119,11 @@ export function LessonInfo({
             <Clock size={14} className="mr-1" />
             <span>{formatDuration(lesson.duration || 0)}</span>
           </div>
-          <div className="flex items-center">
+          {/* <div className="flex items-center">
             <Star size={14} className="dark-secondary mr-1" />
             <span>Avalie esta aula</span>
-          </div>
-          {lesson.videoUrl && (
+          </div> */}
+          {/* {lesson.videoUrl && (
             <div className="flex items-center">
               <a
                 href={lesson.videoUrl}
@@ -145,16 +142,16 @@ export function LessonInfo({
                 <span>Abrir no YouTube</span>
               </a>
             </div>
-          )}
+          )} */}
         </div>
 
-        <div className="flex items-center space-x-2">
+        {/* <div className="flex items-center space-x-2">
           <Button className="dark-glass dark-border hover:dark-border-hover gap-2">
             <MessageCircle size={16} />
             Assistente IA
           </Button>
           <Button className="dark-btn-primary">Fazer Pergunta</Button>
-        </div>
+        </div> */}
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { PasswordInput } from "@/src/components/password-input";
+import { usePageTitle } from "@/src/hooks";
 import {
   resetPassword,
   validateResetToken,
@@ -42,6 +43,8 @@ const resetPasswordSchema = z
 type ResetPasswordScheme = z.infer<typeof resetPasswordSchema>;
 
 function ResetPasswordContent() {
+  usePageTitle("Redefinir Senha");
+
   const [isLoading, setIsLoading] = useState(false);
   const [isValidating, setIsValidating] = useState(true);
   const [tokenError, setTokenError] = useState<string | null>(null);

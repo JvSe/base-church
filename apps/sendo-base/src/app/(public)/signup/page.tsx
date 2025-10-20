@@ -1,7 +1,7 @@
 "use client";
 
 import { PasswordInput } from "@/src/components/password-input";
-import { useAuth } from "@/src/hooks";
+import { useAuth, usePageTitle } from "@/src/hooks";
 import { signUp } from "@/src/lib/actions";
 import { signUpSchema, SignUpScheme } from "@/src/lib/forms/auth/signup.scheme";
 import { Button } from "@base-church/ui/components/button";
@@ -23,6 +23,8 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 export default function SignUpPage() {
+  usePageTitle("Cadastro");
+
   const [isLoading, setIsLoading] = useState(false);
   const { setUser } = useAuth();
   const router = useRouter();

@@ -11,7 +11,7 @@ import {
   StatsRow,
   ViewModeToggle,
 } from "@/src/components/courses";
-import { useCourseFilters, useMyEnrollments } from "@/src/hooks";
+import { useCourseFilters, useMyEnrollments, usePageTitle } from "@/src/hooks";
 import {
   Tabs,
   TabsContent,
@@ -21,6 +21,8 @@ import {
 import { Filter, Search } from "lucide-react";
 
 export default function ContentsPage() {
+  usePageTitle("Meus Cursos");
+
   const {
     approvedEnrollments,
     pendingEnrollments,

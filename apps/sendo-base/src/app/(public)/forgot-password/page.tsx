@@ -1,14 +1,15 @@
 "use client";
 
+import { usePageTitle } from "@/src/hooks";
 import { requestPasswordReset } from "@/src/lib/actions";
 import { Button } from "@base-church/ui/components/button";
 import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from "@base-church/ui/components/form";
 import { Input } from "@base-church/ui/components/input";
 import { formatDocument } from "@base-church/ui/helpers/format-document.helper";
@@ -32,6 +33,8 @@ const forgotPasswordSchema = z.object({
 type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 
 export default function ForgotPasswordPage() {
+  usePageTitle("Recuperar Senha");
+
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
 

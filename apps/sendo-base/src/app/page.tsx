@@ -1,4 +1,5 @@
 import { SectionHero } from "@/src/components/sections/hero-section";
+import type { Metadata } from "next";
 import { Navbar } from "../components/navbar";
 import { CourseSection } from "../components/sections/courses-section";
 import { Footer } from "../components/sections/footer";
@@ -8,6 +9,12 @@ import { TeachersSection } from "../components/sections/teachers-section";
 import { TestimonialSection } from "../components/sections/testimonial-section";
 import { WelcomeSection } from "../components/sections/welcome-section";
 import { WorldSection } from "../components/sections/world-section";
+
+export const metadata: Metadata = {
+  title: {
+    absolute: "Sendo Base",
+  },
+};
 
 export default function Page() {
   return (

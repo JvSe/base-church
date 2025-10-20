@@ -10,7 +10,7 @@ import {
   CourseSearchBar,
   ViewModeToggle,
 } from "@/src/components/courses";
-import { useCatalogCourses, useCourseFilters } from "@/src/hooks";
+import { useCatalogCourses, useCourseFilters, usePageTitle } from "@/src/hooks";
 import { Button } from "@base-church/ui/components/button";
 import {
   Tabs,
@@ -21,6 +21,8 @@ import {
 import { Filter, Search, Target, TrendingUp, Zap } from "lucide-react";
 
 export default function CatalogPage() {
+  usePageTitle("Catálogo de Cursos");
+
   const { courses, featuredCourses, enrolledCourses, isLoading, error } =
     useCatalogCourses();
 

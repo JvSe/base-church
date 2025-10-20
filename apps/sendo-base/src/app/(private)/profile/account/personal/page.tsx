@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/src/hooks";
+import { useAuth, usePageTitle } from "@/src/hooks";
 import { getUserProfile, updateUserProfileData } from "@/src/lib/actions";
 import { dayjs } from "@/src/lib/dayjs";
 import {
@@ -43,6 +43,8 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 export default function ProfileEditPersonalPage() {
+  usePageTitle("Dados Pessoais");
+
   const [isEditingPersonal, setIsEditingPersonal] = useState(false);
   const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [isEditingAdditional, setIsEditingAdditional] = useState(false);

@@ -1,7 +1,7 @@
 "use client";
 
 import { PasswordInput } from "@/src/components/password-input";
-import { useAuth } from "@/src/hooks";
+import { useAuth, usePageTitle } from "@/src/hooks";
 import { signIn } from "@/src/lib/actions";
 import { signInSchema, SignInScheme } from "@/src/lib/forms/auth/signin.scheme";
 import { Button } from "@base-church/ui/components/button";
@@ -23,6 +23,8 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 export default function SignInPage() {
+  usePageTitle("Login");
+
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { setUser } = useAuth();

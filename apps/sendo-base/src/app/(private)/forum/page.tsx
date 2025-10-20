@@ -4,6 +4,11 @@ import { ForumClientWrapper } from "@/src/components/forum/forum-client-wrapper"
 import { getForumPosts } from "@/src/lib/actions";
 import { getSession } from "@/src/lib/helpers/session.helper";
 import type { ForumPost } from "@/src/lib/types/forum";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Fórum",
+};
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

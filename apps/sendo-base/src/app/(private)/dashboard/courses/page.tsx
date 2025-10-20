@@ -4,8 +4,13 @@ import { getStatsIconConfig } from "@/src/lib/helpers/course.helper";
 import type { CourseLevel, CourseStatus } from "@/src/lib/types/index";
 import { Button } from "@base-church/ui/components/button";
 import { Plus, Search } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { CoursesListClient } from "./components/courses-list-client";
+
+export const metadata: Metadata = {
+  title: "Gerenciar Cursos",
+};
 
 type DashboardCourse = {
   id: string;

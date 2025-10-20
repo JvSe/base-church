@@ -1,8 +1,17 @@
+import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import localFont from "next/font/local";
 
 import { AppProviders } from "../components/providers/app-providers";
 import "../global.css";
+
+export const metadata: Metadata = {
+  title: {
+    template: "%s | Sendo Base",
+    default: "Sendo Base",
+  },
+  description: "Plataforma de cursos e ensino da igreja",
+};
 
 const roboto = Roboto({
   weight: "400",

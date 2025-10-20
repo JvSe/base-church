@@ -4,6 +4,7 @@ import { ErrorState } from "@/src/components/common/feedback/error-state";
 import { LoadingState } from "@/src/components/common/feedback/loading-state";
 import { PageHeader } from "@/src/components/common/layout/page-header";
 import { PageLayout } from "@/src/components/common/layout/page-layout";
+import { usePageTitle } from "@/src/hooks";
 import { Button } from "@base-church/ui/components/button";
 import { Input } from "@base-church/ui/components/input";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -54,6 +55,8 @@ interface CertificateTemplate {
 }
 
 export default function CertificatesPage() {
+  usePageTitle("Certificados");
+
   const [searchTerm, setSearchTerm] = useState("");
   const router = useRouter();
   const queryClient = useQueryClient();

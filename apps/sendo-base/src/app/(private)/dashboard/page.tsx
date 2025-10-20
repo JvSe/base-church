@@ -4,6 +4,7 @@ import { ErrorState } from "@/src/components/common/feedback/error-state";
 import { LoadingState } from "@/src/components/common/feedback/loading-state";
 import { PageHeader } from "@/src/components/common/layout/page-header";
 import { PageLayout } from "@/src/components/common/layout/page-layout";
+import { usePageTitle } from "@/src/hooks";
 import { useQuery } from "@tanstack/react-query";
 import {
   Award,
@@ -46,6 +47,8 @@ interface DashboardAnalytics {
 }
 
 export default function DashboardPage() {
+  usePageTitle("Dashboard");
+
   // Fetch dashboard stats
   const {
     data: statsData,

@@ -8,7 +8,6 @@ import {
   HelpCircle,
   Home,
   LogOut,
-  Map,
   MessageCircle,
   User,
   Users,
@@ -86,11 +85,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           ]
         : [],
     navLearning: [
-      {
-        title: "Minha Jornada",
-        url: "/journey",
-        icon: Map,
-      },
+      // {
+      //   title: "Minha Jornada",
+      //   url: "/journey",
+      //   icon: Map,
+      // },
       {
         title: "Meus Conteúdos",
         icon: FileText,

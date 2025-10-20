@@ -4,3 +4,4 @@ export { useCatalogCourses } from "./use-catalog-courses";
 export { useCourseDetail } from "./use-course-detail";
 export { useCourseFilters } from "./use-course-filters";
 export { useMyEnrollments } from "./use-my-enrollments";
+export { usePageTitle } from "./use-page-title";

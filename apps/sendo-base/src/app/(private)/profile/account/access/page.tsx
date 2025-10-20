@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/src/hooks";
+import { useAuth, usePageTitle } from "@/src/hooks";
 import { updateUserPassword } from "@/src/lib/actions";
 import { Button } from "@base-church/ui/components/button";
 import { Input } from "@base-church/ui/components/input";
@@ -11,6 +11,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 export default function ProfileEditAccessPage() {
+  usePageTitle("Acesso e Segurança");
+
   const [isEditingPassword, setIsEditingPassword] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);

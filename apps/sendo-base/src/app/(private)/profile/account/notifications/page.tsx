@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/src/hooks";
+import { useAuth, usePageTitle } from "@/src/hooks";
 import { getUserProfile, updateUserNotifications } from "@/src/lib/actions";
 import { Button } from "@base-church/ui/components/button";
 import { Checkbox } from "@base-church/ui/components/checkbox";
@@ -18,6 +18,8 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export default function ProfileEditNotificationsPage() {
+  usePageTitle("Notificações");
+
   const [notificationSettings, setNotificationSettings] = useState({
     email: {
       courseUpdates: true,

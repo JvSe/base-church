@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/src/hooks";
+import { useAuth, usePageTitle } from "@/src/hooks";
 import { getUserProfile, updateUserProfileData } from "@/src/lib/actions";
 import { formatDocument } from "@/src/lib/helpers";
 import {
@@ -34,6 +34,8 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 export default function ProfileEditOverviewPage() {
+  usePageTitle("Minha Conta");
+
   const { user, updateUser } = useAuth();
   const queryClient = useQueryClient();
   const [showImageModal, setShowImageModal] = useState(false);

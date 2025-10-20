@@ -1,11 +1,14 @@
 "use client";
 
+import { usePageTitle } from "@/src/hooks";
 import { signOut } from "@/src/lib/actions";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 export default function LogoutPage() {
+  usePageTitle("Saindo");
+
   const router = useRouter();
 
   const loading = useRef(false);

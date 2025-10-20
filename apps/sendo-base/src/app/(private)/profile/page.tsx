@@ -2,7 +2,7 @@
 
 import { PageLayout } from "@/src/components/common/layout/page-layout";
 import { Section } from "@/src/components/common/layout/section";
-import { useAuth } from "@/src/hooks";
+import { useAuth, usePageTitle } from "@/src/hooks";
 import { getUserProfile } from "@/src/lib/actions";
 import { getInitials } from "@/src/lib/get-initial-by-name";
 import {
@@ -30,6 +30,8 @@ import Link from "next/link";
 import { useState } from "react";
 
 export default function ProfilePage() {
+  usePageTitle("Perfil");
+
   const [activeTab, setActiveTab] = useState("overview");
   const { user } = useAuth();
 

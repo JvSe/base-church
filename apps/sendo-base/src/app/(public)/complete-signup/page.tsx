@@ -1,6 +1,7 @@
 "use client";
 
 import { PasswordInput } from "@/src/components/password-input";
+import { usePageTitle } from "@/src/hooks";
 import {
   completeUserSignup,
   validateInviteToken,
@@ -36,6 +37,8 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 function CompleteSignupContent() {
+  usePageTitle("Completar Cadastro");
+
   const [isLoading, setIsLoading] = useState(false);
   const [isValidating, setIsValidating] = useState(true);
   const [tokenError, setTokenError] = useState<string | null>(null);

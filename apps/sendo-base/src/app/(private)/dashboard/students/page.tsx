@@ -6,7 +6,7 @@ import { LoadingState } from "@/src/components/common/feedback/loading-state";
 import { PageHeader } from "@/src/components/common/layout/page-header";
 import { PageLayout } from "@/src/components/common/layout/page-layout";
 import { Section } from "@/src/components/common/layout/section";
-import { useAuth } from "@/src/hooks";
+import { useAuth, usePageTitle } from "@/src/hooks";
 import {
   approveEnrollment,
   deleteStudent,
@@ -95,6 +95,8 @@ interface Enrollment {
 }
 
 export default function StudentsPage() {
+  usePageTitle("Gerenciar Alunos");
+
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);

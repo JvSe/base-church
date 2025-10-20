@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/src/hooks";
+import { useAuth, usePageTitle } from "@/src/hooks";
 import { signOut } from "@/src/lib/actions";
 import { Button } from "@base-church/ui/components/button";
 import { LogOut } from "lucide-react";
@@ -9,6 +9,8 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function PendingApprovalPage() {
+  usePageTitle("Aguardando Aprovação");
+
   const { user, clearUser } = useAuth();
   const router = useRouter();
 
