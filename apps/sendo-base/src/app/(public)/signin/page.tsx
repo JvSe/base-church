@@ -50,7 +50,7 @@ export default function SignInPage() {
         const userApprovalStatus = (result.user as any)?.approvalStatus;
         if (userApprovalStatus === "APPROVED") {
           toast.success("Login realizado com sucesso!");
-          router.push("/home");
+          router.replace("/home");
         } else {
           router.push("/pending-approval");
         }
