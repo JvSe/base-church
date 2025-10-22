@@ -208,10 +208,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   };
 
   return (
-    <Sidebar className="rounded-xl" collapsible="icon" {...props}>
+    <Sidebar
+      className="overflow-hidden rounded-xl"
+      collapsible="icon"
+      style={
+        {
+          "--sidebar-width": "18rem",
+          "--sidebar-width-icon": "3.5rem",
+          "--sidebar-width-mobile": "20rem",
+        } as React.CSSProperties
+      }
+      {...props}
+    >
       {/* Header Simples */}
-      <SidebarHeader className="dark-border w-full flex-row justify-between border-b pt-10 pb-5">
-        <Link href="/profile" className="w-full max-w-4/5 flex-1">
+      <SidebarHeader className="dark-border w-full flex-row justify-between overflow-hidden border-b pt-10 pb-5">
+        <Link href="/profile" className="w-full max-w-4/5 min-w-0 flex-1">
           <div className="flex cursor-pointer items-center gap-3 overflow-hidden transition-[margin,opacity,width] duration-300 ease-in-out group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:opacity-0">
             <div className="dark-primary-subtle-bg flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full">
               <Avatar className="h-full w-full">
@@ -235,11 +246,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
 
       {/* Navegação Principal */}
-      <SidebarContent>
+      <SidebarContent className="overflow-hidden">
         {/* Navegação Principal */}
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu className="space-y-1">
+        <SidebarGroup className="overflow-hidden">
+          <SidebarGroupContent className="overflow-hidden">
+            <SidebarMenu className="space-y-1 overflow-hidden">
               {data.navMain.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
@@ -265,13 +276,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
         {/* Navegação Administrativa - Apenas para Líderes */}
         {data.navAdmin.length > 0 && (
-          <SidebarGroup>
-            <SidebarGroupLabel className="gap-2 px-0 text-xs font-semibold tracking-wider uppercase">
+          <SidebarGroup className="overflow-hidden">
+            <SidebarGroupLabel className="gap-2 overflow-hidden px-0 text-xs font-semibold tracking-wider uppercase">
               Administração
               <Separator className="bg-white opacity-5" />
             </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu className="space-y-1">
+            <SidebarGroupContent className="overflow-hidden">
+              <SidebarMenu className="space-y-1 overflow-hidden">
                 {data.navAdmin.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
@@ -303,13 +314,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         )}
 
         {/* Navegação de Aprendizado */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="gap-2 px-0 text-xs font-semibold tracking-wider uppercase">
+        <SidebarGroup className="overflow-hidden">
+          <SidebarGroupLabel className="gap-2 overflow-hidden px-0 text-xs font-semibold tracking-wider uppercase">
             Aprendizado
             <Separator className="bg-white opacity-5" />
           </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu className="space-y-1">
+          <SidebarGroupContent className="overflow-hidden">
+            <SidebarMenu className="space-y-1 overflow-hidden">
               {data.navLearning.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
@@ -334,13 +345,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarGroup>
 
         {/* Navegação da Comunidade */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="gap-2 px-0 text-xs font-semibold tracking-wider uppercase">
+        <SidebarGroup className="overflow-hidden">
+          <SidebarGroupLabel className="gap-2 overflow-hidden px-0 text-xs font-semibold tracking-wider uppercase">
             Comunidade
             <Separator className="bg-white opacity-5" />
           </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu className="space-y-1">
+          <SidebarGroupContent className="overflow-hidden">
+            <SidebarMenu className="space-y-1 overflow-hidden">
               {data.navCommunity.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
@@ -365,14 +376,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarGroup>
 
         {/* Navegação Secundária */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="gap-2 px-0 text-xs font-semibold tracking-wider uppercase">
+        <SidebarGroup className="overflow-hidden">
+          <SidebarGroupLabel className="gap-2 overflow-hidden px-0 text-xs font-semibold tracking-wider uppercase">
             Sistema
             <Separator className="bg-white opacity-5" />
           </SidebarGroupLabel>
 
-          <SidebarGroupContent>
-            <SidebarMenu className="space-y-1">
+          <SidebarGroupContent className="overflow-hidden">
+            <SidebarMenu className="space-y-1 overflow-hidden">
               {data.navSecondary.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
@@ -398,10 +409,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
 
       {/* Footer Simples */}
-      <SidebarFooter className="dark-border border-t p-4 group-data-[collapsible=icon]:hidden">
-        <div className="text-center">
-          <p className="dark-text-tertiary text-xs">Base Church Platform</p>
-          <p className="dark-text-tertiary mt-1 text-xs">Versão 1.0</p>
+      <SidebarFooter className="dark-border overflow-hidden border-t p-4 group-data-[collapsible=icon]:hidden">
+        <div className="overflow-hidden text-center">
+          <p className="dark-text-tertiary truncate text-xs">
+            Base Church Platform
+          </p>
+          <p className="dark-text-tertiary mt-1 truncate text-xs">Versão 1.0</p>
         </div>
       </SidebarFooter>
     </Sidebar>

@@ -27,7 +27,7 @@ export function middleware(request: NextRequest) {
   const session = getSessionFromRequest(request);
 
   // Redirecionar página inicial para login se não estiver autenticado
-  if (pathname === "/" && !session) {
+  if (pathname === "/") {
     return NextResponse.redirect(new URL("/signin", request.url));
   }
 

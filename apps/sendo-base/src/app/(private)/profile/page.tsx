@@ -475,32 +475,16 @@ export default function ProfilePage() {
             </div>
 
             <div className="space-y-2">
-              {!userAuth?.image && (
-                <Button
-                  variant="success"
-                  className="w-full justify-start text-sm"
-                >
-                  <Plus className="mr-2" size={14} />
-                  Adicionar foto de perfil
-                </Button>
-              )}
-              {!userAuth?.bio && (
-                <Button
-                  variant="success"
-                  className="w-full justify-start text-sm"
-                >
-                  <Plus className="mr-2" size={14} />
-                  Adicionar biografia
-                </Button>
-              )}
-              {!userAuth?.phone && (
-                <Button
-                  variant="success"
-                  className="w-full justify-start text-sm"
-                >
-                  <Plus className="mr-2" size={14} />
-                  Adicionar telefone
-                </Button>
+              {(!userAuth?.image || !userAuth?.bio || !userAuth?.phone) && (
+                <Link href="/profile/account">
+                  <Button
+                    variant="success"
+                    className="w-full justify-start text-sm"
+                  >
+                    <Plus className="mr-2" size={14} />
+                    Completar perfil
+                  </Button>
+                </Link>
               )}
             </div>
           </Section>
