@@ -239,7 +239,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
 
       {/* Navegação Principal */}
-      <SidebarContent>
+      <SidebarContent className="overflow-hidden">
         {/* Navegação Principal */}
         <SidebarGroup>
           <SidebarGroupContent>
