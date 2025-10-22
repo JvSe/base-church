@@ -10,13 +10,13 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="h-screen overflow-hidden [--header-height:calc(--spacing(14))]">
-      <SidebarProvider className="flex h-full flex-col">
-        <div className="flex flex-1 overflow-hidden">
+    <div className="[--header-height:calc(--spacing(14))]">
+      <SidebarProvider className="flex flex-col">
+        <div className="flex flex-1">
           <AppSidebar variant="inset" />
 
-          <SidebarInset className="flex-1 overflow-hidden">
-            <div className="flex flex-1 flex-col gap-4 overflow-hidden md:gap-6">
+          <SidebarInset className="overflow-hidden">
+            <div className="flex flex-1 flex-col gap-4 md:gap-6">
               {children}
             </div>
           </SidebarInset>
