@@ -531,4 +531,21 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Fix sidebar scroll issues on different DPI and resolutions */
+  [data-slot="sidebar-wrapper"] {
+    overflow: hidden;
+    max-width: 100vw;
+  }
+
+  [data-slot="sidebar"] {
+    overflow: hidden;
+    max-width: var(--sidebar-width, 16rem);
+    flex-shrink: 0;
+  }
+
+  /* Ensure sidebar content doesn't overflow */
+  [data-slot="sidebar"] > * {
+    overflow: hidden;
+  }
 }
