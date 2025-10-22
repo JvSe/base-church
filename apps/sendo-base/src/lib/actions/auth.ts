@@ -118,33 +118,49 @@ export async function signIn(data: SignInInput) {
 
     const cleanCpfValue = cleanCpf(data.cpf);
 
-    // Buscar usuário por CPF
+    // Buscar usuário com select mínimo para performance
     const user = await prisma.user.findUnique({
       where: { cpf: cleanCpfValue },
+      select: {
+        id: true,
+        name: true,
+        cpf: true,
+        email: true,
+        password: true,
+        role: true,
+        isPastor: true,
+        image: true,
+        approvalStatus: true,
+      },
     });
 
     if (!user) {
       return { success: false, error: "Usuário não cadastrado!" };
     }
 
+    // Verificar senha
     const isPasswordValid = await verifyPassword(data.password, user.password!);
-
     if (!isPasswordValid) {
       return { success: false, error: "CPF ou senha incorretos" };
     }
 
-    // Verificar e atualizar streak (zera se passou 24h)
-    await checkAndUpdateLoginStreak(user.id);
+    // Executar streak check e session creation em paralelo para melhor performance
+    const [streakResult] = await Promise.all([
+      checkAndUpdateLoginStreak(user.id),
+      createSession({
+        userId: user.id,
+        cpf: user.cpf!,
+        name: user.name!,
+        role: user.role,
+        email: user.email || undefined,
+        approvalStatus: user.approvalStatus,
+      }),
+    ]);
 
-    // Criar sessão (agora seta o cookie diretamente)
-    await createSession({
-      userId: user.id,
-      cpf: user.cpf!,
-      name: user.name!,
-      role: user.role,
-      email: user.email || undefined,
-      approvalStatus: user.approvalStatus,
-    });
+    // Verificar se houve erro no streak (não crítico para login)
+    if (!streakResult.success) {
+      console.warn("Streak check failed:", streakResult.error);
+    }
 
     const userData = {
       id: user.id,

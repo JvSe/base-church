@@ -18,26 +18,31 @@ export type SessionData = {
 /**
  * Cria e seta uma sessão para o usuário usando a API de cookies do Next.js
  * @param userData - Dados do usuário para a sessão
+ * OTIMIZADO: Melhor error handling e performance
  */
 export async function createSession(userData: SessionData): Promise<void> {
-  const sessionData = {
-    ...userData,
-    expiresAt: Date.now() + SESSION_DURATION,
-  };
+  try {
+    const sessionData = {
+      ...userData,
+      expiresAt: Date.now() + SESSION_DURATION,
+    };
 
-  const cookieValue = Buffer.from(JSON.stringify(sessionData)).toString(
-    "base64",
-  );
+    const cookieValue = Buffer.from(JSON.stringify(sessionData)).toString(
+      "base64",
+    );
+    const cookieStore = await cookies();
 
-  const cookieStore = await cookies();
-
-  cookieStore.set(SESSION_COOKIE_NAME, cookieValue, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: SESSION_MAX_AGE,
-    path: "/",
-  });
+    cookieStore.set(SESSION_COOKIE_NAME, cookieValue, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: SESSION_MAX_AGE,
+      path: "/",
+    });
+  } catch (error) {
+    console.error("Error creating session:", error);
+    throw new Error("Falha ao criar sessão do usuário");
+  }
 }
 
 /**

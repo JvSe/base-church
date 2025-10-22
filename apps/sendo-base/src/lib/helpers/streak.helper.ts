@@ -4,35 +4,26 @@ import { dayjs } from "../dayjs";
 /**
  * Verifica e atualiza o streak do usuário no login
  * Zera o streak se passou mais de 24h desde o último acesso
+ * OTIMIZADO: Reduz de 3 queries para 1-2 queries máximo
  */
 export async function checkAndUpdateLoginStreak(userId: string) {
   try {
-    // Buscar UserStats do usuário
-    const userStats = await prisma.userStats.findUnique({
+    // Usar upsert para reduzir queries - cria ou atualiza em uma operação
+    const userStats = await prisma.userStats.upsert({
       where: { userId },
+      update: {
+        lastActivityAt: new Date(),
+      },
+      create: {
+        userId,
+        currentStreak: 0,
+        longestStreak: 0,
+        lastActivityAt: new Date(),
+      },
     });
 
-    // Se não existe UserStats, criar com valores padrão
-    if (!userStats) {
-      await prisma.userStats.create({
-        data: {
-          userId,
-          currentStreak: 0,
-          longestStreak: 0,
-          lastActivityAt: new Date(),
-        },
-      });
-      return { success: true, streakReset: false, currentStreak: 0 };
-    }
-
-    // Se nunca teve atividade, apenas atualizar
+    // Se nunca teve atividade, retornar sem verificação adicional
     if (!userStats.lastActivityAt) {
-      await prisma.userStats.update({
-        where: { userId },
-        data: {
-          lastActivityAt: new Date(),
-        },
-      });
       return {
         success: true,
         streakReset: false,
@@ -45,21 +36,13 @@ export async function checkAndUpdateLoginStreak(userId: string) {
     const lastActivity = dayjs(userStats.lastActivityAt);
     const hoursDiff = now.diff(lastActivity, "hours");
 
-    // Se passou mais de 24h, zerar o streak
+    // Se passou mais de 24h, zerar o streak em uma única operação
     if (hoursDiff >= 24) {
       await prisma.userStats.update({
         where: { userId },
         data: {
           currentStreak: 0,
           lastActivityAt: new Date(),
-        },
-      });
-
-      // Também zerar no User
-      await prisma.user.update({
-        where: { id: userId },
-        data: {
-          currentStreak: 0,
         },
       });
 
@@ -81,6 +64,7 @@ export async function checkAndUpdateLoginStreak(userId: string) {
 /**
  * Incrementa o streak do usuário quando completa uma aula
  * Só incrementa se for a primeira aula do dia
+ * OTIMIZADO: Reduz queries e remove update desnecessário no User
  */
 export async function updateStreakOnLessonCompletion(userId: string) {
   try {
@@ -97,14 +81,6 @@ export async function updateStreakOnLessonCompletion(userId: string) {
           currentStreak: 1,
           longestStreak: 1,
           lastActivityAt: new Date(),
-        },
-      });
-
-      // Atualizar também no User
-      await prisma.user.update({
-        where: { id: userId },
-        data: {
-          currentStreak: 1,
         },
       });
 
@@ -139,14 +115,6 @@ export async function updateStreakOnLessonCompletion(userId: string) {
         },
       });
 
-      // Atualizar também no User
-      await prisma.user.update({
-        where: { id: userId },
-        data: {
-          currentStreak: newStreak,
-        },
-      });
-
       return {
         success: true,
         streakIncremented: true,
@@ -174,5 +142,3 @@ export async function updateStreakOnLessonCompletion(userId: string) {
     return { success: false, error: "Erro ao atualizar streak" };
   }
 }
-
-

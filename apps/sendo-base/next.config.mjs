@@ -26,8 +26,23 @@ const nextConfig = {
   experimental: {
     serverActions: {
       bodySizeLimit: "5mb",
+      allowedOrigins: [
+        "localhost:3000",
+        "localhost:3001",
+        "*.vercel.app",
+        "*.vercel.com",
+      ],
     },
+    // Configurações de performance
+    optimizeCss: true,
+    optimizePackageImports: ["@base-church/ui", "@base-church/db"],
   },
+  // Configurações de performance para produção
+  ...(process.env.NODE_ENV === "production" && {
+    compress: true,
+    poweredByHeader: false,
+    generateEtags: false,
+  }),
 };
 
 export default nextConfig;
