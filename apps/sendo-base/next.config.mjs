@@ -34,7 +34,6 @@ const nextConfig = {
       ],
     },
     // Configurações de performance
-    optimizeCss: true,
     optimizePackageImports: ["@base-church/ui", "@base-church/db"],
   },
   // Configurações de performance para produção
