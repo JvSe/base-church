@@ -1,5 +1,6 @@
 "use client";
 
+import { addPastorPrefix } from "@/src/lib/helpers";
 import { formatRelativeDate } from "@/src/lib/helpers/date-helpers";
 import type { ForumPost } from "@/src/lib/types/forum";
 import { Button } from "@base-church/ui/components/button";
@@ -29,7 +30,8 @@ export function PostCard({ post, showActions = true }: PostCardProps) {
     setIsBookmarked(!isBookmarked);
   }
 
-  const displayName = post.user.name || "Usuário";
+  const displayName =
+    addPastorPrefix(post.user.name, post.user.isPastor) || "Usuário";
   const displayUsername =
     post.user.username ||
     `@${post.user.name?.toLowerCase().replace(/\s+/g, "") || "usuario"}`;

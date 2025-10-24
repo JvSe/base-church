@@ -9,7 +9,7 @@ import {
   DialogTrigger,
 } from "@base-church/ui/components/dialog";
 import { Download, Eye } from "lucide-react";
-import { PropsWithChildren, useState } from "react";
+import { PropsWithChildren, useMemo, useState } from "react";
 
 type PdfViewerProps = PropsWithChildren<{
   pdfBase64?: string | null;
@@ -27,11 +27,16 @@ export function PdfViewer({
 }: PdfViewerProps) {
   const [isOpen, setIsOpen] = useState(false);
 
+  const pdfUrl = useMemo(
+    () => `data:application/pdf;base64,${pdfBase64}`,
+    [pdfBase64],
+  );
+
   const handleDownload = () => {
-    if (pdfBase64) {
+    if (pdfUrl) {
       // Download do PDF em base64
       const link = document.createElement("a");
-      link.href = pdfBase64;
+      link.href = pdfUrl;
       link.download = fileName;
       document.body.appendChild(link);
       link.click();
@@ -112,8 +117,8 @@ export function PdfViewer({
         <div className="mt-4">
           {pdfBase64 ? (
             <iframe
-              src={pdfBase64}
-              className="h-[600px] w-full rounded-lg border"
+              src={pdfUrl}
+              className="h-[800px] w-full rounded-lg border"
               title="Visualização do PDF"
             />
           ) : certificateUrl ? (

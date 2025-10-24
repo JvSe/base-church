@@ -1,4 +1,5 @@
 import { getUserEnrollments } from "@/src/lib/actions";
+import { addPastorPrefix } from "@/src/lib/helpers";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "./auth";
 
@@ -22,11 +23,15 @@ export function useMyEnrollments() {
     id: enrollment.course.id,
     title: enrollment.course.title,
     description: enrollment.course.description,
-    image: enrollment.course.image || "/api/placeholder/300/200",
+    image: enrollment.course.image || null,
     duration: enrollment.course.duration,
     level: enrollment.course.level,
     category: enrollment.course.category,
-    instructor: enrollment.course.instructor?.name || "Instrutor não definido",
+    instructor:
+      addPastorPrefix(
+        enrollment.course.instructor?.name,
+        enrollment.course.instructor?.isPastor,
+      ) || "Instrutor não definido",
     price: enrollment.course.price || 0,
     rating: enrollment.course.rating || 0,
     enrolledStudents: enrollment.course._count?.enrollments || 0,

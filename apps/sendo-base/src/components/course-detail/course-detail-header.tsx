@@ -1,4 +1,5 @@
 import { formatDate } from "@/src/lib/formatters";
+import { addPastorPrefix } from "@/src/lib/helpers";
 import { getLevelFormatted } from "@/src/lib/helpers/level.helper";
 import {
   BookOpen,
@@ -9,10 +10,7 @@ import {
   User,
   Users,
 } from "lucide-react";
-import {
-  formatDuration,
-  getUserRoleLabel,
-} from "../../app/(private)/contents/course/helpers/course.helpers";
+import { formatDuration } from "../../app/(private)/contents/course/helpers/course.helpers";
 
 type CourseDetailHeaderProps = {
   course: any;
@@ -58,13 +56,10 @@ export function CourseDetailHeader({
               </div>
               <div>
                 <div className="dark-text-primary text-sm font-medium">
-                  {course.instructor?.name || "Instrutor não informado"}
-                </div>
-                <div className="dark-text-tertiary text-xs">
-                  {getUserRoleLabel(
-                    course.instructor?.role,
+                  {addPastorPrefix(
+                    course.instructor?.name,
                     course.instructor?.isPastor,
-                  )}
+                  ) || "Instrutor não informado"}
                 </div>
               </div>
             </div>

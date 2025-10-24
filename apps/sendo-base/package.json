@@ -24,6 +24,7 @@
     "@hookform/resolvers": "^5.0.1",
     "@prisma/client": "latest",
     "@prisma/nextjs-monorepo-workaround-plugin": "^6.16.2",
+    "@supabase/supabase-js": "^2.76.1",
     "@tabler/icons-react": "^3.34.1",
     "@tailwindcss/postcss": "^4.1.8",
     "@tanstack/react-query": "^5.86.0",

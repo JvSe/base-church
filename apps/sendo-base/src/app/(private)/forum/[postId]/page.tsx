@@ -5,6 +5,7 @@ import { CommentsList } from "@/src/components/forum/comments-list";
 import { LikeButton } from "@/src/components/forum/like-button";
 import { ViewTracker } from "@/src/components/forum/view-tracker";
 import { getForumPostById } from "@/src/lib/actions";
+import { addPastorPrefix } from "@/src/lib/helpers";
 import { formatRelativeDate } from "@/src/lib/helpers/date-helpers";
 import { getSession } from "@/src/lib/helpers/session.helper";
 import type { ForumComment, ForumPost } from "@/src/lib/types/forum";
@@ -52,7 +53,8 @@ export default async function ForumPostPage({ params }: PageProps) {
   }
 
   const { post } = data;
-  const displayName = post.user.name || "Usuário";
+  const displayName =
+    addPastorPrefix(post.user.name, post.user.isPastor) || "Usuário";
   const displayUsername =
     post.user.username ||
     `@${post.user.name?.toLowerCase().replace(/\s+/g, "") || "usuario"}`;

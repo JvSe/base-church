@@ -3,6 +3,14 @@
 import { prisma } from "@base-church/db";
 import { revalidatePath } from "next/cache";
 import {
+  deleteCertificate as deleteCertificateFile,
+  deleteCertificateTemplate as deleteTemplateFile,
+  downloadCertificate,
+  downloadCertificateTemplate,
+  uploadCertificate,
+  uploadCertificateTemplate,
+} from "../storage/certificate-storage";
+import {
   CreateCertificateInput,
   CreateCertificateTemplateInput,
   IssueCertificateInput,
@@ -33,6 +41,7 @@ export async function getAllCertificateTemplates() {
               select: {
                 id: true,
                 name: true,
+                isPastor: true,
               },
             },
           },
@@ -847,4 +856,711 @@ function generateVerificationCode(): string {
   const timestamp = Date.now().toString(36);
   const random = Math.random().toString(36).substring(2, 8);
   return `${timestamp}-${random}`.toUpperCase();
+}
+
+// ========================================
+// SUPABASE STORAGE INTEGRATION
+// ========================================
+
+// Upload de certificado para Supabase Storage
+export async function uploadCertificateToStorage(
+  certificateId: string,
+  file: File | Buffer,
+  userId: string,
+  fileName?: string,
+) {
+  try {
+    console.log("📤 Enviando certificado para Supabase Storage...", {
+      certificateId,
+      userId,
+    });
+
+    const uploadResult = await uploadCertificate(
+      file,
+      userId,
+      certificateId,
+      fileName,
+    );
+
+    if (!uploadResult.success) {
+      return {
+        success: false,
+        error: uploadResult.error || "Erro no upload do certificado",
+      };
+    }
+
+    // Atualizar o certificado no banco com a URL do Supabase
+    const certificate = await db.certificate.update({
+      where: { id: certificateId },
+      data: {
+        certificateUrl: uploadResult.url,
+        status: "ISSUED",
+        issuedAt: new Date(),
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        course: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+        template: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+          },
+        },
+      },
+    });
+
+    console.log("✅ Certificado enviado e atualizado:", certificate.id);
+
+    revalidatePath("/dashboard/certificates");
+
+    return {
+      success: true,
+      certificate,
+      storageUrl: uploadResult.url,
+      storagePath: uploadResult.path,
+    };
+  } catch (error) {
+    console.error("❌ Erro no upload do certificado:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Erro desconhecido no upload",
+    };
+  }
+}
+
+// Download de certificado do Supabase Storage
+export async function downloadCertificateFromStorage(certificateId: string) {
+  try {
+    console.log("📥 Baixando certificado do Supabase Storage...", {
+      certificateId,
+    });
+
+    // Buscar certificado no banco
+    const certificate = await db.certificate.findUnique({
+      where: { id: certificateId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        course: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+    });
+
+    if (!certificate) {
+      return {
+        success: false,
+        error: "Certificado não encontrado",
+      };
+    }
+
+    if (!certificate.certificateUrl) {
+      return {
+        success: false,
+        error: "Certificado não possui arquivo associado",
+      };
+    }
+
+    // Extrair o caminho do arquivo da URL
+    const url = new URL(certificate.certificateUrl);
+    const filePath = url.pathname.split("/").slice(3).join("/"); // Remove /storage/v1/object/public/certificates/
+
+    const downloadResult = await downloadCertificate(filePath);
+
+    if (!downloadResult.success) {
+      return {
+        success: false,
+        error: downloadResult.error || "Erro no download do certificado",
+      };
+    }
+
+    console.log("✅ Certificado baixado com sucesso");
+
+    return {
+      success: true,
+      data: downloadResult.data,
+      certificate,
+    };
+  } catch (error) {
+    console.error("❌ Erro no download do certificado:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Erro desconhecido no download",
+    };
+  }
+}
+
+// Obter URL pública do certificado
+export async function getCertificatePublicUrl(certificateId: string) {
+  try {
+    console.log("🔗 Obtendo URL pública do certificado...", { certificateId });
+
+    const certificate = await db.certificate.findUnique({
+      where: { id: certificateId },
+      select: {
+        id: true,
+        certificateUrl: true,
+        status: true,
+      },
+    });
+
+    if (!certificate) {
+      return {
+        success: false,
+        error: "Certificado não encontrado",
+      };
+    }
+
+    if (!certificate.certificateUrl) {
+      return {
+        success: false,
+        error: "Certificado não possui arquivo associado",
+      };
+    }
+
+    if (certificate.status !== "ISSUED") {
+      return {
+        success: false,
+        error: "Certificado ainda não foi emitido",
+      };
+    }
+
+    console.log("✅ URL pública obtida:", certificate.certificateUrl);
+
+    return {
+      success: true,
+      url: certificate.certificateUrl,
+    };
+  } catch (error) {
+    console.error("❌ Erro ao obter URL do certificado:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Erro desconhecido",
+    };
+  }
+}
+
+// Deletar certificado do Supabase Storage
+export async function deleteCertificateFromStorage(certificateId: string) {
+  try {
+    console.log("🗑️ Excluindo certificado do Supabase Storage...", {
+      certificateId,
+    });
+
+    // Buscar certificado no banco
+    const certificate = await db.certificate.findUnique({
+      where: { id: certificateId },
+      select: {
+        id: true,
+        certificateUrl: true,
+      },
+    });
+
+    if (!certificate) {
+      return {
+        success: false,
+        error: "Certificado não encontrado",
+      };
+    }
+
+    // Se tem arquivo no storage, deletar
+    if (certificate.certificateUrl) {
+      const url = new URL(certificate.certificateUrl);
+      const filePath = url.pathname.split("/").slice(3).join("/");
+
+      const deleteResult = await deleteCertificateFile(filePath);
+
+      if (!deleteResult.success) {
+        console.warn(
+          "⚠️ Erro ao deletar arquivo do storage:",
+          deleteResult.error,
+        );
+        // Continuar mesmo se não conseguir deletar do storage
+      }
+    }
+
+    // Deletar do banco de dados
+    await db.certificate.delete({
+      where: { id: certificateId },
+    });
+
+    console.log("✅ Certificado excluído com sucesso");
+
+    revalidatePath("/dashboard/certificates");
+
+    return {
+      success: true,
+    };
+  } catch (error) {
+    console.error("❌ Erro ao excluir certificado:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Erro desconhecido na exclusão",
+    };
+  }
+}
+
+// Emitir certificado com upload automático para Supabase Storage
+export async function issueCertificateWithStorage(
+  certificateId: string,
+  file: File | Buffer,
+  userId: string,
+  fileName?: string,
+) {
+  try {
+    console.log("🎓 Emitindo certificado com upload para Supabase Storage...", {
+      certificateId,
+      userId,
+    });
+
+    // Upload do arquivo para Supabase Storage
+    const uploadResult = await uploadCertificateToStorage(
+      certificateId,
+      file,
+      userId,
+      fileName,
+    );
+
+    if (!uploadResult.success) {
+      return uploadResult;
+    }
+
+    console.log("✅ Certificado emitido e enviado para Supabase Storage");
+
+    return {
+      success: true,
+      certificate: uploadResult.certificate,
+      storageUrl: uploadResult.storageUrl,
+      storagePath: uploadResult.storagePath,
+    };
+  } catch (error) {
+    console.error("❌ Erro ao emitir certificado:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Erro desconhecido na emissão",
+    };
+  }
+}
+
+// ========================================
+// CERTIFICATE TEMPLATE STORAGE INTEGRATION
+// ========================================
+
+// Upload de template de certificado para Supabase Storage
+export async function uploadCertificateTemplateToStorage(
+  templateId: string,
+  file: File | Buffer,
+  courseId: string,
+  fileName?: string,
+) {
+  try {
+    console.log("📤 Enviando template para Supabase Storage...", {
+      templateId,
+      courseId,
+    });
+
+    const uploadResult = await uploadCertificateTemplate(
+      file,
+      courseId,
+      templateId,
+      fileName,
+    );
+
+    if (!uploadResult.success) {
+      return {
+        success: false,
+        error: uploadResult.error || "Erro no upload do template",
+      };
+    }
+
+    // Atualizar o template no banco com a URL do Supabase
+    const template = await db.certificateTemplate.update({
+      where: { id: templateId },
+      data: {
+        templateUrl: uploadResult.url,
+      },
+      include: {
+        course: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+    });
+
+    console.log("✅ Template enviado e atualizado:", template.id);
+
+    revalidatePath("/dashboard/courses");
+    revalidatePath("/dashboard/certificates");
+
+    return {
+      success: true,
+      template,
+      storageUrl: uploadResult.url,
+      storagePath: uploadResult.path,
+    };
+  } catch (error) {
+    console.error("❌ Erro no upload do template:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Erro desconhecido no upload",
+    };
+  }
+}
+
+// Download de template de certificado do Supabase Storage
+export async function downloadCertificateTemplateFromStorage(
+  templateId: string,
+) {
+  try {
+    console.log("📥 Baixando template do Supabase Storage...", { templateId });
+
+    // Buscar template no banco
+    const template = await db.certificateTemplate.findUnique({
+      where: { id: templateId },
+      include: {
+        course: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+    });
+
+    if (!template) {
+      return {
+        success: false,
+        error: "Template não encontrado",
+      };
+    }
+
+    if (!template.templateUrl) {
+      return {
+        success: false,
+        error: "Template não possui arquivo associado",
+      };
+    }
+
+    // Extrair o caminho do arquivo da URL
+    const url = new URL(template.templateUrl);
+    const filePath = url.pathname.split("/").slice(3).join("/"); // Remove /storage/v1/object/public/certificate-templates/
+
+    const downloadResult = await downloadCertificateTemplate(filePath);
+
+    if (!downloadResult.success) {
+      return {
+        success: false,
+        error: downloadResult.error || "Erro no download do template",
+      };
+    }
+
+    console.log("✅ Template baixado com sucesso");
+
+    return {
+      success: true,
+      data: downloadResult.data,
+      template,
+    };
+  } catch (error) {
+    console.error("❌ Erro no download do template:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Erro desconhecido no download",
+    };
+  }
+}
+
+// Obter URL pública do template
+export async function getCertificateTemplatePublicUrl(templateId: string) {
+  try {
+    console.log("🔗 Obtendo URL pública do template...", { templateId });
+
+    const template = await db.certificateTemplate.findUnique({
+      where: { id: templateId },
+      select: {
+        id: true,
+        templateUrl: true,
+        isActive: true,
+      },
+    });
+
+    if (!template) {
+      return {
+        success: false,
+        error: "Template não encontrado",
+      };
+    }
+
+    if (!template.templateUrl) {
+      return {
+        success: false,
+        error: "Template não possui arquivo associado",
+      };
+    }
+
+    if (!template.isActive) {
+      return {
+        success: false,
+        error: "Template não está ativo",
+      };
+    }
+
+    console.log("✅ URL pública obtida:", template.templateUrl);
+
+    return {
+      success: true,
+      url: template.templateUrl,
+    };
+  } catch (error) {
+    console.error("❌ Erro ao obter URL do template:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Erro desconhecido",
+    };
+  }
+}
+
+// Deletar template de certificado do Supabase Storage
+export async function deleteCertificateTemplateFromStorage(templateId: string) {
+  try {
+    console.log("🗑️ Excluindo template do Supabase Storage...", { templateId });
+
+    // Buscar template no banco
+    const template = await db.certificateTemplate.findUnique({
+      where: { id: templateId },
+      select: {
+        id: true,
+        templateUrl: true,
+      },
+    });
+
+    if (!template) {
+      return {
+        success: false,
+        error: "Template não encontrado",
+      };
+    }
+
+    // Se tem arquivo no storage, deletar
+    if (template.templateUrl) {
+      const url = new URL(template.templateUrl);
+      const filePath = url.pathname.split("/").slice(3).join("/");
+
+      const deleteResult = await deleteTemplateFile(filePath);
+
+      if (!deleteResult.success) {
+        console.warn(
+          "⚠️ Erro ao deletar arquivo do storage:",
+          deleteResult.error,
+        );
+        // Continuar mesmo se não conseguir deletar do storage
+      }
+    }
+
+    // Deletar do banco de dados
+    await db.certificateTemplate.delete({
+      where: { id: templateId },
+    });
+
+    console.log("✅ Template excluído com sucesso");
+
+    revalidatePath("/dashboard/courses");
+    revalidatePath("/dashboard/certificates");
+
+    return {
+      success: true,
+    };
+  } catch (error) {
+    console.error("❌ Erro ao excluir template:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Erro desconhecido na exclusão",
+    };
+  }
+}
+
+// Criar template de certificado com upload para Supabase Storage
+export async function createCertificateTemplateWithStorage(
+  courseId: string,
+  title: string,
+  description: string | null,
+  file: File | Buffer,
+  fileName?: string,
+) {
+  try {
+    console.log("📋 Criando template com upload para Supabase Storage...", {
+      courseId,
+      title,
+    });
+
+    // Primeiro criar o template no banco
+    const template = await db.certificateTemplate.create({
+      data: {
+        courseId,
+        title,
+        description,
+        templateUrl: "", // Será atualizado após o upload
+        isActive: true,
+      },
+    });
+
+    // Upload do arquivo para Supabase Storage
+    const uploadResult = await uploadCertificateTemplateToStorage(
+      template.id,
+      file,
+      courseId,
+      fileName,
+    );
+
+    if (!uploadResult.success) {
+      // Se o upload falhou, deletar o template criado
+      await db.certificateTemplate.delete({
+        where: { id: template.id },
+      });
+      return uploadResult;
+    }
+
+    console.log("✅ Template criado e enviado para Supabase Storage");
+
+    return {
+      success: true,
+      template: uploadResult.template,
+      storageUrl: uploadResult.storageUrl,
+      storagePath: uploadResult.storagePath,
+    };
+  } catch (error) {
+    console.error("❌ Erro ao criar template:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Erro desconhecido na criação",
+    };
+  }
+}
+
+// Atualizar template de certificado com upload para Supabase Storage
+export async function updateCertificateTemplateWithStorage(
+  templateId: string,
+  title: string,
+  description: string | null,
+  file?: File | Buffer,
+  fileName?: string,
+) {
+  try {
+    console.log("📝 Atualizando template com upload para Supabase Storage...", {
+      templateId,
+      title,
+    });
+
+    // Se tem arquivo novo, fazer upload
+    if (file) {
+      const uploadResult = await uploadCertificateTemplateToStorage(
+        templateId,
+        file,
+        "", // courseId não é necessário para update
+        fileName,
+      );
+
+      if (!uploadResult.success) {
+        return uploadResult;
+      }
+
+      // Atualizar template no banco
+      const template = await db.certificateTemplate.update({
+        where: { id: templateId },
+        data: {
+          title,
+          description,
+          templateUrl: uploadResult.storageUrl,
+        },
+        include: {
+          course: {
+            select: {
+              id: true,
+              title: true,
+            },
+          },
+        },
+      });
+
+      console.log("✅ Template atualizado e enviado para Supabase Storage");
+
+      return {
+        success: true,
+        template,
+        storageUrl: uploadResult.storageUrl,
+        storagePath: uploadResult.storagePath,
+      };
+    } else {
+      // Apenas atualizar dados sem arquivo
+      const template = await db.certificateTemplate.update({
+        where: { id: templateId },
+        data: {
+          title,
+          description,
+        },
+        include: {
+          course: {
+            select: {
+              id: true,
+              title: true,
+            },
+          },
+        },
+      });
+
+      console.log("✅ Template atualizado (sem arquivo)");
+
+      return {
+        success: true,
+        template,
+      };
+    }
+  } catch (error) {
+    console.error("❌ Erro ao atualizar template:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Erro desconhecido na atualização",
+    };
+  }
 }

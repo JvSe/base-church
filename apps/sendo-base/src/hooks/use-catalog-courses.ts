@@ -1,4 +1,5 @@
 import { getCourses, getUserEnrollments } from "@/src/lib/actions";
+import { addPastorPrefix } from "@/src/lib/helpers";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "./auth";
 
@@ -11,8 +12,9 @@ export function useCatalogCourses() {
     isLoading: coursesLoading,
     error: coursesError,
   } = useQuery({
-    queryKey: ["courses", "published"],
-    queryFn: () => getCourses({ filter: "published" }),
+    queryKey: ["courses", "published", user?.id],
+    queryFn: () =>
+      getCourses({ filter: "published", userAdm: user?.role === "ADMIN" }),
     select: (data) => data.courses,
   });
 
@@ -30,11 +32,13 @@ export function useCatalogCourses() {
       id: course.id,
       title: course.title,
       description: course.description,
-      image: course.image || "/api/placeholder/300/200",
+      image: course.image || null,
       duration: course.duration,
       level: course.level,
       category: course.category,
-      instructor: course.instructor?.name || "Instrutor não definido",
+      instructor:
+        addPastorPrefix(course.instructor?.name, course.instructor?.isPastor) ||
+        "Instrutor não definido",
       price: course.price || 0,
       rating: course.rating || 0,
       enrolledStudents: course.studentsCount || course._count?.enrollments || 0,

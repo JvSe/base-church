@@ -1,5 +1,5 @@
+import { addPastorPrefix } from "@/src/lib/helpers";
 import { User } from "lucide-react";
-import { getUserRoleLabel } from "../../helpers/course.helpers";
 
 type CourseInstructorProps = {
   instructor: any;
@@ -18,11 +18,10 @@ export function CourseInstructor({ instructor }: CourseInstructorProps) {
         </div>
         <div className="flex-1">
           <h3 className="dark-text-primary mb-1 text-lg font-semibold">
-            {instructor?.name || "Instrutor não informado"}
+            {addPastorPrefix(instructor?.name, instructor?.isPastor) ||
+              "Instrutor não informado"}
           </h3>
-          <p className="dark-text-secondary mb-2">
-            {getUserRoleLabel(instructor?.role, instructor?.isPastor)}
-          </p>
+
           <p className="dark-text-secondary leading-relaxed">
             {instructor?.bio || "Biografia não disponível"}
           </p>

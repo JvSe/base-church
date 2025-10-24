@@ -1,6 +1,6 @@
 "use client";
 
-import { ImageViewer } from "@/src/components/image-viewer";
+import { PdfViewer } from "@/src/components/pdf-viewer";
 import { Award, CheckCircle, Lock } from "lucide-react";
 
 type CertificateCardProps = {
@@ -10,6 +10,8 @@ type CertificateCardProps = {
 
 export function CertificateCard({ course, certificate }: CertificateCardProps) {
   if (!course.certificateTemplate) return null;
+
+  console.log("certificate", certificate);
 
   return (
     <div className="dark-border mt-auto mb-6 border-t">
@@ -28,11 +30,11 @@ export function CertificateCard({ course, certificate }: CertificateCardProps) {
         </div>
 
         {certificate ? (
-          <ImageViewer
-            imageBase64={certificate.template?.templateUrl || undefined}
-            imageUrl={certificate.template?.templateUrl || undefined}
+          <PdfViewer
+            pdfBase64={certificate.certificateBase64 || undefined}
+            certificateUrl={certificate.certificateUrl || undefined}
             title={`Certificado: ${course.title}`}
-            fileName={`certificado-${course.title.replace(/\s+/g, "-").toLowerCase()}.png`}
+            fileName={`certificado-${course.title.replace(/\s+/g, "-").toLowerCase()}.pdf`}
           >
             <div className="cursor-pointer space-y-3">
               <div className="rounded-lg bg-green-500/10 p-3">
@@ -47,7 +49,7 @@ export function CertificateCard({ course, certificate }: CertificateCardProps) {
                 </p>
               </div>
             </div>
-          </ImageViewer>
+          </PdfViewer>
         ) : (
           <div className="space-y-3">
             <div className="rounded-lg bg-yellow-500/10 p-3">
