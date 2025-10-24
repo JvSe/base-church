@@ -208,11 +208,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   };
 
   return (
-    <Sidebar
-      className="overflow-hidden rounded-xl"
-      collapsible="icon"
-      {...props}
-    >
+    <Sidebar className="rounded-xl" collapsible="icon" {...props}>
       {/* Header Simples */}
       <SidebarHeader className="dark-border w-full flex-row justify-between border-b pt-10 pb-5">
         <Link href="/profile" className="w-full max-w-4/5 flex-1">
