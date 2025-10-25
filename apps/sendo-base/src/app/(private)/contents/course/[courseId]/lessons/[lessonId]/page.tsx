@@ -7,7 +7,7 @@ import Link from "next/link";
 import { use, useState } from "react";
 import { useLessonProgress } from "../../../hooks/use-lesson-progress";
 import {
-  CertificateCard,
+  CourseTabs,
   LessonContent,
   LessonHeader,
   LessonInfo,
@@ -78,9 +78,10 @@ export default function LessonPage(props: LessonPageProps) {
 
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
-        <div className="flex flex-1 flex-col overflow-hidden p-8 pt-0">
+        {/* Content Area */}
+        <div className="flex flex-1 flex-col overflow-auto p-4 sm:p-6 lg:p-8">
           {/* Lesson Content */}
-          <div className="flex-1 overflow-hidden">
+          <div className="md:min-h-0 md:flex-1 md:overflow-hidden">
             <LessonContent
               lesson={lesson}
               userId={user?.id || ""}
@@ -100,28 +101,36 @@ export default function LessonPage(props: LessonPageProps) {
             showCertificateNotification={showCertificateNotification}
             onCompleteLesson={handleCompleteLesson}
           />
+
+          {/* Mobile Course Tabs - Below Lesson Info */}
+          <CourseTabs
+            course={course}
+            currentLessonId={lessonId}
+            certificate={certificate}
+          />
         </div>
 
-        {/* Sidebar */}
-        {isSidebarOpen ? (
-          <div className="flex flex-col overflow-hidden">
-            <LessonSidebar
-              onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-              course={course}
-              currentLessonId={lessonId}
-            />
-            <CertificateCard course={course} certificate={certificate} />
-          </div>
-        ) : (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="dark-text-secondary hover:dark-text-primary mr-4 -ml-4"
-          >
-            <PanelRightOpen size={24} />
-          </Button>
-        )}
+        {/* Desktop Sidebar */}
+        <div className="hidden lg:flex">
+          {isSidebarOpen ? (
+            <div className="flex flex-col overflow-hidden">
+              <LessonSidebar
+                onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+                course={course}
+                currentLessonId={lessonId}
+              />
+            </div>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="dark-text-secondary hover:dark-text-primary mr-4 -ml-4"
+            >
+              <PanelRightOpen size={24} />
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

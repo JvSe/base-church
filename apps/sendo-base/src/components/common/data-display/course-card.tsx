@@ -104,6 +104,8 @@ export function CourseCard({
           ? "dark-gradient-secondary"
           : "dark-gradient-primary";
 
+  console.log(course);
+
   // GRID LAYOUT
   if (layout === "grid") {
     return (

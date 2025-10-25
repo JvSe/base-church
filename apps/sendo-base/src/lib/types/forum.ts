@@ -13,6 +13,7 @@ export type ForumPost = {
     name: string | null;
     username: string | null;
     image: string | null;
+    isPastor: boolean;
   };
   _count: {
     comments: number;
@@ -58,6 +59,7 @@ export type ForumComment = {
     name: string | null;
     username: string | null;
     image: string | null;
+    isPastor: boolean;
   };
 };
 

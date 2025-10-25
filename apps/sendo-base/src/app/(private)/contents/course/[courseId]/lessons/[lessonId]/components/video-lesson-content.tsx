@@ -12,7 +12,7 @@ export function VideoLessonContent({
   onEnded,
 }: VideoLessonContentProps) {
   return (
-    <div className="h-full w-full overflow-hidden rounded-t-lg bg-black">
+    <div className="h-64 w-full overflow-hidden rounded-t-lg bg-black sm:h-80 md:h-96 lg:h-full">
       <VideoPlayer
         className="h-full w-full"
         url={videoUrl}

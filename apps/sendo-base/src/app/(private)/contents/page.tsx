@@ -11,7 +11,12 @@ import {
   StatsRow,
   ViewModeToggle,
 } from "@/src/components/courses";
-import { useCourseFilters, useMyEnrollments, usePageTitle } from "@/src/hooks";
+import {
+  useCourseFilters,
+  useMyEnrollments,
+  usePageTitle,
+  useResponsive,
+} from "@/src/hooks";
 import {
   Tabs,
   TabsContent,
@@ -40,6 +45,8 @@ export default function ContentsPage() {
     setViewMode,
     filteredCourses,
   } = useCourseFilters(approvedEnrollments);
+
+  const { isMobile } = useResponsive();
 
   const filteredPending = useCourseFilters(pendingEnrollments, {
     searchFields: ["title", "description", "instructor", "category", "tags"],
@@ -102,15 +109,19 @@ export default function ContentsPage() {
       <PageHeader
         title="Biblioteca de Conteúdos"
         description="Continue de onde parou e acompanhe seu progresso de aprendizado ministerial"
-        actions={[
-          {
-            label: "Filtrar",
-            icon: Filter,
-            className: "dark-glass dark-border hover:dark-border-hover",
-          },
-        ]}
+        actions={
+          isMobile
+            ? undefined
+            : [
+                {
+                  label: "Filtrar",
+                  icon: Filter,
+                  className: "dark-glass dark-border hover:dark-border-hover",
+                },
+              ]
+        }
       >
-        <div className="flex items-center justify-end">
+        <div className="hidden items-center justify-end md:flex">
           <ViewModeToggle mode={viewMode} onChange={setViewMode} />
         </div>
 
@@ -129,28 +140,28 @@ export default function ContentsPage() {
       {/* Tabs */}
       <div className="dark-shadow-sm rounded-xl p-1">
         <Tabs defaultValue="all" className="w-full">
-          <TabsList className="dark-bg-secondary grid h-12 w-full grid-cols-4">
+          <TabsList className="dark-bg-secondary mb-10 grid h-12 w-full grid-cols-2 gap-2 md:mb-0 md:grid-cols-4">
             <TabsTrigger
               value="all"
-              className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+              className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary p-2 text-sm"
             >
               Todos ({approvedEnrollments.length})
             </TabsTrigger>
             <TabsTrigger
               value="in-progress"
-              className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+              className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary p-2 text-sm"
             >
               Em Andamento ({inProgressCourses.length})
             </TabsTrigger>
             <TabsTrigger
               value="completed"
-              className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+              className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary p-2 text-sm"
             >
               Concluídos ({completedCourses.length})
             </TabsTrigger>
             <TabsTrigger
               value="pending-approval"
-              className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+              className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary p-2 text-sm"
             >
               Aguardando Autorização ({pendingEnrollments.length})
             </TabsTrigger>

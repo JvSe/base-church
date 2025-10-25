@@ -15,18 +15,24 @@ type CourseWhereClause = {
 // Course Actions
 export async function getCourses({
   filter = "published",
+  userAdm = false,
 }: {
   filter?: "all" | "published" | "draft";
+  userAdm?: boolean;
 } = {}) {
   try {
     // Construir o filtro baseado no parâmetro
-    const whereClause: CourseWhereClause = {};
+    let whereClause: CourseWhereClause = {};
 
-    if (filter === "published") {
+    if (userAdm) {
+      whereClause = {};
+    } else if (filter === "published") {
       whereClause.isPublished = true;
     } else if (filter === "draft") {
       whereClause.isPublished = false;
     }
+
+    console.log("whereClause", whereClause);
     // Se filter === "all", não aplicamos nenhum filtro de isPublished
 
     const courses = await prisma.course.findMany({
@@ -37,6 +43,7 @@ export async function getCourses({
             id: true,
             name: true,
             image: true,
+            isPastor: true,
           },
         },
         modules: {
@@ -97,6 +104,7 @@ export async function getCourseBySlug(slug: string) {
             image: true,
             bio: true,
             role: true,
+            isPastor: true,
           },
         },
         modules: {
@@ -1448,11 +1456,6 @@ export async function generateCertificateForCompletedCourse(
   courseId: string,
 ) {
   try {
-    console.log("🎯 Iniciando geração de certificado para:", {
-      userId,
-      courseId,
-    });
-
     // Check if course has certificate template
     const course = await prisma.course.findUnique({
       where: { id: courseId },
@@ -1460,9 +1463,6 @@ export async function generateCertificateForCompletedCourse(
         certificateTemplate: true,
       },
     });
-
-    console.log("📋 Curso encontrado:", !!course);
-    console.log("📋 Template de certificado:", !!course?.certificateTemplate);
 
     if (!course || !course.certificateTemplate) {
       return {
@@ -1496,8 +1496,24 @@ export async function generateCertificateForCompletedCourse(
     });
 
     if (existingCertificate) {
-      console.log("📜 Certificado já existe:", existingCertificate.id);
       return { success: true, certificate: existingCertificate };
+    }
+
+    // Get user information for the certificate
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    });
+
+    if (!user) {
+      return {
+        success: false,
+        error: "Usuário não encontrado",
+      };
     }
 
     // Generate verification code
@@ -1505,7 +1521,40 @@ export async function generateCertificateForCompletedCourse(
       Math.random().toString(36).substring(2, 15) +
       Math.random().toString(36).substring(2, 15);
 
-    console.log("🔑 Código de verificação gerado:", verificationCode);
+    // Call external API to generate certificate
+    let certificateBase64: string | null = null;
+
+    try {
+      const apiResponse = await fetch(
+        "https://certificados.basechurch.com.br/api/certificate",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            nome: user.name,
+            url_img: course.certificateTemplate.templateUrl,
+          }),
+        },
+      );
+
+      if (!apiResponse.ok) {
+        throw new Error(`API responded with status: ${apiResponse.status}`);
+      }
+
+      const apiData = await apiResponse.json();
+
+      if (apiData.success && apiData.certificate) {
+        certificateBase64 = apiData.certificate;
+      } else {
+        throw new Error(apiData.message || "Falha na geração do certificado");
+      }
+    } catch (apiError) {
+      console.error("❌ Error calling certificate API:", apiError);
+      // Continue with certificate creation even if API fails
+      // The certificate will be created without base64
+    }
 
     // Create certificate
     const certificate = await prisma.certificate.create({
@@ -1516,6 +1565,7 @@ export async function generateCertificateForCompletedCourse(
         verificationCode,
         status: "ISSUED",
         issuedAt: new Date(),
+        certificateBase64,
       },
       include: {
         template: true,

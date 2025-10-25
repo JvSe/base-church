@@ -32,16 +32,18 @@ export function LessonInfo({
   return (
     <div
       className={cn(
-        "dark-bg-primary dark-border flex-[0.2] rounded-b-lg border p-6",
+        "dark-bg-primary dark-border rounded-b-lg border p-4 sm:p-6 md:flex-[0.2]",
         lesson.type !== "VIDEO" && "rounded-t-lg",
       )}
     >
-      <div className="mb-4 flex items-start justify-between">
-        <div>
-          <h1 className="dark-text-primary mb-2 text-xl font-bold">
+      <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1">
+          <h1 className="dark-text-primary mb-2 text-lg font-bold sm:text-xl">
             {lesson.title}
           </h1>
-          <p className="dark-text-secondary">{lesson.description}</p>
+          <p className="dark-text-secondary text-sm sm:text-base">
+            {lesson.description}
+          </p>
         </div>
 
         <div className="flex items-center space-x-3">

@@ -15,8 +15,8 @@ import {
   updateCourseStatus,
 } from "@/src/lib/actions";
 import {
-  createCertificateTemplate,
-  updateCertificateTemplate,
+  createCertificateTemplateWithStorage,
+  updateCertificateTemplateWithStorage,
 } from "@/src/lib/actions/certificate";
 import {
   certificateTemplateSchema,
@@ -403,17 +403,18 @@ export default function EditCoursePage(props: EditCoursePageProps) {
 
     setIsLoading(true);
     try {
-      let templateUrl = "";
-      if (certificateFile) {
-        templateUrl = await convertFileToBase64(certificateFile);
+      if (!certificateFile) {
+        toast.error("Por favor, selecione um arquivo de template");
+        return;
       }
 
-      const result = await createCertificateTemplate({
+      const result = await createCertificateTemplateWithStorage(
         courseId,
-        title: data.title,
-        description: data.description,
-        templateUrl,
-      });
+        data.title,
+        data.description,
+        certificateFile,
+        certificateFile.name,
+      );
 
       if (result.success) {
         toast.success("Template de certificado criado com sucesso!");
@@ -425,7 +426,11 @@ export default function EditCoursePage(props: EditCoursePageProps) {
           queryKey: ["course", courseId],
         });
       } else {
-        toast.error(result.error || "Erro ao criar template de certificado");
+        toast.error(
+          "error" in result
+            ? result.error
+            : "Erro ao criar template de certificado",
+        );
       }
     } catch (error) {
       toast.error("Erro ao criar template de certificado");
@@ -442,19 +447,12 @@ export default function EditCoursePage(props: EditCoursePageProps) {
 
     setIsLoading(true);
     try {
-      let templateUrl = courseData.certificateTemplate.templateUrl || "";
-      if (certificateFile) {
-        templateUrl = await convertFileToBase64(certificateFile);
-      }
-
-      const result = await updateCertificateTemplate(
+      const result = await updateCertificateTemplateWithStorage(
         courseData.certificateTemplate.id,
-        {
-          title: data.title,
-          description: data.description,
-          templateUrl,
-          isActive: true,
-        },
+        data.title,
+        data.description,
+        certificateFile || undefined,
+        certificateFile?.name,
       );
 
       if (result.success) {
@@ -467,7 +465,9 @@ export default function EditCoursePage(props: EditCoursePageProps) {
         });
       } else {
         toast.error(
-          result.error || "Erro ao atualizar template de certificado",
+          "error" in result
+            ? result.error
+            : "Erro ao atualizar template de certificado",
         );
       }
     } catch (error) {

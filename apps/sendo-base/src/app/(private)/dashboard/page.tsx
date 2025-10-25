@@ -189,7 +189,7 @@ export default function DashboardPage() {
       />
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">
         <div className="dark-card dark-shadow-sm rounded-xl p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -287,7 +287,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Additional Stats */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
         <div className="dark-card dark-shadow-sm rounded-xl p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -360,7 +360,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Recent Activity */}
         <div className="dark-glass dark-shadow-sm rounded-xl p-6">
           <h2 className="dark-text-primary mb-6 flex items-center gap-2 text-xl font-bold">

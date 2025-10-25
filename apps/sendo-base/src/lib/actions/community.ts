@@ -181,6 +181,7 @@ export async function getForumPosts(userId?: string) {
             name: true,
             username: true,
             image: true,
+            isPastor: true,
           },
         },
         _count: {
@@ -222,6 +223,7 @@ export async function getForumPostById(postId: string, userId?: string) {
             name: true,
             username: true,
             image: true,
+            isPastor: true,
           },
         },
         comments: {
@@ -232,6 +234,7 @@ export async function getForumPostById(postId: string, userId?: string) {
                 name: true,
                 username: true,
                 image: true,
+                isPastor: true,
               },
             },
           },
@@ -288,6 +291,7 @@ export async function createForumPost(
             name: true,
             username: true,
             image: true,
+            isPastor: true,
           },
         },
         _count: {
@@ -335,6 +339,7 @@ export async function updateForumPost(
             name: true,
             username: true,
             image: true,
+            isPastor: true,
           },
         },
         _count: {
@@ -395,6 +400,7 @@ export async function createForumComment(
             name: true,
             username: true,
             image: true,
+            isPastor: true,
           },
         },
       },
@@ -434,6 +440,7 @@ export async function updateForumComment(
             name: true,
             username: true,
             image: true,
+            isPastor: true,
           },
         },
       },

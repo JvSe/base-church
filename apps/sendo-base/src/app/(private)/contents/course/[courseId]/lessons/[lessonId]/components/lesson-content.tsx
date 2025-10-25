@@ -112,7 +112,7 @@ export function LessonContent({
   const [isVideoEnded, setIsVideoEnded] = useState(false);
 
   useEffect(() => {
-    if (isUpdatingProgress) {
+    if (lesson.type === "VIDEO" && isUpdatingProgress) {
       setIsVideoEnded(true);
     }
   }, [isUpdatingProgress]);
@@ -121,6 +121,7 @@ export function LessonContent({
   if (isVideoEnded) {
     return <LessonCompletionFallback />;
   }
+
   // VIDEO Lesson
   if (lesson.type === "VIDEO") {
     return (

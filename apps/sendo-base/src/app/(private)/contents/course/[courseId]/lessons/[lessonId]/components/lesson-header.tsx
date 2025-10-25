@@ -16,8 +16,8 @@ export function LessonHeader({
   moduleTitle,
 }: LessonHeaderProps) {
   return (
-    <div className="dark-bg-secondary dark-border-b flex items-center justify-between px-6 py-4">
-      <div className="flex items-center space-x-4">
+    <div className="dark-bg-secondary dark-border-b flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
+      <div className="flex min-w-0 flex-1 items-center space-x-2 sm:space-x-4">
         <Button
           variant="ghost"
           size="sm"
@@ -25,12 +25,15 @@ export function LessonHeader({
           className="dark-text-secondary hover:dark-text-primary"
         >
           <Link href={`/contents/course/${courseId}`}>
-            <ArrowLeft size={16} className="mr-2" />
-            {courseTitle}
+            <ArrowLeft size={16} className="mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">{courseTitle}</span>
+            <span className="max-w-32 truncate sm:hidden">{courseTitle}</span>
           </Link>
         </Button>
-        <span className="dark-text-tertiary text-sm">/</span>
-        <span className="dark-text-secondary text-sm">{moduleTitle}</span>
+        <span className="dark-text-tertiary hidden text-sm sm:inline">/</span>
+        <span className="dark-text-secondary truncate text-sm">
+          {moduleTitle}
+        </span>
       </div>
     </div>
   );

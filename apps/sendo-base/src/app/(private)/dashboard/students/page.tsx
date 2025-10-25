@@ -19,6 +19,7 @@ import {
   updateUserPastorStatus,
   updateUserRole,
 } from "@/src/lib/actions";
+import { addPastorPrefix } from "@/src/lib/helpers";
 import {
   Accordion,
   AccordionContent,
@@ -1018,8 +1019,12 @@ export default function StudentsPage() {
                                               <p className="dark-text-secondary text-sm">
                                                 Instrutor:{" "}
                                                 <span className="dark-text-primary font-medium">
-                                                  {enrollment.course.instructor
-                                                    ?.name || "Não informado"}
+                                                  {addPastorPrefix(
+                                                    enrollment.course.instructor
+                                                      ?.name,
+                                                    enrollment.course.instructor
+                                                      ?.isPastor,
+                                                  ) || "Não informado"}
                                                 </span>
                                               </p>
                                             </div>

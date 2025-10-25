@@ -38,6 +38,7 @@ export async function enrollInCourse(userId: string, courseId: string) {
                 id: true,
                 name: true,
                 image: true,
+                isPastor: true,
               },
             },
           },
@@ -82,6 +83,7 @@ export async function getUserEnrollments(
                 id: true,
                 name: true,
                 image: true,
+                isPastor: true,
               },
             },
             modules: {
@@ -145,6 +147,7 @@ export async function getAllUserEnrollments(userId: string) {
                 id: true,
                 name: true,
                 image: true,
+                isPastor: true,
               },
             },
             modules: {

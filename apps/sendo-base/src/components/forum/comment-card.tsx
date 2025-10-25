@@ -1,6 +1,7 @@
 "use client";
 
 import { deleteForumComment, updateForumComment } from "@/src/lib/actions";
+import { addPastorPrefix } from "@/src/lib/helpers";
 import { formatRelativeDate } from "@/src/lib/helpers/date-helpers";
 import type { ForumComment } from "@/src/lib/types/forum";
 import { Button } from "@base-church/ui/components/button";
@@ -20,7 +21,8 @@ export function CommentCard({ comment, currentUserId }: CommentCardProps) {
   const [editContent, setEditContent] = useState(comment.content);
   const isOwner = currentUserId === comment.userId;
 
-  const displayName = comment.user.name || "Usuário";
+  const displayName =
+    addPastorPrefix(comment.user.name, comment.user.isPastor) || "Usuário";
   const displayUsername =
     comment.user.username ||
     `@${comment.user.name?.toLowerCase().replace(/\s+/g, "") || "usuario"}`;

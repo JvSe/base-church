@@ -132,32 +132,32 @@ export function HomeClientWrapper({
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
       </div>
 
-      <div className="relative mx-auto max-w-7xl space-y-8 p-6">
+      <div className="relative mx-auto max-w-7xl space-y-6 p-4 sm:space-y-8 sm:p-6">
         {/* Header */}
-        <div className="dark-glass dark-shadow-md rounded-2xl p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="dark-text-primary mb-2 text-3xl font-bold">
+        <div className="dark-glass dark-shadow-md rounded-2xl p-4 sm:p-6">
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+            <div className="min-w-0 flex-1">
+              <h1 className="dark-text-primary mb-2 text-2xl font-bold sm:text-3xl">
                 {getGreeting()},{" "}
                 {user?.name?.split(" ")[0] ||
                   userData?.name?.split(" ")[0] ||
                   "Usuário"}
                 ! 👋
               </h1>
-              <p className="dark-text-secondary">
+              <p className="dark-text-secondary text-sm sm:text-base">
                 Continue sua jornada de aprendizado
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="hidden items-center gap-3 md:flex">
               <NotificationsButton />
             </div>
           </div>
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <div className="dark-card dark-shadow-sm rounded-xl p-6">
+        <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
+          <div className="dark-card dark-shadow-sm flex min-h-[150px] flex-col rounded-xl p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="dark-text-tertiary text-sm font-medium">
@@ -171,7 +171,7 @@ export function HomeClientWrapper({
                 <BookOpen className="dark-primary" size={24} />
               </div>
             </div>
-            <div className="mt-4 flex items-center text-sm">
+            <div className="mt-auto flex items-center text-sm">
               <TrendingUp className="dark-success mr-1" size={16} />
               <span className="dark-success font-medium">
                 {activeCourses > 0
@@ -181,7 +181,7 @@ export function HomeClientWrapper({
             </div>
           </div>
 
-          <div className="dark-card dark-shadow-sm rounded-xl p-6">
+          <div className="dark-card dark-shadow-sm flex min-h-[150px] flex-col rounded-xl p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="dark-text-tertiary text-sm font-medium">
@@ -195,7 +195,7 @@ export function HomeClientWrapper({
                 <Clock className="dark-secondary" size={24} />
               </div>
             </div>
-            <div className="mt-4 flex items-center text-sm">
+            <div className="mt-auto flex items-center text-sm">
               <Activity className="dark-secondary mr-1" size={16} />
               <span className="dark-secondary font-medium">
                 {(userData as any)?.stats?.lastActivityAt
@@ -205,7 +205,7 @@ export function HomeClientWrapper({
             </div>
           </div>
 
-          <div className="dark-card dark-shadow-sm rounded-xl p-6">
+          <div className="dark-card dark-shadow-sm flex min-h-[150px] flex-col rounded-xl p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="dark-text-tertiary text-sm font-medium">
@@ -219,7 +219,7 @@ export function HomeClientWrapper({
                 <Award className="dark-warning" size={24} />
               </div>
             </div>
-            <div className="mt-4 flex items-center text-sm">
+            <div className="mt-auto flex items-center text-sm">
               <Star className="dark-warning mr-1" size={16} />
               <span className="dark-warning font-medium">
                 {certificates > 0
@@ -229,7 +229,7 @@ export function HomeClientWrapper({
             </div>
           </div>
 
-          <div className="dark-card dark-shadow-sm rounded-xl p-6">
+          <div className="dark-card dark-shadow-sm flex min-h-[150px] flex-col rounded-xl p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="dark-text-tertiary text-sm font-medium">
@@ -243,7 +243,7 @@ export function HomeClientWrapper({
                 <Flame className="dark-success" size={24} />
               </div>
             </div>
-            <div className="mt-4 flex items-center text-sm">
+            <div className="mt-auto flex items-center text-sm">
               <Target className="dark-success mr-1" size={16} />
               <span className="dark-success font-medium">
                 Meta: {userData?.goal?.dailyStudyHours} horas por dia
@@ -562,7 +562,7 @@ export function HomeClientWrapper({
           {/* Right Sidebar */}
           <div className="space-y-6">
             {/* Profile Card */}
-            <div className="dark-glass dark-shadow-sm rounded-xl p-6 text-center">
+            <div className="dark-glass dark-shadow-sm hidden rounded-xl p-6 text-center md:block">
               <div className="dark-primary-subtle-bg mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
                 <User className="dark-primary" size={28} />
               </div>

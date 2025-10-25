@@ -13,6 +13,11 @@ export interface CertificateTemplate {
   course: {
     id: string;
     title: string;
+    instructor?: {
+      id: string;
+      name: string;
+      isPastor: boolean;
+    };
   };
 }
 

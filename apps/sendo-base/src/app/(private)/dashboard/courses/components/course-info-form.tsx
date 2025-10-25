@@ -1,6 +1,7 @@
 "use client";
 
 import { COURSE_CATEGORIES } from "@/src/lib/constants";
+import { addPastorPrefix } from "@/src/lib/helpers";
 import {
   Accordion,
   AccordionContent,
@@ -76,7 +77,9 @@ export function CourseInfoForm({
   const courseDescription = form.watch("description") || "Sem descrição";
   const instructorId = form.watch("instructorId");
   const instructor = leadersData?.find((l) => l.id === instructorId);
-  const instructorName = instructor?.name || "Instrutor não definido";
+  const instructorName =
+    addPastorPrefix(instructor?.name, instructor?.isPastor) ||
+    "Instrutor não definido";
   const level = form.watch("level");
   const category = form.watch("category");
   const price = form.watch("price");
@@ -336,12 +339,12 @@ export function CourseInfoForm({
                                 className="dark-text-primary hover:dark-bg-tertiary"
                               >
                                 <div className="flex items-center space-x-2">
-                                  <span>{leader.name}</span>
-                                  {leader.isPastor && (
-                                    <span className="dark-primary text-xs font-medium">
-                                      (Pastor)
-                                    </span>
-                                  )}
+                                  <span>
+                                    {addPastorPrefix(
+                                      leader.name,
+                                      leader.isPastor,
+                                    )}
+                                  </span>
                                 </div>
                               </SelectItem>
                             ))}

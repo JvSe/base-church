@@ -26,12 +26,14 @@ export function CourseProgressCard({
     <div className="dark-card dark-shadow-sm rounded-xl p-6">
       <div className="relative">
         <div className="h-48 overflow-hidden rounded-3xl">
-          <Image
-            src={course.image ?? ""}
-            alt={course.title}
-            fill
-            className="rounded-xl object-cover"
-          />
+          {course.image && (
+            <Image
+              src={course.image ?? ""}
+              alt={course.title}
+              fill
+              className="rounded-xl object-cover"
+            />
+          )}
           <div className="bg-dark-bg-tertiary/70 absolute inset-0 mb-4 flex h-full items-center justify-center rounded-lg">
             <Play size={48} />
           </div>

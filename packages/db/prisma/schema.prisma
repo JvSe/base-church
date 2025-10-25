@@ -264,16 +264,17 @@ model CertificateTemplate {
 
 // Certificado emitido - criado quando usuário completa o curso
 model Certificate {
-  id               String            @id @default(uuid())
-  userId           String? // Nullable - só preenchido quando emitido
-  courseId         String
-  templateId       String
-  status           CertificateStatus @default(PENDING)
-  issuedAt         DateTime? // Nullable - só preenchido quando emitido
-  certificateUrl   String? // URL do certificado gerado (PNG)
-  verificationCode String?           @unique // Código único para verificação
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  id                String            @id @default(uuid())
+  userId            String? // Nullable - só preenchido quando emitido
+  courseId          String
+  templateId        String
+  status            CertificateStatus @default(PENDING)
+  issuedAt          DateTime? // Nullable - só preenchido quando emitido
+  certificateUrl    String? // URL do certificado gerado (PNG)
+  certificateBase64 String? // Base64 do certificado gerado pela API
+  verificationCode  String?           @unique // Código único para verificação
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 
   // Relations
   user     User?               @relation(fields: [userId], references: [id], onDelete: Cascade)

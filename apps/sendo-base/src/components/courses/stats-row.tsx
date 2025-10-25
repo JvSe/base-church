@@ -18,7 +18,7 @@ type StatsRowProps = {
 
 export function StatsRow({ stats }: StatsRowProps) {
   return (
-    <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-4">
+    <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
       {stats.map((stat, index) => (
         <StatCard key={index} value={stat.value} label={stat.label} />
       ))}

@@ -23,9 +23,9 @@ export function LessonSidebar({
   onToggleSidebar,
 }: LessonSidebarProps) {
   return (
-    <div className="dark-bg-primary dark-border dark-glass dark-border dark-shadow-lg flex w-96 flex-col rounded-lg border-l">
+    <div className="dark-bg-primary dark-border dark-glass dark-border dark-shadow-lg flex w-full flex-col rounded-lg border-l lg:w-96">
       {/* Sidebar Header */}
-      <div className="dark-border flex flex-row gap-3 border-b p-4">
+      <div className="dark-border flex flex-row gap-3 border-b p-3 sm:p-4">
         {/* Progress Circle */}
         <div className="mb-4 flex items-center justify-center">
           <div className="relative h-16 w-16">
@@ -81,14 +81,17 @@ export function LessonSidebar({
           </div>
 
           <div className="flex flex-col items-center">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onToggleSidebar}
-              className="dark-text-secondary hover:dark-text-primary"
-            >
-              <PanelRightClose size={24} />
-            </Button>
+            {/* Toggle button only on desktop */}
+            <div className="hidden lg:block">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onToggleSidebar}
+                className="dark-text-secondary hover:dark-text-primary"
+              >
+                <PanelRightClose size={24} />
+              </Button>
+            </div>
           </div>
         </div>
       </div>

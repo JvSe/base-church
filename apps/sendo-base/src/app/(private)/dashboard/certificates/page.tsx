@@ -5,6 +5,7 @@ import { LoadingState } from "@/src/components/common/feedback/loading-state";
 import { PageHeader } from "@/src/components/common/layout/page-header";
 import { PageLayout } from "@/src/components/common/layout/page-layout";
 import { usePageTitle } from "@/src/hooks";
+import { addPastorPrefix } from "@/src/lib/helpers";
 import { Button } from "@base-church/ui/components/button";
 import { Input } from "@base-church/ui/components/input";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -46,6 +47,7 @@ interface CertificateTemplate {
     instructor: {
       id: string;
       name: string | null;
+      isPastor: boolean;
     };
   };
   // Campos adicionais para compatibilidade com a UI
@@ -113,6 +115,7 @@ export default function CertificatesPage() {
         instructor: {
           id: template.course.instructor?.id || "",
           name: template.course.instructor?.name || null,
+          isPastor: template.course.instructor?.isPastor || false,
         },
       },
       // Campos adicionais para compatibilidade com a UI
@@ -379,7 +382,11 @@ export default function CertificatesPage() {
                           <div className="flex items-center text-sm">
                             <Edit className="dark-text-tertiary mr-2 h-3 w-3" />
                             <span className="dark-text-secondary">
-                              Instrutor: {template.instructorName}
+                              Instrutor:{" "}
+                              {addPastorPrefix(
+                                template.course.instructor?.name,
+                                template.course.instructor?.isPastor,
+                              )}
                             </span>
                           </div>
                           <div className="flex items-center text-sm">

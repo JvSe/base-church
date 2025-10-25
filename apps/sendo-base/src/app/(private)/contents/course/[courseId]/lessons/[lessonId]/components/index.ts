@@ -1,4 +1,7 @@
 export { CertificateCard } from "./certificate-card";
+export { CourseContentList } from "./course-content-list";
+export { CourseTabs } from "./course-tabs";
+export { DownloadMaterials } from "./download-materials";
 export { LessonContent } from "./lesson-content";
 export { LessonHeader } from "./lesson-header";
 export { LessonInfo } from "./lesson-info";
