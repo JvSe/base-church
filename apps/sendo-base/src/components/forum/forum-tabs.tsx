@@ -33,37 +33,37 @@ export function ForumTabs({ posts, onCreatePost }: ForumTabsProps) {
   return (
     <div className="dark-shadow-sm rounded-xl p-1">
       <Tabs defaultValue="all" className="w-full">
-        <TabsList className="dark-bg-secondary grid h-12 w-full grid-cols-5">
+        <TabsList className="dark-bg-secondary mb-10 grid h-12 w-full grid-cols-2 gap-2 md:mb-0 md:grid-cols-5">
           <TabsTrigger
             value="all"
-            className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+            className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary p-2 text-sm"
           >
             Todas ({posts.length})
           </TabsTrigger>
           <TabsTrigger
             value="trending"
-            className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+            className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary p-2 text-sm"
           >
             <TrendingUp size={14} className="mr-1" />
             Em Alta
           </TabsTrigger>
           <TabsTrigger
             value="recent"
-            className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+            className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary p-2 text-sm"
           >
             <Clock size={14} className="mr-1" />
             Recentes
           </TabsTrigger>
           <TabsTrigger
             value="solved"
-            className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+            className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary p-2 text-sm"
           >
             <MessageCircle size={14} className="mr-1" />
             Resolvidas ({solvedPosts.length})
           </TabsTrigger>
           <TabsTrigger
             value="unsolved"
-            className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary text-sm"
+            className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary p-2 text-sm"
           >
             <Users size={14} className="mr-1" />
             Abertas ({unsolvedPosts.length})

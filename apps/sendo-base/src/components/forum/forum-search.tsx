@@ -31,7 +31,7 @@ export function ForumSearch({
           placeholder={placeholder}
           value={searchQuery}
           onChange={(e) => handleSearchChange(e.target.value)}
-          className="dark-input h-12 pl-12 text-base"
+          className="dark-input h-12 pl-12 text-sm md:text-base"
         />
       </div>
     </div>

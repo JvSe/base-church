@@ -1,3 +1,4 @@
+import { MobileHeader } from "@/src/components/mobile";
 import { AppSidebar } from "@/src/components/sidebar/app-sidebar";
 import {
   SidebarInset,
@@ -12,11 +13,18 @@ export default function DashboardLayout({
   return (
     <div className="[--header-height:calc(--spacing(14))]">
       <SidebarProvider className="flex flex-col">
+        {/* Mobile Header */}
+        <MobileHeader />
+
         <div className="flex flex-1">
-          <AppSidebar variant="inset" />
+          {/* Desktop Sidebar */}
+          <AppSidebar variant="inset" className="hidden md:flex" />
 
           <SidebarInset className="overflow-hidden">
-            <div className="flex flex-1 flex-col gap-4 md:gap-6">
+            {/* Mobile Spacer */}
+            <div className="h-16 md:hidden" />
+
+            <div className="flex flex-1 flex-col gap-4 sm:gap-6">
               {children}
             </div>
           </SidebarInset>

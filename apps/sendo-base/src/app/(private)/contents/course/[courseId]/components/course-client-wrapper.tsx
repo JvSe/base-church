@@ -1,5 +1,6 @@
 "use client";
 
+import { PageLayout } from "@/src/components/common/layout/page-layout";
 import {
   CourseDetailHeader,
   CourseDetailTabs,
@@ -99,13 +100,8 @@ export function CourseClientWrapper({ params }: CourseClientWrapperProps) {
   );
 
   return (
-    <div className="dark-bg-primary min-h-screen">
-      {/* Background Pattern */}
-      <div className="fixed inset-0 opacity-3">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
-      </div>
-
-      <div className="relative mx-auto max-w-7xl space-y-6 p-6">
+    <PageLayout>
+      <div className="relative mx-auto max-w-7xl space-y-6 md:p-6">
         {/* Course Header with Progress Card */}
         <CourseDetailHeader course={course} reviewsCount={reviews.length}>
           <CourseProgressCard
@@ -155,6 +151,6 @@ export function CourseClientWrapper({ params }: CourseClientWrapperProps) {
           <CourseStatsSidebar course={course} additionalStats={progressStats} />
         </div>
       </div>
-    </div>
+    </PageLayout>
   );
 }

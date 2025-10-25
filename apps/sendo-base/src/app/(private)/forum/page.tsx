@@ -43,7 +43,7 @@ export default async function ForumPage() {
         description="Conecte-se, aprenda e compartilhe experiências ministeriais com nossa comunidade"
       >
         {/* Forum Stats */}
-        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-4">
+        <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
           <div className="dark-bg-secondary rounded-lg p-4 text-center">
             <div className="dark-text-primary mb-1 text-2xl font-bold">
               {totalDiscussions}

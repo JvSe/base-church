@@ -24,7 +24,7 @@ export function CourseDetailHeader({
   children,
 }: CourseDetailHeaderProps) {
   return (
-    <div className="dark-glass dark-shadow-md rounded-2xl p-8">
+    <div className="dark-glass dark-shadow-md rounded-2xl p-4 md:p-8">
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <div className="mb-4">
@@ -49,61 +49,63 @@ export function CourseDetailHeader({
             </p>
           </div>
 
-          <div className="mb-6 flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <div className="dark-primary-subtle-bg rounded-full p-2">
-                <User className="dark-primary" size={16} />
-              </div>
-              <div>
-                <div className="dark-text-primary text-sm font-medium">
-                  {addPastorPrefix(
-                    course.instructor?.name,
-                    course.instructor?.isPastor,
-                  ) || "Instrutor não informado"}
+          <div className="flex flex-1 flex-row justify-between md:flex-col">
+            <div className="mb-6 flex flex-1 flex-col items-start gap-6 md:flex-row md:items-center">
+              <div className="flex items-center gap-2">
+                <div className="dark-primary-subtle-bg rounded-full p-2">
+                  <User className="dark-primary" size={16} />
+                </div>
+                <div>
+                  <div className="dark-text-primary text-sm font-medium text-nowrap">
+                    {addPastorPrefix(
+                      course.instructor?.name,
+                      course.instructor?.isPastor,
+                    ) || "Instrutor não informado"}
+                  </div>
                 </div>
               </div>
+
+              <div className="flex items-center gap-1">
+                <Star className="dark-warning fill-current" size={16} />
+                <span className="dark-text-primary font-semibold">
+                  {course.averageRating || 0}
+                </span>
+                <span className="dark-text-tertiary text-sm">
+                  ({reviewsCount} avaliações)
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <Users className="dark-text-tertiary" size={16} />
+                <span className="dark-text-tertiary text-sm">
+                  {course.studentsCount?.toLocaleString() || 0} alunos
+                </span>
+              </div>
             </div>
 
-            <div className="flex items-center gap-1">
-              <Star className="dark-warning fill-current" size={16} />
-              <span className="dark-text-primary font-semibold">
-                {course.averageRating || 0}
-              </span>
-              <span className="dark-text-tertiary text-sm">
-                ({reviewsCount} avaliações)
-              </span>
-            </div>
-
-            <div className="flex items-center gap-1">
-              <Users className="dark-text-tertiary" size={16} />
-              <span className="dark-text-tertiary text-sm">
-                {course.studentsCount?.toLocaleString() || 0} alunos
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 text-sm">
-            <div className="flex items-center gap-1">
-              <Clock className="dark-text-tertiary" size={16} />
-              <span className="dark-text-tertiary">
-                {formatDuration(course.totalDuration || 0)}
-              </span>
-            </div>
-            <div className="flex items-center gap-1">
-              <BookOpen className="dark-text-tertiary" size={16} />
-              <span className="dark-text-tertiary">
-                {course.totalLessons || 0} aulas
-              </span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Globe className="dark-text-tertiary" size={16} />
-              <span className="dark-text-tertiary">Acesso vitalício</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Calendar className="dark-text-tertiary" size={16} />
-              <span className="dark-text-tertiary">
-                Atualizado em {formatDate(course.lastUpdated)}
-              </span>
+            <div className="flex flex-1 flex-col items-end gap-4 text-sm md:flex-row md:items-center">
+              <div className="flex items-center gap-1">
+                <Clock className="dark-text-tertiary" size={16} />
+                <span className="dark-text-tertiary">
+                  {formatDuration(course.totalDuration || 0)}
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                <BookOpen className="dark-text-tertiary" size={16} />
+                <span className="dark-text-tertiary">
+                  {course.totalLessons || 0} aulas
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Globe className="dark-text-tertiary" size={16} />
+                <span className="dark-text-tertiary">Acesso vitalício</span>
+              </div>
+              <div className="flex items-center justify-end gap-1 text-right md:items-center md:justify-start md:text-left">
+                <Calendar className="dark-text-tertiary" size={16} />
+                <span className="dark-text-tertiary w-2/3 text-right">
+                  Atualizado em {formatDate(course.lastUpdated)}
+                </span>
+              </div>
             </div>
           </div>
         </div>

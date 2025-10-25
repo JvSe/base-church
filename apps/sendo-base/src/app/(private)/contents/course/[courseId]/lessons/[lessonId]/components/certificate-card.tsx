@@ -14,11 +14,11 @@ export function CertificateCard({ course, certificate }: CertificateCardProps) {
   console.log("certificate", certificate);
 
   return (
-    <div className="dark-border mt-auto mb-6 border-t">
-      <div className="p-4 transition-all duration-300 hover:-translate-y-1">
+    <div className="dark-border mt-4 border-t lg:mt-auto lg:mb-6">
+      <div className="p-3 transition-all duration-300 hover:-translate-y-1 sm:p-4">
         <div className="mb-2 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <h4 className="dark-text-primary font-medium">
+            <h4 className="dark-text-primary text-sm font-medium sm:text-base">
               Certificado de Conclusão
             </h4>
             {certificate ? (

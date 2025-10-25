@@ -1,10 +1,13 @@
 "use client";
 
+import { MobileNotificationsDrawer } from "@/src/components/mobile";
+import { useResponsive } from "@/src/hooks";
 import { Bell } from "lucide-react";
 import { useNotifications } from "./hook";
 import { NotificationsDropdown } from "./notifications-dropdown";
 
 export function NotificationsButton() {
+  const { isMobile } = useResponsive();
   const {
     notifications,
     isLoading,
@@ -26,6 +29,19 @@ export function NotificationsButton() {
   // Mostrar erro (mas não quebrar a UI)
   if (error) {
     console.error("Erro ao carregar notificações:", error);
+  }
+
+  // Use drawer on mobile, dropdown on desktop
+  if (isMobile) {
+    return (
+      <MobileNotificationsDrawer
+        notifications={notifications}
+        onMarkAsRead={markAsRead}
+        onMarkAllAsRead={markAllAsRead}
+        onClearAll={clearAll}
+        isLoading={isLoading}
+      />
+    );
   }
 
   return (

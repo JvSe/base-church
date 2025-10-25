@@ -41,11 +41,16 @@ export function PageHeader({
   children,
 }: PageHeaderProps) {
   return (
-    <div className={cn("dark-glass dark-shadow-md rounded-2xl p-6", className)}>
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
+    <div
+      className={cn(
+        "dark-glass dark-shadow-md rounded-2xl p-4 sm:p-6",
+        className,
+      )}
+    >
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div className="min-w-0 flex-1">
           {typeof title === "string" ? (
-            <h1 className="dark-text-primary mb-2 text-3xl font-bold">
+            <h1 className="dark-text-primary mb-2 text-2xl font-bold sm:text-3xl">
               {title}
             </h1>
           ) : (
@@ -54,7 +59,9 @@ export function PageHeader({
           {description && (
             <>
               {typeof description === "string" ? (
-                <p className="dark-text-secondary">{description}</p>
+                <p className="dark-text-secondary text-sm sm:text-base">
+                  {description}
+                </p>
               ) : (
                 description
               )}
@@ -63,7 +70,7 @@ export function PageHeader({
         </div>
 
         {actions && actions.length > 0 && (
-          <div className="flex gap-2">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
             {actions.map((action, index) => {
               const ButtonContent = (
                 <>
@@ -78,7 +85,7 @@ export function PageHeader({
                     key={index}
                     asChild
                     variant={action.variant || "default"}
-                    className={action.className}
+                    className={cn("w-full sm:w-auto", action.className)}
                   >
                     <Link href={action.href}>{ButtonContent}</Link>
                   </Button>
@@ -90,7 +97,7 @@ export function PageHeader({
                   key={index}
                   onClick={action.onClick}
                   variant={action.variant || "default"}
-                  className={action.className}
+                  className={cn("w-full sm:w-auto", action.className)}
                 >
                   {ButtonContent}
                 </Button>

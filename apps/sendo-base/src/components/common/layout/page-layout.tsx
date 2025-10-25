@@ -46,7 +46,7 @@ export function PageLayout({
     <div className="dark-bg-primary min-h-screen">
       {/* Background Pattern */}
       {showPattern && (
-        <div className="fixed inset-0 opacity-3">
+        <div className="opacity-3 fixed inset-0">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
         </div>
       )}
@@ -54,7 +54,7 @@ export function PageLayout({
       {/* Content */}
       <div
         className={cn(
-          "relative mx-auto p-6",
+          "relative mx-auto p-4 sm:p-6 lg:p-8",
           maxWidthClasses[maxWidth],
           spacingClasses[spacing],
           className,

@@ -19,8 +19,8 @@ export function TextLessonContent({
   return (
     <div className="dark-bg-secondary flex h-full flex-col">
       {/* Content Area */}
-      <div className="flex-1 overflow-y-auto p-8">
-        <div className="dark-bg-primary dark-border mx-auto max-w-4xl rounded-lg border p-8 shadow-sm">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <div className="dark-bg-primary dark-border mx-auto max-w-4xl rounded-lg border p-4 shadow-sm sm:p-6 lg:p-8">
           {/* Render content with basic formatting */}
           <div className="dark-text-primary prose prose-slate dark:prose-invert max-w-none">
             <div
