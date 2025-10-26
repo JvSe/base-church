@@ -9,6 +9,7 @@ import { addPastorPrefix } from "@/src/lib/helpers";
 import { formatRelativeDate } from "@/src/lib/helpers/date-helpers";
 import { getSession } from "@/src/lib/helpers/session.helper";
 import type { ForumComment, ForumPost } from "@/src/lib/types/forum";
+import { Button } from "@base-church/ui/components/button";
 import { Eye, MessageCircle, Share, Users } from "lucide-react";
 
 export const dynamic = "force-dynamic";

@@ -6,7 +6,7 @@ import { LoadingState } from "@/src/components/common/feedback/loading-state";
 import { PageHeader } from "@/src/components/common/layout/page-header";
 import { PageLayout } from "@/src/components/common/layout/page-layout";
 import { Section } from "@/src/components/common/layout/section";
-import { useAuth, usePageTitle } from "@/src/hooks";
+import { useAuth, usePageTitle, useResponsive } from "@/src/hooks";
 import {
   approveEnrollment,
   deleteStudent,
@@ -115,6 +115,7 @@ export default function StudentsPage() {
   );
 
   const { user } = useAuth();
+  const { isMobile } = useResponsive();
 
   // Buscar dados dos alunos
   const {
@@ -547,23 +548,27 @@ export default function StudentsPage() {
       <PageHeader
         title="Gestão de Alunos 👥"
         description="Gerencie e acompanhe o progresso dos seus alunos"
-        actions={[
-          {
-            label: "Exportar",
-            icon: Download,
-            className: "dark-glass dark-border hover:dark-border-hover",
-          },
-          {
-            label: "Filtros",
-            icon: Filter,
-            className: "dark-glass dark-border hover:dark-border-hover",
-          },
-        ]}
+        actions={
+          isMobile
+            ? []
+            : [
+                {
+                  label: "Exportar",
+                  icon: Download,
+                  className: "dark-glass dark-border hover:dark-border-hover",
+                },
+                {
+                  label: "Filtros",
+                  icon: Filter,
+                  className: "dark-glass dark-border hover:dark-border-hover",
+                },
+              ]
+        }
       />
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <div className="dark-card dark-shadow-sm rounded-xl p-6">
+      <div className="grid grid-cols-2 gap-2 md:gap-6 lg:grid-cols-4">
+        <div className="dark-card dark-shadow-sm flex min-h-[150px] flex-col rounded-xl p-4 md:p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="dark-text-tertiary text-sm font-medium">
@@ -577,7 +582,7 @@ export default function StudentsPage() {
               <Users className="dark-primary" size={24} />
             </div>
           </div>
-          <div className="mt-4 flex items-center text-sm">
+          <div className="mt-auto flex items-center text-sm">
             <TrendingUp className="dark-success mr-1" size={16} />
             <span className="dark-success font-medium">
               {totalStudents} cadastrados
@@ -585,7 +590,7 @@ export default function StudentsPage() {
           </div>
         </div>
 
-        <div className="dark-card dark-shadow-sm rounded-xl p-6">
+        <div className="dark-card dark-shadow-sm flex min-h-[150px] flex-col rounded-xl p-4 md:p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="dark-text-tertiary text-sm font-medium">
@@ -607,7 +612,8 @@ export default function StudentsPage() {
           </div>
         </div>
 
-        <div className="dark-card dark-shadow-sm rounded-xl p-6">
+        <div className="dark-card dark-shadow-sm flex min-h-[150px] flex-col rounded-xl p-4 md:p-6">
+          {" "}
           <div className="flex items-center justify-between">
             <div>
               <p className="dark-text-tertiary text-sm font-medium">
@@ -621,7 +627,7 @@ export default function StudentsPage() {
               <BookOpen className="dark-secondary" size={24} />
             </div>
           </div>
-          <div className="mt-4 flex items-center text-sm">
+          <div className="mt-auto flex items-center text-sm">
             <TrendingUp className="dark-success mr-1" size={16} />
             <span className="dark-success font-medium">
               {Math.round(totalCoursesEnrolled / totalStudents)} por aluno
@@ -629,7 +635,7 @@ export default function StudentsPage() {
           </div>
         </div>
 
-        <div className="dark-card dark-shadow-sm rounded-xl p-6">
+        <div className="dark-card dark-shadow-sm flex min-h-[150px] flex-col rounded-xl p-4 md:p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="dark-text-tertiary text-sm font-medium">
@@ -643,7 +649,7 @@ export default function StudentsPage() {
               <Award className="dark-warning" size={24} />
             </div>
           </div>
-          <div className="mt-4 flex items-center text-sm">
+          <div className="mt-auto flex items-center text-sm">
             <TrendingUp className="dark-success mr-1" size={16} />
             <span className="dark-success font-medium">
               {Math.round((totalCertificates / totalCoursesEnrolled) * 100)}%
