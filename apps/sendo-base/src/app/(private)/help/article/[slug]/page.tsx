@@ -11,14 +11,7 @@ import { getHelpArticleBySlug } from "@/src/lib/actions";
 import { formatRelativeDate } from "@/src/lib/helpers/date-helpers";
 import type { HelpArticle } from "@/src/lib/types/help";
 import { Button } from "@base-church/ui/components/button";
-import {
-  ArrowLeft,
-  BookOpen,
-  Calendar,
-  ChevronRight,
-  Eye,
-  ThumbsUp,
-} from "lucide-react";
+import { BookOpen, Calendar, ChevronRight, Eye, ThumbsUp } from "lucide-react";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -86,16 +79,6 @@ export default async function HelpArticlePage({ params }: PageProps) {
           <ChevronRight size={14} />
           <span className="dark-text-secondary">{article.title}</span>
         </nav>
-
-        <Link href="/help">
-          <Button
-            variant="ghost"
-            className="dark-text-secondary hover:dark-text-primary"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar para Ajuda
-          </Button>
-        </Link>
       </div>
 
       {/* Article Header */}

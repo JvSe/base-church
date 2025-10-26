@@ -106,16 +106,6 @@ export default function ProfileEditAccessPage() {
                 : "Altere sua senha para manter sua conta segura"}
             </p>
           </div>
-          {!isEditingPassword && (
-            <Button
-              onClick={() => setIsEditingPassword(true)}
-              size="sm"
-              className="dark-btn-primary"
-            >
-              <Key size={16} className="mr-1" />
-              Alterar
-            </Button>
-          )}
         </div>
 
         <div className="space-y-4">
@@ -249,6 +239,17 @@ export default function ProfileEditAccessPage() {
             </>
           )}
         </div>
+
+        {!isEditingPassword && (
+          <Button
+            onClick={() => setIsEditingPassword(true)}
+            size="sm"
+            className="dark-btn-primary mt-6 w-full"
+          >
+            <Key size={16} className="mr-1" />
+            Alterar
+          </Button>
+        )}
       </div>
 
       {/* Security Tips */}

@@ -9,9 +9,7 @@ import { addPastorPrefix } from "@/src/lib/helpers";
 import { formatRelativeDate } from "@/src/lib/helpers/date-helpers";
 import { getSession } from "@/src/lib/helpers/session.helper";
 import type { ForumComment, ForumPost } from "@/src/lib/types/forum";
-import { Button } from "@base-church/ui/components/button";
-import { ArrowLeft, Eye, MessageCircle, Share, Users } from "lucide-react";
-import Link from "next/link";
+import { Eye, MessageCircle, Share, Users } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -63,19 +61,6 @@ export default async function ForumPostPage({ params }: PageProps) {
     <PageLayout>
       {/* View Tracker - registra visualização automaticamente */}
       <ViewTracker postId={postId} />
-
-      {/* Header with back button */}
-      <div className="mb-6">
-        <Link href="/forum">
-          <Button
-            variant="ghost"
-            className="dark-text-secondary hover:dark-text-primary mb-4"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar para o Fórum
-          </Button>
-        </Link>
-      </div>
 
       {/* Post Content */}
       <div className="dark-card dark-shadow-md mb-6 rounded-xl p-8">
