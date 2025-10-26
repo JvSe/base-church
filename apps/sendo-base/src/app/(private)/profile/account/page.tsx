@@ -129,7 +129,12 @@ export default function ProfileEditOverviewPage() {
               <User size={20} />
               Dados pessoais
             </h3>
-            <Button asChild size="sm" variant="info">
+            <Button
+              asChild
+              size="sm"
+              variant="info"
+              className="hidden md:block"
+            >
               <Link href="/profile/account/personal">
                 <Edit size={14} className="mr-1" />
                 Alterar
@@ -201,6 +206,18 @@ export default function ProfileEditOverviewPage() {
               )}
             </div>
           </div>
+
+          <Button
+            asChild
+            size="sm"
+            variant="info"
+            className="mt-10 w-full md:hidden"
+          >
+            <Link href="/profile/account/personal">
+              <Edit size={14} className="mr-1" />
+              Alterar
+            </Link>
+          </Button>
         </div>
 
         {/* Access Data Card */}

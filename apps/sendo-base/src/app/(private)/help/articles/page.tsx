@@ -8,7 +8,7 @@ import {
 import { getHelpArticles } from "@/src/lib/actions";
 import type { CategoryWithCount, HelpArticle } from "@/src/lib/types/help";
 import { Button } from "@base-church/ui/components/button";
-import { ArrowLeft, BookOpen } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -57,19 +57,6 @@ export default async function HelpArticlesPage({ searchParams }: PageProps) {
 
   return (
     <PageLayout>
-      {/* Back to Help */}
-      <div className="mb-4">
-        <Link href="/help">
-          <Button
-            variant="ghost"
-            className="dark-text-secondary hover:dark-text-primary"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar para Ajuda
-          </Button>
-        </Link>
-      </div>
-
       <PageHeader
         title={pageTitle}
         description={
@@ -77,6 +64,7 @@ export default async function HelpArticlesPage({ searchParams }: PageProps) {
             ? `${articles.length} ${articles.length === 1 ? "artigo encontrado" : "artigos encontrados"}`
             : "Explore nossa base de conhecimento completa"
         }
+        backButton={{ href: "/help", label: "Voltar para Ajuda" }}
       >
         <div className="mt-6">
           <ArticlesSearch />

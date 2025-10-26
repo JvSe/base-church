@@ -1,10 +1,7 @@
 "use client";
 
-import { useAuth } from "@/src/hooks";
-import { getUserProfile } from "@/src/lib/actions";
-import { Button } from "@base-church/ui/components/button";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Key, Settings, User } from "lucide-react";
+import { PageHeader } from "@/src/components/common/layout/page-header";
+import { Key, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -14,18 +11,6 @@ export default function ProfileEditLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { user } = useAuth();
-
-  const { data: userAuth } = useQuery({
-    queryKey: ["user", user?.id],
-    queryFn: () => getUserProfile(user!.id),
-    select: (data) => data.user,
-    enabled: !!user?.id,
-  });
-
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString("pt-BR");
-  };
 
   const navigationItems = [
     {
@@ -51,13 +36,13 @@ export default function ProfileEditLayout({
       href: "/profile/account/access",
       description: "Altere seu email e senha de acesso",
     },
-    {
-      id: "notifications",
-      label: "Preferências de notificação",
-      icon: Settings,
-      href: "/profile/account/notifications",
-      description: "Configure como você recebe notificações",
-    },
+    // {
+    //   id: "notifications",
+    //   label: "Preferências de notificação",
+    //   icon: Settings,
+    //   href: "/profile/account/notifications",
+    //   description: "Configure como você recebe notificações",
+    // },
   ];
 
   const getCurrentSection = () => {
@@ -67,8 +52,6 @@ export default function ProfileEditLayout({
     return currentItem || navigationItems[0];
   };
 
-  const currentSection = getCurrentSection();
-
   return (
     <div className="dark-bg-primary min-h-screen">
       {/* Background Pattern */}
@@ -76,33 +59,13 @@ export default function ProfileEditLayout({
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
       </div>
 
-      <div className="relative mx-auto max-w-7xl space-y-6 p-6">
+      <div className="relative mx-auto max-w-7xl space-y-6 p-4 md:p-6">
         {/* Header */}
-
-        <div className="dark-glass dark-shadow-md rounded-2xl p-6">
-          <div className="flex items-center space-x-4">
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="hover:dark-bg-tertiary"
-            >
-              <Link href="/profile">
-                <ArrowLeft size={16} className="mr-2" />
-                Voltar ao Perfil
-              </Link>
-            </Button>
-
-            <div className="flex-1">
-              <h1 className="dark-text-primary text-3xl font-bold">
-                Minha Conta
-              </h1>
-              <p className="dark-text-secondary mt-2">
-                Gerencie as informações de conta e dados pessoais.
-              </p>
-            </div>
-          </div>
-        </div>
+        <PageHeader
+          title="Minha Conta"
+          description="Gerencie as informações de conta e dados pessoais."
+          backButton={{ href: "/profile", label: "Voltar ao Perfil" }}
+        />
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
           {/* Navigation Sidebar */}

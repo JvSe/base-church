@@ -145,7 +145,7 @@ export default function ProfilePage() {
       {/* Header Profile */}
       <div className="dark-glass dark-shadow-md rounded-2xl p-8">
         <div className="mb-6 flex items-start justify-between">
-          <div className="flex items-start space-x-6">
+          <div className="flex w-full flex-col items-center md:flex-row md:items-start md:space-x-6">
             <div className="dark-primary-subtle-bg h-24 min-h-24 w-24 min-w-24 overflow-hidden rounded-full">
               <Avatar className="h-full w-full">
                 <AvatarImage
@@ -159,11 +159,11 @@ export default function ProfilePage() {
               </Avatar>
               {/* <User className="dark-primary" size={48} /> */}
             </div>
-            <div>
-              <h1 className="dark-text-primary mb-2 text-3xl font-bold">
+            <div className="mt-3 text-center md:mt-0">
+              <h1 className="dark-text-primary mb-1 text-3xl font-bold md:mb-2">
                 {userAuth?.name}
               </h1>
-              <p className="dark-text-secondary mb-2 text-lg">
+              <p className="dark-text-secondary mb-2 hidden text-lg md:block">
                 {userAuth?.role === "ADMIN"
                   ? "Administrador"
                   : userAuth?.role === "LIDER"
@@ -175,7 +175,7 @@ export default function ProfilePage() {
                   "Perfil em construção. Adicione uma biografia para compartilhar sua jornada ministerial."}
               </p>
 
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+              <div className="hidden flex-wrap items-center gap-x-4 gap-y-2 text-sm md:flex">
                 <div className="flex items-center space-x-1">
                   <Calendar className="dark-text-tertiary" size={14} />
                   <span className="dark-text-tertiary text-nowrap">
@@ -193,8 +193,8 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
-
-          <div className="flex items-center space-x-3">
+          {/* //BUTTON EDIT */}
+          <div className="hidden items-center space-x-3 md:flex">
             <Button asChild variant="info" className="gap-2">
               <Link href="/profile/account">
                 <Edit size={16} />
@@ -212,7 +212,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           <div className="dark-bg-secondary rounded-lg p-4 text-center">
             <div className="dark-text-primary mb-1 text-2xl font-bold">
               {coursesCompleted}
@@ -241,6 +241,15 @@ export default function ProfilePage() {
             </div>
             <div className="dark-text-tertiary text-sm">Sequência Atual</div>
           </div>
+        </div>
+
+        <div className="mt-4 flex w-full justify-center md:hidden">
+          <Button asChild variant="info" className="mt-2 w-full gap-2">
+            <Link href="/profile/account">
+              <Edit size={16} />
+              Editar Perfil
+            </Link>
+          </Button>
         </div>
       </div>
 
@@ -295,77 +304,147 @@ export default function ProfilePage() {
                           "border-l-4 border-l-green-400",
                       )}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="mb-2 flex items-center gap-3">
-                            <div className="relative">
-                              {enrollment.course?.image ? (
-                                <div className="dark-bg-tertiary flex h-20 w-40 items-center justify-center overflow-hidden rounded-xl">
-                                  <Image
-                                    src={enrollment.course.image}
-                                    alt={
-                                      enrollment.course.title ||
-                                      "Curso sem imagem"
-                                    }
-                                    fill
-                                    className="rounded-lg object-cover"
-                                  />
-                                </div>
-                              ) : (
-                                <div className="dark-bg-tertiary flex h-20 w-20 items-center justify-center rounded-lg">
-                                  <BookOpen
-                                    className="dark-text-tertiary"
-                                    size={24}
-                                  />
-                                </div>
-                              )}
+                      {/* Mobile Layout */}
+                      <div className="flex flex-col gap-3 md:hidden">
+                        {/* Image */}
+                        <div className="relative h-40 w-full overflow-hidden rounded-lg">
+                          {enrollment.course?.image ? (
+                            <Image
+                              src={enrollment.course.image}
+                              alt={
+                                enrollment.course.title || "Curso sem imagem"
+                              }
+                              fill
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div className="dark-bg-tertiary flex h-full w-full items-center justify-center">
+                              <BookOpen
+                                className="dark-text-tertiary"
+                                size={48}
+                              />
                             </div>
-                            <div>
-                              <h3 className="dark-text-primary font-semibold">
-                                {enrollment.course?.title || "Curso sem título"}
-                              </h3>
-                              <p className="dark-text-tertiary text-sm">
-                                Instrutor:{" "}
-                                <span className="dark-text-primary font-medium">
-                                  {enrollment.course?.instructor?.name ||
-                                    "Instrutor não definido"}
-                                </span>
-                              </p>
-                            </div>
-                          </div>
+                          )}
                         </div>
 
-                        <div className="flex flex-col items-end gap-2">
-                          <div className="flex items-center gap-2">
+                        {/* Content */}
+                        <div className="space-y-2">
+                          <div>
+                            <h3 className="dark-text-primary line-clamp-2 font-semibold">
+                              {enrollment.course?.title || "Curso sem título"}
+                            </h3>
+                            <p className="dark-text-tertiary mt-0.5 line-clamp-1 text-xs">
+                              {enrollment.course?.instructor?.name ||
+                                "Instrutor não definido"}
+                            </p>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-2">
                             <span
-                              className={`inline-flex items-center rounded-full px-3 py-1.5 text-xs font-medium ${getEnrollmentStatusColor(enrollment.status)}`}
+                              className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getEnrollmentStatusColor(enrollment.status)}`}
                             >
                               {getEnrollmentStatusText(enrollment.status)}
                             </span>
+                            {enrollment.status === "approved" && (
+                              <span className="dark-primary text-xs font-medium">
+                                {Math.round(enrollment.progress || 0)}% completo
+                              </span>
+                            )}
                           </div>
 
                           {enrollment.status === "approved" && (
-                            <div className="text-right">
-                              <span className="dark-primary text-sm font-medium">
-                                {Math.round(enrollment.progress || 0)}% completo
-                              </span>
+                            <div className="dark-bg-tertiary h-2 w-full rounded-full">
+                              <div
+                                className={`h-2 rounded-full transition-all duration-300 ${
+                                  enrollment.progress === 100
+                                    ? "bg-dark-success"
+                                    : "dark-gradient-primary"
+                                }`}
+                                style={{
+                                  width: `${enrollment.progress || 0}%`,
+                                }}
+                              />
                             </div>
                           )}
                         </div>
                       </div>
 
-                      {enrollment.status === "approved" && (
-                        <div className="dark-bg-tertiary mt-3 h-2 w-full rounded-full">
-                          <div
-                            className={`h-2 rounded-full transition-all duration-300 ${
-                              enrollment.progress === 100
-                                ? "bg-dark-success"
-                                : "dark-gradient-primary"
-                            }`}
-                            style={{ width: `${enrollment.progress || 0}%` }}
-                          />
+                      {/* Desktop Layout */}
+                      <div className="hidden md:block">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="mb-2 flex items-center gap-3">
+                              <div className="relative">
+                                {enrollment.course?.image ? (
+                                  <div className="dark-bg-tertiary flex h-20 w-40 items-center justify-center overflow-hidden rounded-xl">
+                                    <Image
+                                      src={enrollment.course.image}
+                                      alt={
+                                        enrollment.course.title ||
+                                        "Curso sem imagem"
+                                      }
+                                      fill
+                                      className="rounded-lg object-cover"
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="dark-bg-tertiary flex h-20 w-20 items-center justify-center rounded-lg">
+                                    <BookOpen
+                                      className="dark-text-tertiary"
+                                      size={24}
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                              <div>
+                                <h3 className="dark-text-primary font-semibold">
+                                  {enrollment.course?.title ||
+                                    "Curso sem título"}
+                                </h3>
+                                <p className="dark-text-tertiary text-sm">
+                                  Instrutor:{" "}
+                                  <span className="dark-text-primary font-medium">
+                                    {enrollment.course?.instructor?.name ||
+                                      "Instrutor não definido"}
+                                  </span>
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col items-end gap-2">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={`inline-flex items-center rounded-full px-3 py-1.5 text-xs font-medium ${getEnrollmentStatusColor(enrollment.status)}`}
+                              >
+                                {getEnrollmentStatusText(enrollment.status)}
+                              </span>
+                            </div>
+
+                            {enrollment.status === "approved" && (
+                              <div className="text-right">
+                                <span className="dark-primary text-sm font-medium">
+                                  {Math.round(enrollment.progress || 0)}%
+                                  completo
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      )}
+
+                        {enrollment.status === "approved" && (
+                          <div className="dark-bg-tertiary mt-3 h-2 w-full rounded-full">
+                            <div
+                              className={`h-2 rounded-full transition-all duration-300 ${
+                                enrollment.progress === 100
+                                  ? "bg-dark-success"
+                                  : "dark-gradient-primary"
+                              }`}
+                              style={{ width: `${enrollment.progress || 0}%` }}
+                            />
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </Link>
                 ))}

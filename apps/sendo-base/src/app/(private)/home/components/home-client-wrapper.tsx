@@ -61,9 +61,6 @@ export function HomeClientWrapper({
 }: HomeClientWrapperProps) {
   const { user } = useAuth();
 
-  console.log("userData", userData);
-  console.log("user", user);
-
   function getGreeting() {
     const hour = new Date().getHours();
     if (hour < 12) return "Bom dia";

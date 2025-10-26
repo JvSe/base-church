@@ -1,3 +1,4 @@
+import { cn } from "@base-church/ui/lib/utils";
 import type { ReactNode } from "react";
 
 type SectionProps = {
@@ -14,13 +15,18 @@ export function Section({
   title,
   description,
   right,
-  className = "dark-glass dark-shadow-sm rounded-xl p-6",
+  className,
   headerClassName = "mb-6 flex items-center justify-between",
   contentClassName = "",
   children,
 }: SectionProps) {
   return (
-    <div className={className}>
+    <div
+      className={cn(
+        "dark-glass dark-shadow-sm rounded-xl p-4 md:p-6",
+        className,
+      )}
+    >
       {(title || description || right) && (
         <div className={headerClassName}>
           <div>

@@ -114,7 +114,7 @@ export default function StudentsPage() {
     null,
   );
 
-  const { user, isAuthenticated, isLoading: userLoading } = useAuth();
+  const { user } = useAuth();
 
   // Buscar dados dos alunos
   const {
@@ -127,8 +127,6 @@ export default function StudentsPage() {
     queryFn: getAllStudents,
     select: (data) => data.students,
   });
-
-  console.log("studentsData", studentsData);
 
   // Buscar estatísticas dos alunos
   const {
@@ -438,7 +436,6 @@ export default function StudentsPage() {
     }
   };
 
-  // Abrir automaticamente matrículas de alunos com pendências
   useEffect(() => {
     if (
       allEnrollmentsData &&
@@ -670,7 +667,7 @@ export default function StudentsPage() {
       </Section>
 
       {/* Students List */}
-      <Section title={`Lista de Alunos (${filteredStudents.length})`}>
+      <Section>
         <div className="mb-6 flex items-center justify-between">
           <h2 className="dark-text-primary flex items-center gap-2 text-xl font-bold">
             <Users className="dark-primary" size={24} />
@@ -706,8 +703,68 @@ export default function StudentsPage() {
                     value={`student-${student.id}`}
                     className={`dark-glass dark-shadow-sm rounded-xl`}
                   >
-                    <AccordionTrigger className="dark-card hover:dark-bg-secondary p-4 transition-all">
-                      <div className="flex w-full items-center justify-between">
+                    <AccordionTrigger
+                      className="dark-card hover:dark-bg-secondary w-full p-4 transition-all"
+                      arrow={true}
+                    >
+                      {/* Mobile Layout */}
+                      <div className="flex w-full min-w-0 items-center gap-2 md:hidden">
+                        <div className="flex min-w-0 flex-1 items-start gap-3 overflow-hidden pr-2">
+                          <div
+                            className={`flex-shrink-0 rounded-xl p-2 ${
+                              hasPendingEnrollments
+                                ? "dark-warning-bg"
+                                : "dark-primary-subtle-bg"
+                            }`}
+                          >
+                            {hasPendingEnrollments ? (
+                              <Clock
+                                className="dark-warning animate-pulse"
+                                size={20}
+                              />
+                            ) : (
+                              <Users className="dark-primary" size={20} />
+                            )}
+                          </div>
+                          <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+                            <div className="flex min-w-0 items-center justify-between gap-2">
+                              <h3 className="dark-text-primary truncate font-semibold">
+                                {student.name}
+                              </h3>
+                              {hasPendingEnrollments && (
+                                <div className="dark-warning-bg flex flex-shrink-0 items-center gap-1 rounded-full px-2 py-0.5">
+                                  <Clock className="dark-warning h-3 w-3 animate-pulse" />
+                                  <span className="dark-warning text-xs font-medium whitespace-nowrap">
+                                    {
+                                      getStudentPendingEnrollments(student.id)
+                                        .length
+                                    }{" "}
+                                    pendente
+                                    {getStudentPendingEnrollments(student.id)
+                                      .length !== 1
+                                      ? "s"
+                                      : ""}
+                                  </span>
+                                </div>
+                              )}
+                              <span
+                                className={`flex-shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(student.approvalStatus)}`}
+                              >
+                                {getStatusText(student.approvalStatus)}
+                              </span>
+                            </div>
+                            <p className="dark-text-secondary truncate text-sm">
+                              {student.email}
+                            </p>
+                            <span className="dark-text-tertiary text-xs">
+                              {getRoleText(student.role, student.isPastor)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Desktop Layout */}
+                      <div className="hidden w-full items-center justify-between md:flex">
                         <div className="flex items-center gap-3">
                           <div
                             className={`rounded-xl p-2 ${
