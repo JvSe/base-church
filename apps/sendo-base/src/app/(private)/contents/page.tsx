@@ -23,7 +23,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@base-church/ui/components/tabs";
-import { Filter, Search } from "lucide-react";
+import { Search } from "lucide-react";
 
 export default function ContentsPage() {
   usePageTitle("Meus Cursos");
@@ -109,27 +109,12 @@ export default function ContentsPage() {
       <PageHeader
         title="Biblioteca de Conteúdos"
         description="Continue de onde parou e acompanhe seu progresso de aprendizado ministerial"
-        actions={
-          isMobile
-            ? undefined
-            : [
-                {
-                  label: "Filtrar",
-                  icon: Filter,
-                  className: "dark-glass dark-border hover:dark-border-hover",
-                },
-              ]
-        }
       >
-        <div className="hidden items-center justify-end md:flex">
-          <ViewModeToggle mode={viewMode} onChange={setViewMode} />
-        </div>
-
         <StatsRow stats={stats} />
       </PageHeader>
 
       {/* Search */}
-      <div className="dark-glass dark-shadow-sm rounded-xl p-4">
+      <div className="dark-glass dark-shadow-sm flex flex-row rounded-xl p-4">
         <CourseSearchBar
           value={searchQuery}
           onChange={setSearchQuery}
@@ -140,32 +125,37 @@ export default function ContentsPage() {
       {/* Tabs */}
       <div className="dark-shadow-sm rounded-xl p-1">
         <Tabs defaultValue="all" className="w-full">
-          <TabsList className="dark-bg-secondary mb-10 grid h-12 w-full grid-cols-2 gap-2 md:mb-0 md:grid-cols-4">
-            <TabsTrigger
-              value="all"
-              className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary p-2 text-sm"
-            >
-              Todos ({approvedEnrollments.length})
-            </TabsTrigger>
-            <TabsTrigger
-              value="in-progress"
-              className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary p-2 text-sm"
-            >
-              Em Andamento ({inProgressCourses.length})
-            </TabsTrigger>
-            <TabsTrigger
-              value="completed"
-              className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary p-2 text-sm"
-            >
-              Concluídos ({completedCourses.length})
-            </TabsTrigger>
-            <TabsTrigger
-              value="pending-approval"
-              className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary p-2 text-sm"
-            >
-              Aguardando Autorização ({pendingEnrollments.length})
-            </TabsTrigger>
-          </TabsList>
+          <div>
+            <TabsList className="dark-bg-secondary mb-10 grid h-12 w-full grid-cols-2 gap-2 md:mb-0 md:grid-cols-4">
+              <TabsTrigger
+                value="all"
+                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary p-2 text-sm"
+              >
+                Todos ({approvedEnrollments.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="in-progress"
+                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary p-2 text-sm"
+              >
+                Em Andamento ({inProgressCourses.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="completed"
+                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary p-2 text-sm"
+              >
+                Concluídos ({completedCourses.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="pending-approval"
+                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary p-2 text-sm"
+              >
+                Aguardando Autorização ({pendingEnrollments.length})
+              </TabsTrigger>
+            </TabsList>
+            <div className="mt-2 hidden items-center justify-end md:flex">
+              <ViewModeToggle mode={viewMode} onChange={setViewMode} />
+            </div>
+          </div>
 
           <TabsContent value="all" className="mt-6">
             {filteredCourses.length > 0 ? (

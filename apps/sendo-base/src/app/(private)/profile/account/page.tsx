@@ -2,7 +2,7 @@
 
 import { useAuth, usePageTitle } from "@/src/hooks";
 import { getUserProfile, updateUserProfileData } from "@/src/lib/actions";
-import { formatDocument } from "@/src/lib/helpers";
+import { formatDocument, formatPhone } from "@/src/lib/helpers";
 import {
   Avatar,
   AvatarFallback,
@@ -129,12 +129,7 @@ export default function ProfileEditOverviewPage() {
               <User size={20} />
               Dados pessoais
             </h3>
-            <Button
-              asChild
-              size="sm"
-              variant="info"
-              className="hidden md:block"
-            >
+            <Button asChild size="sm" variant="info" className="hidden md:flex">
               <Link href="/profile/account/personal">
                 <Edit size={14} className="mr-1" />
                 Alterar
@@ -144,9 +139,9 @@ export default function ProfileEditOverviewPage() {
 
           <div className="flex gap-6">
             {/* Foto do perfil */}
-            <div className="flex h-min justify-center">
+            <div className="group flex h-min flex-col items-center justify-center gap-2">
               <div
-                className="group relative cursor-pointer"
+                className="relative cursor-pointer"
                 onClick={handleImageSelect}
               >
                 <Avatar className="group-hover:ring-primary h-28 w-28 ring-2 ring-transparent transition-all duration-200">
@@ -164,6 +159,10 @@ export default function ProfileEditOverviewPage() {
                 <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
                   <Camera className="h-6 w-6 text-white" />
                 </div>
+              </div>
+              <div className="flex cursor-pointer items-center gap-1">
+                <Camera className="h-4 w-4 text-white" />
+                <span className="text-xs font-semibold">Alterar foto</span>
               </div>
             </div>
 
@@ -198,7 +197,7 @@ export default function ProfileEditOverviewPage() {
                   <Phone className="dark-text-tertiary" size={16} />
                   <div>
                     <p className="dark-text-secondary text-sm font-medium">
-                      {userAuth.phone}
+                      {formatPhone(userAuth.phone)}
                     </p>
                     <p className="dark-text-tertiary text-xs">Telefone</p>
                   </div>

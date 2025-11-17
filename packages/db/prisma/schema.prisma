@@ -62,7 +62,7 @@ model User {
   name                 String?
   email                String?            @unique
   emailVerified        DateTime?
-  image                String?
+  image                String? // URL da imagem de perfil no Supabase Storage
   username             String?            @unique
   role                 UserRole           @default(MEMBROS)
   isPastor             Boolean            @default(false)
@@ -130,7 +130,7 @@ model Course {
   description     String?
   longDescription String?
   slug            String   @unique
-  image           String?
+  image           String? // URL da imagem do curso no Supabase Storage
   duration        Int? // in minutes
   level           String? // beginner, intermediate, advanced
   category        String?
@@ -157,6 +157,7 @@ model Course {
   certificates        Certificate[]
   certificateTemplate CertificateTemplate?
   reviews             CourseReview[]
+  trackCourses        TrackCourse[] // Relação com trilhas
 
   @@map("courses")
 }
@@ -762,4 +763,49 @@ model SupportOption {
   updatedAt    DateTime @updatedAt
 
   @@map("support_options")
+}
+
+// ============================================================================
+// TRACKS (TRILHAS DE ESTUDO) SYSTEM
+// ============================================================================
+
+// Trilhas de estudo - coleções ordenadas de cursos
+model Track {
+  id           String   @id @default(uuid())
+  title        String
+  description  String?  @db.Text
+  slug         String   @unique
+  image        String? // URL da imagem da trilha no Supabase Storage
+  category     String? // Categoria da trilha (fundamentos, discipulado, etc)
+  level        String? // beginner, intermediate, advanced
+  duration     Int? // Duração total estimada em minutos
+  isPublished  Boolean  @default(false)
+  isFeatured   Boolean  @default(false)
+  order        Int      @default(0) // Ordem de exibição
+  objectives   String[] // Array de objetivos de aprendizado
+  requirements String[] // Array de requisitos
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  courses TrackCourse[]
+
+  @@map("tracks")
+}
+
+// Relação entre trilhas e cursos (com ordem)
+model TrackCourse {
+  id         String   @id @default(uuid())
+  trackId    String
+  courseId   String
+  order      Int // Ordem do curso na trilha
+  isRequired Boolean  @default(true) // Se é obrigatório completar este curso
+  createdAt  DateTime @default(now())
+
+  // Relations
+  track  Track  @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([trackId, courseId]) // Um curso não pode aparecer duas vezes na mesma trilha
+  @@map("track_courses")
 }

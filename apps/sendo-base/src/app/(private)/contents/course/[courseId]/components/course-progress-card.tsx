@@ -71,10 +71,13 @@ export function CourseProgressCard({
           </Button>
         ) : null}
 
-        <Button className="dark-glass dark-border hover:dark-border-hover w-full">
-          <Download className="mr-2" size={16} />
-          Baixar Recursos
-        </Button>
+        {/* Botão de Recursos - só aparece se houver materiais */}
+        {course.materials && course.materials.length > 0 && (
+          <Button className="dark-glass dark-border hover:dark-border-hover w-full">
+            <Download className="mr-2" size={16} />
+            Baixar Recursos ({course.materials.length})
+          </Button>
+        )}
       </div>
     </div>
   );

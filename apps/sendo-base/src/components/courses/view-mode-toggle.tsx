@@ -12,11 +12,14 @@ type ViewModeToggleProps = {
 
 export function ViewModeToggle({ mode, onChange }: ViewModeToggleProps) {
   return (
-    <div className="dark-bg-secondary flex items-center rounded-lg p-1">
+    <div className="dark-bg-secondary flex items-center gap-2 rounded-lg p-1">
       <Button
         variant="ghost"
         size="sm"
         onClick={() => onChange("grid")}
+        style={{
+          transform: "translateY(0px)",
+        }}
         className={
           mode === "grid"
             ? "dark-btn-primary"
@@ -29,6 +32,9 @@ export function ViewModeToggle({ mode, onChange }: ViewModeToggleProps) {
         variant="ghost"
         size="sm"
         onClick={() => onChange("list")}
+        style={{
+          transform: "translateY(0px)",
+        }}
         className={
           mode === "list"
             ? "dark-btn-primary"
