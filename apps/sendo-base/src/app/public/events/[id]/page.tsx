@@ -309,21 +309,9 @@ export default function EventPage(props: EventPageProps) {
                 <div className="dark-text-primary text-sm font-medium">
                   Duração
                 </div>
-                <div className="dark-text-tertiary text-xs">
+                <div className="dark-text-tertiary text-xs capitalize">
                   {durationMs > 0
-                    ? (() => {
-                        const duration = dayjs.duration(durationMs);
-                        const hours = Math.floor(duration.asHours());
-                        const minutes = duration.minutes();
-                        if (hours > 0 && minutes > 0) {
-                          return `${hours}h ${minutes}min`;
-                        } else if (hours > 0) {
-                          return `${hours}h`;
-                        } else if (minutes > 0) {
-                          return `${minutes}min`;
-                        }
-                        return duration.locale("pt-br").humanize();
-                      })()
+                    ? dayjs.duration(durationMs).locale("pt-br").humanize()
                     : "Não especificada"}
                 </div>
               </div>
