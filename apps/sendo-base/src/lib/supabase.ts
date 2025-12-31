@@ -49,11 +49,12 @@ export function getPublicUrl(bucket: string, path: string): string {
 export function extractPathFromUrl(url: string, bucket: string): string | null {
   try {
     if (!url.includes("supabase")) return null;
-    
+
     const urlParts = url.split(`/public/${bucket}/`);
     if (urlParts.length < 2) return null;
-    
-    return urlParts[1];
+
+    const path = urlParts[1];
+    return path || null;
   } catch {
     return null;
   }

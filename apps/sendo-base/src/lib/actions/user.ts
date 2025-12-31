@@ -150,6 +150,7 @@ export async function updateUserProfileData({
           console.error("❌ Erro no upload do avatar:", uploadResult.error);
           // Manter imagem antiga em caso de erro
           imageUrl = currentUser?.image || undefined;
+          throw new Error("Erro no upload do avatar");
         }
       }
     }
@@ -163,8 +164,6 @@ export async function updateUserProfileData({
       },
     });
 
-    revalidatePath("/profile");
-    revalidatePath("/profile/account");
     return { success: true, user: updatedUser };
   } catch (error) {
     console.error("❌ Erro ao atualizar perfil:", error);

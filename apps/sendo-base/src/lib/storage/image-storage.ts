@@ -1,11 +1,11 @@
 "use server";
 
-import { supabaseAdmin } from "../supabase";
 import {
   STORAGE_BUCKETS,
+  extractPathFromUrl,
   generateUniqueFileName,
   getPublicUrl,
-  extractPathFromUrl,
+  supabaseAdmin,
 } from "../supabase";
 
 export interface ImageUploadResult {
@@ -36,7 +36,9 @@ async function deleteOldImage(
 
     console.log(`🗑️ Deletando imagem antiga: ${oldPath}`);
 
-    const { error } = await supabaseAdmin.storage.from(bucket).remove([oldPath]);
+    const { error } = await supabaseAdmin.storage
+      .from(bucket)
+      .remove([oldPath]);
 
     if (error) {
       console.error("❌ Erro ao deletar imagem antiga:", error);
@@ -117,10 +119,6 @@ async function uploadImage(
     };
   }
 }
-
-// ============================================================================
-// FUNÇÕES ESPECÍFICAS POR TIPO DE IMAGEM
-// ============================================================================
 
 /**
  * Upload de avatar de usuário
@@ -229,4 +227,3 @@ export async function deleteTrackImage(imageUrl: string): Promise<boolean> {
     return false;
   }
 }
-

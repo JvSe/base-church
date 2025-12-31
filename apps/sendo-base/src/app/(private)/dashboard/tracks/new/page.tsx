@@ -133,22 +133,30 @@ export default function NewTrackPage() {
   const handleMoveCourseUp = (index: number) => {
     if (index === 0) return;
     const newCourses = [...trackCourses];
-    [newCourses[index - 1], newCourses[index]] = [
-      newCourses[index],
-      newCourses[index - 1],
-    ];
-    setTrackCourses(newCourses.map((c, i) => ({ ...c, order: i })));
+    const prevCourse = newCourses[index - 1];
+    const currentCourse = newCourses[index];
+    if (prevCourse && currentCourse) {
+      [newCourses[index - 1], newCourses[index]] = [
+        currentCourse,
+        prevCourse,
+      ];
+      setTrackCourses(newCourses.map((c, i) => ({ ...c, order: i })));
+    }
   };
 
   // Move course down
   const handleMoveCourseDown = (index: number) => {
     if (index === trackCourses.length - 1) return;
     const newCourses = [...trackCourses];
-    [newCourses[index], newCourses[index + 1]] = [
-      newCourses[index + 1],
-      newCourses[index],
-    ];
-    setTrackCourses(newCourses.map((c, i) => ({ ...c, order: i })));
+    const currentCourse = newCourses[index];
+    const nextCourse = newCourses[index + 1];
+    if (currentCourse && nextCourse) {
+      [newCourses[index], newCourses[index + 1]] = [
+        nextCourse,
+        currentCourse,
+      ];
+      setTrackCourses(newCourses.map((c, i) => ({ ...c, order: i })));
+    }
   };
 
   // Submit form

@@ -103,6 +103,7 @@ export default function CoursePage({ params }: CoursePageProps) {
           rejectionReason={enrollment?.rejectionReason || undefined}
           onEnroll={handleEnrollmentRequest}
           isLoading={isEnrolling}
+          image={course.image ?? undefined}
         />
       </CourseDetailHeader>
 

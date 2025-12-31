@@ -349,6 +349,12 @@ export async function createCourse(courseData: CourseFormData) {
 
       // Converter base64 para Buffer e fazer upload
       const base64Data = courseData.image.split(",")[1];
+      if (!base64Data) {
+        return {
+          success: false,
+          error: "Dados da imagem inválidos",
+        };
+      }
       const buffer = Buffer.from(base64Data, "base64");
 
       const uploadResult = await uploadCourseImage(
@@ -458,6 +464,12 @@ export async function updateCourse(
 
       // Converter base64 para Buffer
       const base64Data = courseData.image.split(",")[1];
+      if (!base64Data) {
+        return {
+          success: false,
+          error: "Dados da imagem inválidos",
+        };
+      }
       const buffer = Buffer.from(base64Data, "base64");
 
       // Upload com substituição automática da imagem antiga

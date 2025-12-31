@@ -166,10 +166,10 @@ export default function SignInPage() {
         </div>
       </div>
       <p className="text-foreground-lighter mt-auto text-center text-xs sm:mx-auto sm:max-w-sm">
-        By continuing, you agree to Sendo Base{" "}
-        <a className="underline">Terms of Service</a> and{" "}
-        <a className="underline">Privacy Policy</a>, and to receive periodic
-        emails with updates.
+        Ao continuar, você concorda com os{" "}
+        <a className="underline">Termos de Serviço</a> e{" "}
+        <a className="underline">Política de Privacidade</a> do Sendo Base,
+        e em receber e-mails periódicos com atualizações.
       </p>
     </div>
   );

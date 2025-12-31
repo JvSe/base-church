@@ -3,13 +3,14 @@
 import { EmptyState } from "@/src/components/common/feedback/empty-state";
 import { ErrorState } from "@/src/components/common/feedback/error-state";
 import { LoadingState } from "@/src/components/common/feedback/loading-state";
+import { PdfViewer } from "@/src/components/pdf-viewer";
 import { useAuth } from "@/src/hooks";
 import {
   checkUserEventEnrollment,
   getEventById,
   getEventCertificateByCpf,
 } from "@/src/lib/actions";
-import { formatDate, formatTime } from "@/src/lib/formatters";
+import { dayjs } from "@/src/lib/dayjs";
 import { getEventTypeInfo } from "@/src/lib/helpers/event.helper";
 import { Button } from "@base-church/ui/components/button";
 import { useQuery } from "@tanstack/react-query";
@@ -19,10 +20,12 @@ import {
   Calendar,
   Clock,
   Download,
+  Eye,
   Loader2,
   MapPin,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 
@@ -47,6 +50,8 @@ export default function EventPage(props: EventPageProps) {
     queryKey: ["public-event", eventId],
     queryFn: () => getEventById(eventId),
     select: (data) => data.event,
+    gcTime: 0, // Não manter em cache
+    staleTime: 0, // Sempre considerar stale
   });
 
   const eventData = eventDataResult;
@@ -59,6 +64,8 @@ export default function EventPage(props: EventPageProps) {
         ? checkUserEventEnrollment(eventId, user.id)
         : Promise.resolve({ success: true, isEnrolled: false }),
     enabled: !!user?.id,
+    gcTime: 0, // Não manter em cache
+    staleTime: 0, // Sempre considerar stale
   });
 
   // Buscar certificado do usuário (se estiver autenticado e tiver CPF)
@@ -70,6 +77,8 @@ export default function EventPage(props: EventPageProps) {
         : Promise.resolve({ success: false, error: "CPF não fornecido" }),
     enabled: !!user?.cpf && !!eventData,
     select: (data) => data.certificate,
+    gcTime: 0, // Não manter em cache
+    staleTime: 0, // Sempre considerar stale
   });
   const isEnrolled = enrollmentData?.isEnrolled || false;
   const userCertificate = certificateData;
@@ -79,6 +88,17 @@ export default function EventPage(props: EventPageProps) {
 
   // Preparar URL do PDF para miniatura
   const [pdfThumbnailUrl, setPdfThumbnailUrl] = useState<string | null>(null);
+
+  // Redirecionar para login após 5 segundos se evento não for encontrado
+  useEffect(() => {
+    if (error || !eventData) {
+      const timer = setTimeout(() => {
+        router.push("/signin");
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [error, eventData, router]);
 
   useEffect(() => {
     if (userCertificate?.certificateBase64) {
@@ -151,15 +171,10 @@ export default function EventPage(props: EventPageProps) {
   const typeInfo = eventType ? getEventTypeInfo(eventType) : null;
   const TypeIcon = typeInfo?.icon;
 
-  // Calcular duração
-  const duration =
-    eventData?.endDate && eventData?.startDate
-      ? Math.round(
-          (new Date(eventData.endDate).getTime() -
-            new Date(eventData.startDate).getTime()) /
-            60000,
-        )
-      : 0;
+  // Calcular duração usando dayjs
+  const startDate = eventData?.startDate ? dayjs(eventData.startDate) : null;
+  const endDate = eventData?.endDate ? dayjs(eventData.endDate) : null;
+  const durationMs = startDate && endDate ? endDate.diff(startDate) : 0;
 
   if (isLoading || enrollmentLoading || certificateLoading) {
     return (
@@ -178,11 +193,13 @@ export default function EventPage(props: EventPageProps) {
         <div className="fixed inset-0 opacity-3">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
         </div>
-        <ErrorState
-          icon={AlertCircle}
-          title="Evento não encontrado"
-          description="O evento que você está procurando não existe ou não está mais disponível."
-        />
+        <div className="relative mx-auto max-w-4xl p-6">
+          <ErrorState
+            icon={AlertCircle}
+            title="Evento não encontrado"
+            description="O evento que você está procurando não existe ou não está mais disponível. Você será redirecionado para a página de login em 5 segundos."
+          />
+        </div>
       </div>
     );
   }
@@ -195,6 +212,32 @@ export default function EventPage(props: EventPageProps) {
       </div>
 
       <div className="relative mx-auto max-w-5xl space-y-8 p-6">
+        {/* Logo */}
+        <div className="flex justify-center">
+          <Link href="/">
+            <Image
+              src="/assets/svg/sendo-base.svg"
+              alt="Sendo Base Logo"
+              width={200}
+              height={60}
+              className="my-10 h-auto w-48"
+            />
+          </Link>
+        </div>
+
+        {/* Informação sobre cadastro */}
+        <div className="dark-glass dark-shadow-md rounded-2xl p-6">
+          <div className="dark-primary-subtle-bg rounded-lg p-4">
+            <p className="dark-text-primary text-sm leading-relaxed">
+              <strong className="font-semibold">Importante:</strong> Ao
+              solicitar seu certificado, você estará criando uma conta na
+              plataforma. No lançamento oficial, você poderá usar o mesmo CPF e
+              senha cadastrados agora para acessar todos os seus certificados e
+              conteúdos exclusivos.
+            </p>
+          </div>
+        </div>
+
         {/* Event Header */}
         <div className="dark-glass dark-shadow-md rounded-2xl p-8">
           {/* Banner do Evento */}
@@ -242,13 +285,18 @@ export default function EventPage(props: EventPageProps) {
               </div>
               <div>
                 <div className="dark-text-primary text-sm font-medium">
-                  {formatDate(new Date(eventData.startDate))}
+                  {startDate && endDate
+                    ? `${startDate.format("DD/MM/YYYY")} - ${endDate.format("DD/MM/YYYY")}`
+                    : startDate
+                      ? startDate.format("DD/MM/YYYY")
+                      : "Data não especificada"}
                 </div>
                 <div className="dark-text-tertiary text-xs">
-                  {formatTime(new Date(eventData.startDate))} -{" "}
-                  {eventData.endDate
-                    ? formatTime(new Date(eventData.endDate))
-                    : "Sem horário de término"}
+                  {startDate && endDate
+                    ? `${startDate.format("HH:mm")} - ${endDate.format("HH:mm")}`
+                    : startDate
+                      ? startDate.format("HH:mm")
+                      : "Horário não especificado"}
                 </div>
               </div>
             </div>
@@ -262,8 +310,20 @@ export default function EventPage(props: EventPageProps) {
                   Duração
                 </div>
                 <div className="dark-text-tertiary text-xs">
-                  {duration > 0
-                    ? `${Math.floor(duration / 60)}h ${duration % 60}min`
+                  {durationMs > 0
+                    ? (() => {
+                        const duration = dayjs.duration(durationMs);
+                        const hours = Math.floor(duration.asHours());
+                        const minutes = duration.minutes();
+                        if (hours > 0 && minutes > 0) {
+                          return `${hours}h ${minutes}min`;
+                        } else if (hours > 0) {
+                          return `${hours}h`;
+                        } else if (minutes > 0) {
+                          return `${minutes}min`;
+                        }
+                        return duration.locale("pt-br").humanize();
+                      })()
                     : "Não especificada"}
                 </div>
               </div>
@@ -306,20 +366,34 @@ export default function EventPage(props: EventPageProps) {
               </div>
             </div>
 
-            {/* Se o usuário já tem certificado, mostrar certificado completo */}
+            {/* Se o usuário já tem certificado, mostrar miniatura */}
             {userCertificate && pdfThumbnailUrl ? (
               <div className="space-y-4">
                 <div className="dark-card dark-shadow-sm overflow-hidden rounded-xl border">
-                  <div className="relative w-full">
+                  <div className="relative h-48 w-full">
                     <iframe
-                      src={`${pdfThumbnailUrl}#page=1`}
-                      title="Certificado"
-                      className="h-[800px] w-full"
+                      src={`${pdfThumbnailUrl}#page=1&zoom=50`}
+                      title="Preview do Certificado"
+                      className="h-full w-full"
                       style={{ border: "none" }}
                     />
                   </div>
                 </div>
                 <div className="flex gap-2">
+                  <PdfViewer
+                    pdfBase64={
+                      userCertificate.certificateBase64?.includes(",")
+                        ? userCertificate.certificateBase64.split(",")[1]
+                        : userCertificate.certificateBase64 || undefined
+                    }
+                    title={`Certificado - ${eventData?.title || "Evento"}`}
+                    fileName={`certificado-${eventData?.title || "evento"}-${userCertificate.verificationCode || "certificado"}.pdf`}
+                  >
+                    <Button className="dark-btn-primary flex-1" size="lg">
+                      <Eye className="mr-2 h-4 w-4" />
+                      Visualizar Certificado
+                    </Button>
+                  </PdfViewer>
                   <Button
                     onClick={handleDownloadCertificate}
                     variant="outline"
@@ -333,7 +407,9 @@ export default function EventPage(props: EventPageProps) {
               </div>
             ) : (
               <Button
-                onClick={() => router.push(`/events/${eventId}/certificate`)}
+                onClick={() =>
+                  router.push(`/public/events/${eventId}/certificate`)
+                }
                 className="dark-btn-primary w-full"
                 size="lg"
               >
@@ -353,6 +429,17 @@ export default function EventPage(props: EventPageProps) {
             />
           </div>
         )}
+
+        {/* Footer */}
+        <p className="text-foreground-lighter mt-auto text-center text-xs sm:mx-auto sm:max-w-sm">
+          Ao continuar, você concorda com os{" "}
+          <a className="underline">Termos de Serviço</a> e{" "}
+          <a className="underline">Política de Privacidade</a> do Sendo Base, e
+          em receber e-mails periódicos com atualizações.
+          <br />
+          <br />
+          <span className="font-bold">© 2025 Base Church.</span>
+        </p>
       </div>
     </div>
   );

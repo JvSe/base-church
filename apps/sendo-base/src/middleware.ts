@@ -23,6 +23,12 @@ export function middleware(request: NextRequest) {
     pathname.startsWith(route),
   );
 
+  // Rotas públicas de eventos (acesso sem autenticação) - apenas /public/events
+  const isPublicEventRoute =
+    pathname.startsWith("/public/events/") &&
+    (pathname.match(/^\/public\/events\/[^/]+$/) || // /public/events/[id]
+      pathname.match(/^\/public\/events\/[^/]+\/certificate$/)); // /public/events/[id]/certificate
+
   // Verificar se o usuário está autenticado
   const session = getSessionFromRequest(request);
 
@@ -32,7 +38,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Se é uma rota pública, permitir acesso
-  if (isPublicRoute) {
+  if (isPublicRoute || isPublicEventRoute) {
     return NextResponse.next();
   }
 

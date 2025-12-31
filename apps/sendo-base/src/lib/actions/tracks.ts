@@ -102,6 +102,12 @@ export async function createTrack(data: CreateTrackInput) {
 
       // Converter base64 para Buffer e fazer upload
       const base64Data = data.image.split(",")[1];
+      if (!base64Data) {
+        return {
+          success: false,
+          error: "Dados da imagem inválidos",
+        };
+      }
       const buffer = Buffer.from(base64Data, "base64");
 
       const uploadResult = await uploadTrackImage(
@@ -235,6 +241,12 @@ export async function updateTrack(data: UpdateTrackInput) {
 
       // Converter base64 para Buffer
       const base64Data = data.image.split(",")[1];
+      if (!base64Data) {
+        return {
+          success: false,
+          error: "Dados da imagem inválidos",
+        };
+      }
       const buffer = Buffer.from(base64Data, "base64");
 
       // Upload com substituição automática da imagem antiga

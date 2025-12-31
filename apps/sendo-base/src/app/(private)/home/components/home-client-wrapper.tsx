@@ -4,6 +4,11 @@ import { GoalsCard } from "@/src/components/home";
 import { NotificationsButton } from "@/src/components/notifications";
 import { useAuth } from "@/src/hooks";
 import type { UserGoal } from "@/src/lib/types/goals";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@base-church/ui/components/avatar";
 import { Button } from "@base-church/ui/components/button";
 import {
   Activity,
@@ -16,7 +21,6 @@ import {
   Star,
   Target,
   TrendingUp,
-  User,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -560,8 +564,17 @@ export function HomeClientWrapper({
           <div className="space-y-6">
             {/* Profile Card */}
             <div className="dark-glass dark-shadow-sm hidden rounded-xl p-6 text-center md:block">
-              <div className="dark-primary-subtle-bg mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-                <User className="dark-primary" size={28} />
+              <div className="group mb-2 flex h-min flex-col items-center justify-center gap-2">
+                <Avatar className="group-hover:ring-primary h-16 w-16 ring-2 ring-transparent transition-all duration-200">
+                  <AvatarImage
+                    src={user?.image ?? ""}
+                    alt={user?.name ?? "Foto do perfil"}
+                    className="object-cover"
+                  />
+                  <AvatarFallback className="dark-bg-tertiary dark-text-primary text-xl font-semibold">
+                    {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                  </AvatarFallback>
+                </Avatar>
               </div>
               <h3 className="dark-text-primary mb-1 font-semibold">
                 {user?.name || (userData as any)?.name || "Usuário"}
