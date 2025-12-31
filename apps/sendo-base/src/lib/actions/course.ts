@@ -4,6 +4,7 @@ import { prisma } from "@base-church/db";
 import { revalidatePath } from "next/cache";
 import type { CourseFormData, LessonFormData } from "../forms/course-schemas";
 import { updateStreakOnLessonCompletion } from "../helpers/streak.helper";
+import { uploadCourseImage } from "../storage/image-storage";
 
 // Alias para o banco de dados
 const db = prisma;
@@ -321,20 +322,79 @@ export async function createCourse(courseData: CourseFormData) {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
 
-    // Criar curso com duração inicial 0 (será calculada quando houver lições)
+    let imageUrl = courseData.image || null;
+
+    // Se tem imagem em base64, criar curso primeiro e depois fazer upload
+    if (courseData.image && courseData.image.startsWith("data:")) {
+      console.log(
+        "⬆️ Detectado base64 no banner, fazendo upload para Supabase Storage...",
+      );
+
+      // Criar curso temporário sem imagem
+      const tempCourse = await db.course.create({
+        data: {
+          title: courseData.title,
+          description: courseData.description,
+          slug: slug,
+          instructorId: courseData.instructorId,
+          duration: 0,
+          level: courseData.level,
+          price: courseData.price,
+          category: courseData.category,
+          tags: tagsArray,
+          isFeatured: false,
+          image: null,
+        },
+      });
+
+      // Converter base64 para Buffer e fazer upload
+      const base64Data = courseData.image.split(",")[1];
+      if (!base64Data) {
+        return {
+          success: false,
+          error: "Dados da imagem inválidos",
+        };
+      }
+      const buffer = Buffer.from(base64Data, "base64");
+
+      const uploadResult = await uploadCourseImage(
+        buffer,
+        tempCourse.id,
+        null,
+        "banner.png",
+      );
+
+      if (uploadResult.success && uploadResult.url) {
+        imageUrl = uploadResult.url;
+      }
+
+      // Atualizar curso com a URL da imagem
+      const course = await db.course.update({
+        where: { id: tempCourse.id },
+        data: { image: imageUrl },
+      });
+
+      return {
+        success: true,
+        course,
+        message: "Curso criado com sucesso",
+      };
+    }
+
+    // Criar curso normalmente se não tem imagem ou já é URL
     const course = await db.course.create({
       data: {
         title: courseData.title,
         description: courseData.description,
         slug: slug,
         instructorId: courseData.instructorId,
-        duration: 0, // Será calculado automaticamente quando houver lições
+        duration: 0,
         level: courseData.level,
         price: courseData.price,
         category: courseData.category,
         tags: tagsArray,
         isFeatured: false,
-        image: courseData.image || null,
+        image: imageUrl,
       },
     });
 
@@ -396,6 +456,39 @@ export async function updateCourse(
           .filter((tag) => tag.length > 0)
       : [];
 
+    let imageUrl = courseData.image || existingCourse.image;
+
+    // Se tem nova imagem em base64, fazer upload com substituição
+    if (courseData.image && courseData.image.startsWith("data:")) {
+      console.log("⬆️ Nova imagem detectada, fazendo upload...");
+
+      // Converter base64 para Buffer
+      const base64Data = courseData.image.split(",")[1];
+      if (!base64Data) {
+        return {
+          success: false,
+          error: "Dados da imagem inválidos",
+        };
+      }
+      const buffer = Buffer.from(base64Data, "base64");
+
+      // Upload com substituição automática da imagem antiga
+      const uploadResult = await uploadCourseImage(
+        buffer,
+        courseId,
+        existingCourse.image, // Passa a imagem antiga para ser deletada
+        "banner.png",
+      );
+
+      if (uploadResult.success && uploadResult.url) {
+        imageUrl = uploadResult.url;
+      } else {
+        console.error("❌ Erro no upload:", uploadResult.error);
+        // Manter imagem antiga em caso de erro
+        imageUrl = existingCourse.image;
+      }
+    }
+
     // Atualizar curso (duração é calculada automaticamente pelas lições)
     const course = await db.course.update({
       where: { id: courseId },
@@ -407,9 +500,12 @@ export async function updateCourse(
         price: courseData.price,
         category: courseData.category,
         tags: tagsArray,
-        image: courseData.image || existingCourse.image,
+        image: imageUrl,
       },
     });
+
+    revalidatePath("/dashboard/courses");
+    revalidatePath(`/contents/course/${courseId}`);
 
     return {
       success: true,

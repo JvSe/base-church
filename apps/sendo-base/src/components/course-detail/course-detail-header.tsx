@@ -2,6 +2,11 @@ import { formatDate } from "@/src/lib/formatters";
 import { addPastorPrefix } from "@/src/lib/helpers";
 import { getLevelFormatted } from "@/src/lib/helpers/level.helper";
 import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@base-church/ui/components/avatar";
+import {
   BookOpen,
   Calendar,
   Clock,
@@ -52,9 +57,16 @@ export function CourseDetailHeader({
           <div className="flex flex-1 flex-row justify-between md:flex-col">
             <div className="mb-6 flex flex-1 flex-col items-start gap-6 md:flex-row md:items-center">
               <div className="flex items-center gap-2">
-                <div className="dark-primary-subtle-bg rounded-full p-2">
-                  <User className="dark-primary" size={16} />
-                </div>
+                <Avatar className="group-hover:ring-primary h-6 w-6 ring-2 ring-transparent transition-all duration-200">
+                  <AvatarImage
+                    src={course.instructor?.image ?? ""}
+                    alt={course.instructor?.name ?? "Foto do perfil"}
+                    className="object-cover"
+                  />
+                  <AvatarFallback className="dark-primary-subtle-bg rounded-full p-4">
+                    <User className="dark-primary" size={32} />
+                  </AvatarFallback>
+                </Avatar>
                 <div>
                   <div className="dark-text-primary text-sm font-medium text-nowrap">
                     {addPastorPrefix(

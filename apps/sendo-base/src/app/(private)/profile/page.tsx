@@ -5,6 +5,7 @@ import { Section } from "@/src/components/common/layout/section";
 import { useAuth, usePageTitle } from "@/src/hooks";
 import { getUserProfile } from "@/src/lib/actions";
 import { getInitials } from "@/src/lib/get-initial-by-name";
+import { formatPhone } from "@/src/lib/helpers";
 import {
   Avatar,
   AvatarFallback,
@@ -16,6 +17,8 @@ import { useQuery } from "@tanstack/react-query";
 import {
   BookOpen,
   Calendar,
+  Camera,
+  CreditCard,
   Edit,
   Flame,
   Mail,
@@ -23,6 +26,7 @@ import {
   Plus,
   Target,
   Trophy,
+  User,
   Zap,
 } from "lucide-react";
 import Image from "next/image";
@@ -42,23 +46,98 @@ export default function ProfilePage() {
     enabled: !!user?.id,
   });
 
+  const getFieldConfig = (fieldName: string) => {
+    const configs: Record<
+      string,
+      { icon: any; label: string; description: string }
+    > = {
+      Nome: {
+        icon: User,
+        label: "Nome",
+        description: "Seu nome completo",
+      },
+      Email: {
+        icon: Mail,
+        label: "Email",
+        description: "Endereço de e-mail",
+      },
+      "Foto de perfil": {
+        icon: Camera,
+        label: "Foto de perfil",
+        description: "Foto para seu perfil",
+      },
+      Telefone: {
+        icon: Phone,
+        label: "Telefone",
+        description: "Número de telefone",
+      },
+      CPF: {
+        icon: CreditCard,
+        label: "CPF",
+        description: "Cadastro de Pessoa Física",
+      },
+      "Data de nascimento": {
+        icon: Calendar,
+        label: "Data de nascimento",
+        description: "Data de nascimento",
+      },
+    };
+    return (
+      configs[fieldName] || { icon: User, label: fieldName, description: "" }
+    );
+  };
+
+  const getMissingFields = (user: any) => {
+    if (!user) return [];
+
+    const missing: string[] = [];
+
+    if (
+      !user.name ||
+      (typeof user.name === "string" && user.name.trim() === "")
+    ) {
+      missing.push("Nome");
+    }
+    if (
+      !user.email ||
+      (typeof user.email === "string" && user.email.trim() === "")
+    ) {
+      missing.push("Email");
+    }
+    if (
+      !user.image ||
+      (typeof user.image === "string" && user.image.trim() === "")
+    ) {
+      missing.push("Foto de perfil");
+    }
+    if (
+      !user.phone ||
+      (typeof user.phone === "string" && user.phone.trim() === "")
+    ) {
+      missing.push("Telefone");
+    }
+    if (!user.cpf || (typeof user.cpf === "string" && user.cpf.trim() === "")) {
+      missing.push("CPF");
+    }
+    if (
+      !user.birthDate ||
+      (user.birthDate instanceof Date && isNaN(user.birthDate.getTime())) ||
+      (typeof user.birthDate === "string" && user.birthDate.trim() === "")
+    ) {
+      missing.push("Data de nascimento");
+    }
+
+    return missing;
+  };
+
   const calculateProfileCompletion = (user: any) => {
     if (!user) return 0;
 
-    const fields = [
-      user.name,
-      user.email,
-      user.image,
-      user.bio,
-      user.phone,
-      user.cpf,
-      user.birthDate,
-    ];
+    const totalFields = 6;
+    const missingFields = getMissingFields(user);
+    const filledFields = totalFields - missingFields.length;
 
-    const filledFields = fields.filter(
-      (field) => field && typeof field === "string" && field.trim() !== "",
-    ).length;
-    return Math.round((filledFields / fields.length) * 100);
+    return Math.round((filledFields / totalFields) * 100);
   };
 
   const getEnrollmentStatusColor = (status: string) => {
@@ -89,6 +168,7 @@ export default function ProfilePage() {
 
   // Use real user data with fallbacks
   const profileCompletion = calculateProfileCompletion(userAuth);
+  const missingFields = getMissingFields(userAuth);
   const coursesCompleted =
     userAuth?.enrollments?.filter((e) => e.completedAt)?.length || 0;
   const certificatesEarned = userAuth?.certificates?.length || 0;
@@ -159,7 +239,7 @@ export default function ProfilePage() {
               </Avatar>
               {/* <User className="dark-primary" size={48} /> */}
             </div>
-            <div className="mt-3 text-center md:mt-0">
+            <div className="mt-3 text-center md:mt-0 md:text-left">
               <h1 className="dark-text-primary mb-1 text-3xl font-bold md:mb-2">
                 {userAuth?.name}
               </h1>
@@ -187,6 +267,14 @@ export default function ProfilePage() {
                     <Mail className="dark-text-tertiary" size={14} />
                     <span className="dark-text-tertiary text-nowrap">
                       {userAuth.email}
+                    </span>
+                  </div>
+                )}
+                {userAuth?.phone && (
+                  <div className="flex items-center space-x-1">
+                    <Phone className="dark-text-tertiary" size={14} />
+                    <span className="dark-text-tertiary text-nowrap">
+                      {formatPhone(userAuth.phone)}
                     </span>
                   </div>
                 )}
@@ -530,31 +618,50 @@ export default function ProfilePage() {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Profile Completion */}
-          <Section
-            title={
-              <span className="flex items-center gap-2">
-                <Target className="dark-warning" size={20} />
-                Completar Perfil
-              </span>
-            }
-          >
-            <div className="mb-4">
-              <div className="mb-2 flex justify-between text-sm">
-                <span className="dark-text-secondary">Progresso</span>
-                <span className="dark-primary font-semibold">
-                  {profileCompletion}%
+          {missingFields.length > 0 && (
+            <Section
+              title={
+                <span className="flex items-center gap-2">
+                  <Target className="dark-warning" size={20} />
+                  Completar Perfil
                 </span>
+              }
+            >
+              <div className="mb-4">
+                <div className="mb-2 flex justify-between text-sm">
+                  <span className="dark-text-secondary">Progresso</span>
+                  <span className="dark-primary font-semibold">
+                    {profileCompletion}%
+                  </span>
+                </div>
+                <div className="dark-bg-tertiary h-2 rounded-full">
+                  <div
+                    className="dark-gradient-primary h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${profileCompletion}%` }}
+                  />
+                </div>
               </div>
-              <div className="dark-bg-tertiary h-2 rounded-full">
-                <div
-                  className="dark-gradient-primary h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${profileCompletion}%` }}
-                />
-              </div>
-            </div>
 
-            <div className="space-y-2">
-              {(!userAuth?.image || !userAuth?.bio || !userAuth?.phone) && (
+              <div className="space-y-4">
+                <div>
+                  <p className="dark-text-secondary mb-3 text-sm font-medium">
+                    Informações faltantes ({missingFields.length}):
+                  </p>
+                  <div className="space-y-2">
+                    {missingFields.map((field, index) => {
+                      const config = getFieldConfig(field);
+                      const Icon = config.icon;
+                      return (
+                        <div key={index} className="flex items-center gap-3">
+                          <Icon className="dark-warning h-4 w-4 flex-shrink-0" />
+                          <span className="dark-text-secondary text-sm">
+                            {config.label}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
                 <Link href="/profile/account">
                   <Button
                     variant="success"
@@ -564,9 +671,9 @@ export default function ProfilePage() {
                     Completar perfil
                   </Button>
                 </Link>
-              )}
-            </div>
-          </Section>
+              </div>
+            </Section>
+          )}
 
           {/* Contact Info */}
           <Section title="Informações de Contato">

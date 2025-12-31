@@ -90,7 +90,7 @@ export function PageHeader({
                 asChild
                 variant="ghost"
                 size="sm"
-                className="hover:dark-bg-tertiary hidden md:block"
+                className="hover:dark-bg-tertiary hidden md:flex"
               >
                 {backButton.href ? (
                   <Link href={backButton.href}>

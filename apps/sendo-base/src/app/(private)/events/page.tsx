@@ -48,7 +48,7 @@ export default function EventosPage() {
     error,
   } = useQuery({
     queryKey: ["events"],
-    queryFn: getEvents,
+    queryFn: () => getEvents({ filter: "all" }),
     select: (data) => data.events,
   });
 

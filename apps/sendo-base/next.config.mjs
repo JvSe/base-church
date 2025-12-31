@@ -15,6 +15,12 @@ const nextConfig = {
         hostname: "ui-avatars.com",
         port: "",
       },
+      {
+        protocol: "https",
+        hostname: "*.supabase.co",
+        port: "",
+        pathname: "/storage/v1/object/public/**",
+      },
     ],
   },
   webpack: (config, { isServer }) => {

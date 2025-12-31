@@ -23,7 +23,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@base-church/ui/components/tabs";
-import { Filter, Search, Target, TrendingUp, Zap } from "lucide-react";
+import { Search, Target, TrendingUp, Zap } from "lucide-react";
 
 export default function CatalogPage() {
   usePageTitle("Catálogo de Cursos");
@@ -77,22 +77,7 @@ export default function CatalogPage() {
       <PageHeader
         title="Catálogo de Cursos"
         description="Explore milhares de cursos e encontre o que você precisa para evoluir"
-        actions={
-          isMobile
-            ? undefined
-            : [
-                {
-                  label: "Filtros avançados",
-                  icon: Filter,
-                  className: "dark-glass dark-border hover:dark-border-hover",
-                },
-              ]
-        }
-      >
-        <div className="hidden items-center justify-end md:flex">
-          <ViewModeToggle mode={viewMode} onChange={setViewMode} />
-        </div>
-      </PageHeader>
+      />
 
       {/* Search and Filters */}
       <div className="dark-glass dark-shadow-sm rounded-xl p-4">
@@ -114,35 +99,40 @@ export default function CatalogPage() {
       {/* Tabs */}
       <div className="dark-shadow-sm rounded-xl p-1">
         <Tabs defaultValue="all" className="w-full">
-          <TabsList className="dark-bg-secondary mb-10 grid h-12 w-full grid-cols-2 gap-2 md:mb-0 md:grid-cols-4">
-            <TabsTrigger
-              value="all"
-              className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary p-2 text-sm"
-            >
-              Todos ({courses.length})
-            </TabsTrigger>
-            <TabsTrigger
-              value="featured"
-              className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary p-2 text-sm"
-            >
-              <TrendingUp size={16} className="mr-2" />
-              Em Destaque ({featuredCourses.length})
-            </TabsTrigger>
-            <TabsTrigger
-              value="enrolled"
-              className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary p-2 text-sm"
-            >
-              <Zap size={16} className="mr-2" />
-              Matriculados ({enrolledCourses.length})
-            </TabsTrigger>
-            <TabsTrigger
-              value="recommended"
-              className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary p-2 text-sm"
-            >
-              <Target size={16} className="mr-2" />
-              Recomendados
-            </TabsTrigger>
-          </TabsList>
+          <div>
+            <TabsList className="dark-bg-secondary mb-10 grid h-12 w-full grid-cols-2 gap-2 md:mb-0 md:grid-cols-4">
+              <TabsTrigger
+                value="all"
+                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary p-2 text-sm"
+              >
+                Todos ({courses.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="featured"
+                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary p-2 text-sm"
+              >
+                <TrendingUp size={16} className="mr-2" />
+                Em Destaque ({featuredCourses.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="enrolled"
+                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary p-2 text-sm"
+              >
+                <Zap size={16} className="mr-2" />
+                Matriculados ({enrolledCourses.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="recommended"
+                className="data-[state=active]:dark-btn-primary dark-text-secondary data-[state=active]:dark-text-primary p-2 text-sm"
+              >
+                <Target size={16} className="mr-2" />
+                Recomendados
+              </TabsTrigger>
+            </TabsList>
+            <div className="mt-2 hidden items-center justify-end md:flex">
+              <ViewModeToggle mode={viewMode} onChange={setViewMode} />
+            </div>
+          </div>
 
           <TabsContent value="all" className="mt-6">
             {filteredCourses.length > 0 ? (

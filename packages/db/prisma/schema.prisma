@@ -4,9 +4,9 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // directUrl = env("DIRECT_URL")
 }
 
 enum UserRole {
@@ -62,7 +62,7 @@ model User {
   name                 String?
   email                String?            @unique
   emailVerified        DateTime?
-  image                String?
+  image                String? // URL da imagem de perfil no Supabase Storage
   username             String?            @unique
   role                 UserRole           @default(MEMBROS)
   isPastor             Boolean            @default(false)
@@ -112,6 +112,7 @@ model User {
   forumPostViews      ForumPostView[]
   eventEnrollments    EventEnrollment[]
   eventReviews        EventReview[]
+  eventCertificates   EventCertificate[]
   courseReviews       CourseReview[]
   achievements        UserAchievement[]
   stats               UserStats?
@@ -130,7 +131,7 @@ model Course {
   description     String?
   longDescription String?
   slug            String   @unique
-  image           String?
+  image           String? // URL da imagem do curso no Supabase Storage
   duration        Int? // in minutes
   level           String? // beginner, intermediate, advanced
   category        String?
@@ -157,6 +158,7 @@ model Course {
   certificates        Certificate[]
   certificateTemplate CertificateTemplate?
   reviews             CourseReview[]
+  trackCourses        TrackCourse[] // Relação com trilhas
 
   @@map("courses")
 }
@@ -262,6 +264,48 @@ model CertificateTemplate {
   @@map("certificate_templates")
 }
 
+// Template de certificado para eventos - criado quando o evento é criado
+model EventCertificateTemplate {
+  id          String   @id @default(uuid())
+  eventId     String   @unique // Um evento tem apenas um template de certificado
+  title       String
+  description String?
+  templateUrl String? // URL do template PNG
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  event         Event              @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  certificates  EventCertificate[] // Certificados emitidos baseados neste template
+
+  @@map("event_certificate_templates")
+}
+
+// Certificado de evento emitido - criado quando usuário solicita certificado do evento
+model EventCertificate {
+  id                String            @id @default(uuid())
+  userId            String? // Nullable - pode ser gerado sem usuário cadastrado
+  eventId           String
+  templateId        String
+  name              String // Nome do participante (pode ser diferente do usuário)
+  cpf               String? // CPF do participante (opcional)
+  status            CertificateStatus @default(PENDING)
+  issuedAt          DateTime? // Nullable - só preenchido quando emitido
+  certificateUrl    String? // URL do certificado gerado (PNG)
+  certificateBase64 String? // Base64 do certificado gerado pela API
+  verificationCode  String?           @unique // Código único para verificação
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  // Relations
+  user     User?                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event    Event                    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  template EventCertificateTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@map("event_certificates")
+}
+
 // Certificado emitido - criado quando usuário completa o curso
 model Certificate {
   id                String            @id @default(uuid())
@@ -346,11 +390,13 @@ model Event {
   updatedAt          DateTime  @updatedAt
 
   // Relations
-  instructor  User?             @relation("EventInstructor", fields: [instructorId], references: [id])
-  enrollments EventEnrollment[]
-  speakers    EventSpeaker[]
-  agenda      EventAgenda[]
-  reviews     EventReview[]
+  instructor          User?                    @relation("EventInstructor", fields: [instructorId], references: [id])
+  enrollments         EventEnrollment[]
+  speakers            EventSpeaker[]
+  agenda              EventAgenda[]
+  reviews             EventReview[]
+  certificateTemplate EventCertificateTemplate?
+  certificates        EventCertificate[]
 
   @@map("events")
 }
@@ -762,4 +808,49 @@ model SupportOption {
   updatedAt    DateTime @updatedAt
 
   @@map("support_options")
+}
+
+// ============================================================================
+// TRACKS (TRILHAS DE ESTUDO) SYSTEM
+// ============================================================================
+
+// Trilhas de estudo - coleções ordenadas de cursos
+model Track {
+  id           String   @id @default(uuid())
+  title        String
+  description  String?  @db.Text
+  slug         String   @unique
+  image        String? // URL da imagem da trilha no Supabase Storage
+  category     String? // Categoria da trilha (fundamentos, discipulado, etc)
+  level        String? // beginner, intermediate, advanced
+  duration     Int? // Duração total estimada em minutos
+  isPublished  Boolean  @default(false)
+  isFeatured   Boolean  @default(false)
+  order        Int      @default(0) // Ordem de exibição
+  objectives   String[] // Array de objetivos de aprendizado
+  requirements String[] // Array de requisitos
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  courses TrackCourse[]
+
+  @@map("tracks")
+}
+
+// Relação entre trilhas e cursos (com ordem)
+model TrackCourse {
+  id         String   @id @default(uuid())
+  trackId    String
+  courseId   String
+  order      Int // Ordem do curso na trilha
+  isRequired Boolean  @default(true) // Se é obrigatório completar este curso
+  createdAt  DateTime @default(now())
+
+  // Relations
+  track  Track  @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([trackId, courseId]) // Um curso não pode aparecer duas vezes na mesma trilha
+  @@map("track_courses")
 }

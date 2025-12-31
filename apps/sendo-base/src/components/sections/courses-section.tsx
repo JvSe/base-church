@@ -12,19 +12,22 @@ export const CourseSection = () => {
   const teachers: Teacher[] = [
     {
       name: "Robson Correa",
-      avatar_url: "https://avatar.iran.liara.run/public/boy?username=Robson",
+      avatar_url:
+        "https://ui-avatars.com/api/?name=Robson+Correa&background=random&color=fff",
       description: "description",
       prefix: "PR.",
     },
     {
       name: "Jefferson Leal",
-      avatar_url: "https://avatar.iran.liara.run/public/boy?username=Jeff",
+      avatar_url:
+        "https://ui-avatars.com/api/?name=Jefferson+Leal&background=random&color=fff",
       description: "description",
       prefix: "PR.",
     },
     {
       name: "Patrick Nascimento",
-      avatar_url: "https://avatar.iran.liara.run/public/boy?username=Patrick",
+      avatar_url:
+        "https://ui-avatars.com/api/?name=Patrick+Nascimento&background=random&color=fff",
       description: "description",
       prefix: "PR.",
     },
