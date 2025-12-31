@@ -1,4 +1,4 @@
-import { getEvents, getUserProfile } from "@/src/lib/actions";
+import { getCommunityEvents, getUserProfile } from "@/src/lib/actions";
 import { getSessionFromCookies } from "@/src/lib/helpers/session.helper";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
@@ -18,7 +18,7 @@ export default async function DashboardPage() {
     session?.userId
       ? getUserProfile(session.userId)
       : Promise.resolve({ success: true, user: null }),
-    getEvents(),
+    getCommunityEvents(),
   ]);
 
   const userData = userDataResult?.user || null;

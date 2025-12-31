@@ -39,13 +39,6 @@ interface DashboardStats {
   }>;
 }
 
-interface DashboardAnalytics {
-  completionRate: number;
-  averageCourseDuration: number;
-  studentSatisfaction: number;
-  monthlyRetention: number;
-}
-
 export default function DashboardPage() {
   usePageTitle("Dashboard");
 

@@ -89,6 +89,7 @@ export type Course = {
   tags: string[];
   objectives: string[];
   requirements: string[];
+  materials?: string[]; // Array de links/arquivos de materiais complementares (opcional)
   createdAt: Date;
   updatedAt: Date;
 };

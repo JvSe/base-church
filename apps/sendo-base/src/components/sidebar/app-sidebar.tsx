@@ -4,10 +4,12 @@ import {
   Award,
   BarChart3,
   BookOpen,
+  Calendar,
   FileText,
   HelpCircle,
   Home,
   LogOut,
+  Map,
   MessageCircle,
   User,
   Users,
@@ -82,14 +84,24 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               url: "/dashboard/certificates",
               icon: Award,
             },
+            {
+              title: "Gestão de Eventos",
+              url: "/dashboard/events",
+              icon: Calendar,
+            },
+            {
+              title: "Gestão de Trilhas",
+              url: "/dashboard/tracks",
+              icon: Map,
+            },
           ]
         : [],
     navLearning: [
-      // {
-      //   title: "Minha Jornada",
-      //   url: "/journey",
-      //   icon: Map,
-      // },
+      {
+        title: "Minha Jornada",
+        url: "/journey",
+        icon: Map,
+      },
       {
         title: "Meus Conteúdos",
         icon: FileText,
@@ -128,21 +140,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           },
         ],
       },
-      // {
-      //   title: "Eventos",
-      //   icon: Calendar,
-      //   url: "/events",
-      //   items: [
-      //     {
-      //       title: "Próximos Eventos",
-      //       url: "/events?upcoming=true",
-      //     },
-      //     {
-      //       title: "Meus Eventos",
-      //       url: "/events?my-events=true",
-      //     },
-      //   ],
-      // },
+      {
+        title: "Eventos",
+        icon: Calendar,
+        url: "/events",
+        items: [
+          {
+            title: "Próximos Eventos",
+            url: "/events?upcoming=true",
+          },
+          {
+            title: "Meus Eventos",
+            url: "/events?my-events=true",
+          },
+        ],
+      },
     ],
     navCommunity: [
       {
@@ -235,7 +247,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
 
       {/* Navegação Principal */}
-      <SidebarContent className="overflow-hidden">
+      <SidebarContent className="overflow-x-hidden overflow-y-auto">
         {/* Navegação Principal */}
         <SidebarGroup>
           <SidebarGroupContent>

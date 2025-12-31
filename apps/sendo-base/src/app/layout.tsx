@@ -7,8 +7,8 @@ import "../global.css";
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | Sendo Base",
-    default: "Sendo Base",
+    template: "%s | Base School",
+    default: "Base School",
   },
   description: "Plataforma de cursos e ensino da igreja",
 };

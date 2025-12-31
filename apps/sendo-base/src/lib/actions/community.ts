@@ -3,8 +3,8 @@
 import { prisma } from "@base-church/db";
 import { revalidatePath } from "next/cache";
 
-// Event Actions
-export async function getEvents() {
+// Community Event Actions (renamed to avoid conflict with event.ts)
+export async function getCommunityEvents() {
   try {
     const events = await prisma.event.findMany({
       where: { isPublished: true },
@@ -51,7 +51,7 @@ export async function getEvents() {
   }
 }
 
-export async function getEventById(eventId: string) {
+export async function getCommunityEventById(eventId: string) {
   try {
     const event = await prisma.event.findUnique({
       where: { id: eventId },

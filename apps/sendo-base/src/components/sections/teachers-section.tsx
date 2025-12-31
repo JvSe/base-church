@@ -1,10 +1,10 @@
 "use client";
 import { Teacher } from "@/src/lib/types";
 import {
-    AutoScroll,
-    Carousel,
-    CarouselContent,
-    CarouselItem,
+  AutoScroll,
+  Carousel,
+  CarouselContent,
+  CarouselItem,
 } from "@base-church/ui/components/carousel";
 import { cn } from "@base-church/ui/lib/utils";
 import { TeacherCard } from "../teacher-card";
@@ -13,37 +13,37 @@ export const TeachersSection = () => {
   const teachers: Teacher[] = [
     {
       name: "Robson Correa",
-      avatar_url: "https://avatar.iran.liara.run/public/boy",
+      avatar_url: "https://ui-avatars.com/api/?name=Robson+Correa",
       description: "description",
       prefix: "PR.",
     },
     {
       name: "Jefferson Leal",
-      avatar_url: "https://avatar.iran.liara.run/public/boy",
+      avatar_url: "https://ui-avatars.com/api/?name=Jefferson+Leal",
       description: "description",
       prefix: "PR.",
     },
     {
       name: "Patrick Nascimento",
-      avatar_url: "https://avatar.iran.liara.run/public/boy",
+      avatar_url: "https://ui-avatars.com/api/?name=Patrick+Nascimento",
       description: "description",
       prefix: "PR.",
     },
     {
       name: "Robson Correa",
-      avatar_url: "https://avatar.iran.liara.run/public/boy",
+      avatar_url: "https://ui-avatars.com/api/?name=Robson+Correa",
       description: "description",
       prefix: "PR.",
     },
     {
       name: "Jefferson Leal",
-      avatar_url: "https://avatar.iran.liara.run/public/boy",
+      avatar_url: "https://ui-avatars.com/api/?name=Jefferson+Leal",
       description: "description",
       prefix: "PR.",
     },
     {
       name: "Patrick Nascimento",
-      avatar_url: "https://avatar.iran.liara.run/public/boy",
+      avatar_url: "https://ui-avatars.com/api/?name=Patrick+Nascimento",
       description: "description",
       prefix: "PR.",
     },

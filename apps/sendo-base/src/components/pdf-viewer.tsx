@@ -9,7 +9,7 @@ import {
   DialogTrigger,
 } from "@base-church/ui/components/dialog";
 import { Download, Eye } from "lucide-react";
-import { PropsWithChildren, useMemo, useState } from "react";
+import { PropsWithChildren, useEffect, useMemo, useState } from "react";
 
 type PdfViewerProps = PropsWithChildren<{
   pdfBase64?: string | null;
@@ -27,20 +27,80 @@ export function PdfViewer({
 }: PdfViewerProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const pdfUrl = useMemo(
-    () => `data:application/pdf;base64,${pdfBase64}`,
-    [pdfBase64],
-  );
+  const pdfUrl = useMemo(() => {
+    if (!pdfBase64) return null;
+    
+    // Se já tem o prefixo data:, usar diretamente
+    if (pdfBase64.startsWith("data:")) {
+      return pdfBase64;
+    }
+    
+    // Criar blob URL para melhor compatibilidade
+    try {
+      const base64Data = pdfBase64.includes(",")
+        ? pdfBase64.split(",")[1]
+        : pdfBase64;
+      
+      if (!base64Data) {
+        return null;
+      }
+      
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: "application/pdf" });
+      return URL.createObjectURL(blob);
+    } catch (error) {
+      console.error("Erro ao criar URL do PDF:", error);
+      // Fallback para data URI
+      return `data:application/pdf;base64,${pdfBase64}`;
+    }
+  }, [pdfBase64]);
+
+  // Limpar blob URL quando componente desmontar ou URL mudar
+  useEffect(() => {
+    return () => {
+      if (pdfUrl && pdfUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(pdfUrl);
+      }
+    };
+  }, [pdfUrl]);
 
   const handleDownload = () => {
-    if (pdfUrl) {
+    if (pdfBase64) {
       // Download do PDF em base64
-      const link = document.createElement("a");
-      link.href = pdfUrl;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      try {
+        const base64Data = pdfBase64?.includes(",")
+          ? pdfBase64.split(",")[1]
+          : pdfBase64;
+        
+        if (!base64Data) {
+          console.error("Dados base64 inválidos");
+          return;
+        }
+        
+        const byteCharacters = atob(base64Data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: "application/pdf" });
+        
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error("Erro ao fazer download:", error);
+      }
     } else if (certificateUrl) {
       // Download do PDF por URL
       const link = document.createElement("a");
@@ -115,11 +175,12 @@ export function PdfViewer({
         </DialogHeader>
 
         <div className="mt-4">
-          {pdfBase64 ? (
+          {pdfBase64 && pdfUrl ? (
             <iframe
               src={pdfUrl}
               className="h-[800px] w-full rounded-lg border"
               title="Visualização do PDF"
+              style={{ border: "none" }}
             />
           ) : certificateUrl ? (
             <div className="dark-bg-tertiary/20 rounded-lg p-8 text-center">

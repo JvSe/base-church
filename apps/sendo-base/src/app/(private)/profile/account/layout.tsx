@@ -45,13 +45,6 @@ export default function ProfileEditLayout({
     // },
   ];
 
-  const getCurrentSection = () => {
-    const currentItem = navigationItems.find(
-      (item) => pathname === item.href || pathname.startsWith(item.href + "/"),
-    );
-    return currentItem || navigationItems[0];
-  };
-
   return (
     <div className="dark-bg-primary min-h-screen">
       {/* Background Pattern */}

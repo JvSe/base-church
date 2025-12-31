@@ -3,6 +3,7 @@
 import { prisma } from "@base-church/db";
 import { revalidatePath } from "next/cache";
 import { cleanCpf } from "../helpers/auth.helper";
+import { uploadUserAvatar } from "../storage/image-storage";
 
 // User Profile Actions
 export async function updateUserProfile(
@@ -110,18 +111,62 @@ export async function updateUserProfileData({
   data: UpdateUserProfileInput;
 }) {
   try {
+    let imageUrl = data.image;
+
+    // Se tem nova imagem em base64, fazer upload para Supabase Storage
+    if (data.image && data.image.startsWith("data:")) {
+      console.log(
+        "⬆️ Detectado base64 no avatar, fazendo upload para Supabase Storage...",
+      );
+
+      // Buscar usuário atual para pegar URL da imagem antiga
+      const currentUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { image: true },
+      });
+
+      // Converter base64 para Buffer
+      const base64Parts = data.image.split(",");
+      const base64Data = base64Parts[1];
+
+      if (!base64Data) {
+        console.error("❌ Formato de base64 inválido");
+        imageUrl = currentUser?.image || undefined;
+      } else {
+        const buffer = Buffer.from(base64Data, "base64");
+
+        // Upload com substituição automática da imagem antiga
+        const uploadResult = await uploadUserAvatar(
+          buffer,
+          userId,
+          currentUser?.image, // Passa a URL antiga para ser deletada
+          "avatar.png",
+        );
+
+        if (uploadResult.success && uploadResult.url) {
+          imageUrl = uploadResult.url;
+          console.log("✅ Avatar atualizado com sucesso:", imageUrl);
+        } else {
+          console.error("❌ Erro no upload do avatar:", uploadResult.error);
+          // Manter imagem antiga em caso de erro
+          imageUrl = currentUser?.image || undefined;
+          throw new Error("Erro no upload do avatar");
+        }
+      }
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {
         ...data,
+        image: imageUrl,
         updatedAt: new Date(),
       },
     });
 
-    revalidatePath("/profile");
-    revalidatePath("/profile/account");
     return { success: true, user: updatedUser };
   } catch (error) {
+    console.error("❌ Erro ao atualizar perfil:", error);
     return { success: false, error: "Failed to update user profile" };
   }
 }
