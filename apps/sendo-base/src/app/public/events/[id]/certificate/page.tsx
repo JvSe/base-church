@@ -336,19 +336,6 @@ export default function CertificatePage(props: CertificatePageProps) {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-dark-text-tertiary)_1px,transparent_0)] bg-[length:60px_60px]" />
         </div>
         <div className="relative mx-auto max-w-4xl space-y-8 p-6">
-          {/* Logo */}
-          <div className="flex justify-center">
-            <Link href="/">
-              <Image
-                src="/assets/svg/sendo-base.svg"
-                alt="Sendo Base Logo"
-                width={200}
-                height={60}
-                className="h-auto w-48"
-              />
-            </Link>
-          </div>
-
           {/* Header */}
           <div className="dark-glass dark-shadow-md rounded-2xl p-8 text-center">
             <div className="dark-warning-bg mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
@@ -368,9 +355,9 @@ export default function CertificatePage(props: CertificatePageProps) {
               <p className="dark-text-primary text-sm leading-relaxed">
                 <strong className="font-semibold">Importante:</strong> Ao
                 solicitar seu certificado, você estará criando uma conta na
-                plataforma. No lançamento oficial, você poderá usar o mesmo CPF
-                e senha cadastrados agora para acessar todos os seus
-                certificados e conteúdos exclusivos.
+                plataforma <b>Base School</b>. No lançamento oficial, você
+                poderá usar o mesmo CPF e senha cadastrados agora para acessar
+                todos os seus certificados e conteúdos exclusivos.
               </p>
             </div>
           </div>

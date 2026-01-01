@@ -25,7 +25,6 @@ import {
   MapPin,
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 
@@ -212,28 +211,15 @@ export default function EventPage(props: EventPageProps) {
       </div>
 
       <div className="relative mx-auto max-w-5xl space-y-8 p-6">
-        {/* Logo */}
-        <div className="flex justify-center">
-          <Link href="/">
-            <Image
-              src="/assets/svg/sendo-base.svg"
-              alt="Sendo Base Logo"
-              width={200}
-              height={60}
-              className="my-10 h-auto w-48"
-            />
-          </Link>
-        </div>
-
         {/* Informação sobre cadastro */}
         <div className="dark-glass dark-shadow-md rounded-2xl p-6">
           <div className="dark-primary-subtle-bg rounded-lg p-4">
             <p className="dark-text-primary text-sm leading-relaxed">
               <strong className="font-semibold">Importante:</strong> Ao
               solicitar seu certificado, você estará criando uma conta na
-              plataforma. No lançamento oficial, você poderá usar o mesmo CPF e
-              senha cadastrados agora para acessar todos os seus certificados e
-              conteúdos exclusivos.
+              plataforma <b>Base School</b>. No lançamento oficial, você poderá
+              usar o mesmo CPF e senha cadastrados agora para acessar todos os
+              seus certificados e conteúdos exclusivos.
             </p>
           </div>
         </div>
